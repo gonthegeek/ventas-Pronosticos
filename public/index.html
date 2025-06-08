@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tracker de Ventas de Máquinas</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js para las gráficas -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    <!-- Fuentes de Google -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Archivo de Estilos CSS -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+    <div class="container mx-auto p-4 md:p-8">
+        <header class="text-center mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-900">Tracker de Ventas de Máquinas</h1>
+            <p class="text-md text-gray-600 mt-2">Registra la venta total acumulada para analizar las ventas por período.</p>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+            <div class="lg:col-span-1 space-y-8">
+                <div class="bg-white p-6 rounded-xl shadow-lg h-fit">
+                    <h2 class="text-2xl font-semibold mb-4 border-b pb-2">Registrar Venta</h2>
+                    <form id="sale-form" class="space-y-4">
+                        <div>
+                            <label for="machine-id" class="block text-sm font-medium text-gray-700">ID de la Máquina</label>
+                            <select id="machine-id" name="machine-id" required class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                                <option value="76">76</option>
+                                <option value="79">79</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="sale-amount" class="block text-sm font-medium text-gray-700">Venta Total Acumulada (Hoy)</label>
+                            <input type="number" id="sale-amount" name="sale-amount" step="0.01" min="0" required class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Ej: 150.50">
+                        </div>
+                        <button type="submit" class="w-full bg-indigo-600 text-white font-bold py-2 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-300">
+                            Registrar Venta
+                        </button>
+                    </form>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl shadow-lg h-fit">
+                    <h2 class="text-2xl font-semibold mb-4 border-b pb-2">Carga de Datos Históricos</h2>
+                    <p class="text-sm text-gray-600 mb-4">Sube un archivo CSV sin encabezados con las columnas: `fecha (YYYY-MM-DD)`, `hora (HH:MM)`, `maquina`, `total_acumulado_diario`.</p>
+                    <div class="space-y-4">
+                         <input type="file" id="csv-file-input" accept=".csv" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"/>
+                         <button id="upload-csv-btn" class="w-full bg-green-600 text-white font-bold py-2 px-4 rounded-md hover:bg-green-700 transition-colors duration-300">
+                            Subir Archivo
+                        </button>
+                    </div>
+                </div>
+
+                <div id="feedback-message" class="mt-4 text-center"></div>
+            </div>
+
+            <div class="lg:col-span-2 space-y-8">
+                <div class="bg-white p-6 rounded-xl shadow-lg">
+                    <div class="flex flex-wrap justify-between items-center mb-4 gap-4">
+                        <h2 id="chart-title" class="text-2xl font-semibold">Análisis de Ventas</h2>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <select id="machine-filter" class="border-gray-300 rounded-md shadow-sm text-sm focus:ring-indigo-500 focus:border-indigo-500">
+                                <option value="all">Todas las Máquinas</option>
+                                <option value="76">76</option>
+                                <option value="79">79</option>
+                            </select>
+                            <button id="filter-today" class="filter-btn px-3 py-1.5 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors">Hoy</button>
+                            <button id="filter-week" class="filter-btn px-3 py-1.5 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors">Esta Semana</button>
+                            <button id="filter-month" class="filter-btn px-3 py-1.5 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors">Este Mes</button>
+                        </div>
+                    </div>
+                    <div id="comparison-area" class="mt-4 p-4 border-t border-gray-200">
+                         <label class="block text-sm font-medium text-gray-700">Comparar Días</label>
+                        <div class="flex items-center gap-2 mt-1">
+                            <input type="date" id="date-comparison-input" class="border-gray-300 rounded-md shadow-sm text-sm focus:ring-indigo-500 focus:border-indigo-500">
+                             <button id="add-comparison-date" class="px-3 py-1.5 text-sm font-medium text-indigo-600 bg-indigo-100 rounded-md hover:bg-indigo-200">Añadir Fecha</button>
+                        </div>
+                        <div id="comparison-pills" class="mt-2"></div>
+                        <button id="compare-days-btn" class="mt-2 w-full bg-pink-600 text-white font-bold py-2 px-4 rounded-md hover:bg-pink-700 transition-colors duration-300 hidden">Comparar Días Seleccionados</button>
+                    </div>
+
+                    <div class="chart-container mt-4">
+                        <canvas id="sales-chart"></canvas>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl shadow-lg">
+                    <h2 class="text-2xl font-semibold mb-4">Registros Recientes</h2>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Máquina</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Venta del Período</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Acumulado (Día)</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hora</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody id="sales-table-body" class="bg-white divide-y divide-gray-200"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <footer class="text-center mt-8 text-sm text-gray-500">
+            <p>ID de Sesión: <span id="user-id-display" class="font-mono"></span></p>
+        </footer>
+    </div>
+
+    <!-- Modal de Edición -->
+    <div id="edit-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h3 class="text-xl font-semibold mb-4">Editar Registro</h3>
+            <form id="edit-form">
+                <input type="hidden" id="edit-sale-id">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700">Máquina</label>
+                    <p id="edit-machine-id" class="mt-1 text-lg font-semibold"></p>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700">Fecha de Registro</label>
+                    <p id="edit-timestamp" class="mt-1 text-sm text-gray-600"></p>
+                </div>
+                <div>
+                    <label for="edit-accumulated-total" class="block text-sm font-medium text-gray-700">Venta Total Acumulada (Día)</label>
+                    <input type="number" id="edit-accumulated-total" step="0.01" min="0" required class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                </div>
+                <div class="mt-6 flex justify-end gap-3">
+                    <button type="button" id="cancel-edit" class="bg-gray-200 text-gray-700 font-bold py-2 px-4 rounded-md hover:bg-gray-300">Cancelar</button>
+                    <button type="submit" class="bg-indigo-600 text-white font-bold py-2 px-4 rounded-md hover:bg-indigo-700">Guardar Cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Archivo de Lógica JavaScript -->
+    <script type="module" src="main.js"></script>
+</body>
+</html>
