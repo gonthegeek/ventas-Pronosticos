@@ -11,7 +11,6 @@ firebase-debug.*.log*
 .firebase/
 
 # Firebase config
-
 # Uncomment this if you'd like others to create their own Firebase project.
 # For a team working on the same Firebase project(s), it is recommended to leave
 # it commented so all members can deploy to the same project(s) in .firebaserc.
@@ -64,3 +63,19 @@ node_modules/
 
 # dotenv environment variables file
 .env
+
+# ----------------------------------------------------
+# AÑADIDOS PARA ESTE PROYECTO
+# ----------------------------------------------------
+
+# Archivos del sistema operativo
+.DS_Store
+Thumbs.db
+
+# Archivos del editor de código (VS Code)
+.vscode/
+
+# ¡MUY IMPORTANTE! Clave de la cuenta de servicio de Firebase
+# Reemplaza 'nombre-de-tu-clave.json' con el nombre exacto del archivo que descargaste.
+# NUNCA subas este archivo a tu repositorio.
+*.json
