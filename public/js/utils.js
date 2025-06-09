@@ -53,15 +53,17 @@ export function parseCSVAndCalculateSales(csvText) {
 }
 
 export function recalculateSalesForDay(allSales, machineId, date) {
+    // **CORRECCIÓN**: Ahora esta función siempre espera que el array `allSales`
+    // contenga objetos donde `timestamp` es una fecha de JavaScript, no de Firebase.
     const salesOnDay = allSales
         .filter(s => {
-            const d = s.timestamp.toDate();
+            const d = s.timestamp; // Ya es una fecha JS, no se necesita .toDate()
             return s.machineId === machineId &&
                 d.getFullYear() === date.getFullYear() &&
                 d.getMonth() === date.getMonth() &&
                 d.getDate() === date.getDate();
         })
-        .sort((a, b) => a.timestamp.toMillis() - b.timestamp.toMillis());
+        .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime()); // Usamos .getTime() para comparar
 
     let lastTotal = 0;
     const updates = [];
@@ -74,7 +76,7 @@ export function recalculateSalesForDay(allSales, machineId, date) {
             data: { 
                 saleAmount: newSaleAmount,
                 accumulatedTotal: sale.accumulatedTotal,
-                timestamp: sale.timestamp,
+                timestamp: sale.timestamp, // Se mantiene como fecha JS para el siguiente paso
              }
         });
         

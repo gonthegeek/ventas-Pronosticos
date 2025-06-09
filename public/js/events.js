@@ -4,128 +4,9 @@ import { openEditModal, closeEditModal, showToast, toggleButtonSpinner, openConf
 import { parseCSVAndCalculateSales, recalculateSalesForDay } from './utils.js';
 import { Timestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-export function setupEventListeners() {
-    document.getElementById('sale-form').addEventListener('submit', handleAddSale);
-    document.getElementById('upload-csv-btn').addEventListener('click', handleCSVUpload);
-    document.getElementById('edit-form').addEventListener('submit', handleUpdateSale);
-    document.getElementById('filter-today').addEventListener('click', () => setFilter({ type: 'today' }));
-    document.getElementById('filter-week').addEventListener('click', () => setFilter({ type: 'week' }));
-    document.getElementById('filter-month').addEventListener('click', () => setFilter({ type: 'month' }));
-    document.getElementById('machine-filter').addEventListener('change', e => setFilter({ machine: e.target.value }));
-    document.getElementById('add-comparison-date').addEventListener('click', addComparisonDate);
-    document.getElementById('comparison-pills').addEventListener('click', handlePillClick);
-    document.getElementById('compare-days-btn').addEventListener('click', () => setFilter({ type: 'comparison' }));
-    document.getElementById('sales-table-body').addEventListener('click', handleTableClick);
-    document.getElementById('cancel-edit').addEventListener('click', closeEditModal);
-    document.getElementById('edit-modal').addEventListener('click', (e) => {
-        if (e.target.id === 'edit-modal') closeEditModal();
-    });
-}
+// --- MANEJADORES DE EVENTOS (EXPORTADOS PARA TESTING) ---
 
-function handleTableClick(event) {
-    const editButton = event.target.closest('.edit-btn');
-    const deleteButton = event.target.closest('.delete-btn');
-
-    if (editButton) {
-        openEditModal(editButton.dataset.id);
-    } else if (deleteButton) {
-        openConfirmModal(
-            () => handleDeleteSale(deleteButton.dataset.id)
-        );
-    }
-}
-
-async function handleDeleteSale(saleId) {
-    const allSales = getAllSales();
-    const saleToDelete = allSales.find(s => s.id === saleId);
-    if (!saleToDelete) return showToast("No se encontró el registro para eliminar.", "error");
-
-    const saleDate = saleToDelete.timestamp.toDate();
-    const salesOnThatDay = allSales
-        .filter(s => {
-            const d = s.timestamp.toDate();
-            return s.machineId === saleToDelete.machineId && d.getFullYear() === saleDate.getFullYear() && d.getMonth() === saleDate.getMonth() && d.getDate() === saleDate.getDate();
-        })
-        .sort((a, b) => a.timestamp.toMillis() - b.timestamp.toMillis());
-
-    const saleIndexInDay = salesOnThatDay.findIndex(s => s.id === saleId);
-    const previousSale = saleIndexInDay > 0 ? salesOnThatDay[saleIndexInDay - 1] : null;
-    const nextSale = saleIndexInDay < salesOnThatDay.length - 1 ? salesOnThatDay[saleIndexInDay + 1] : null;
-
-    let nextSaleUpdate = null;
-    if (nextSale) {
-        const previousTotal = previousSale ? previousSale.accumulatedTotal : 0;
-        nextSaleUpdate = {
-            id: nextSale.id,
-            saleAmount: nextSale.accumulatedTotal - previousTotal
-        };
-    }
-    
-    try {
-        await deleteSaleAndUpdate(saleId, nextSaleUpdate);
-        showToast("Registro eliminado con éxito.", "success");
-        triggerRefetch();
-    } catch (e) {
-        showToast("Error al eliminar el registro.", "error");
-        console.error(e);
-    }
-}
-
-async function handleUpdateSale(event) {
-    event.preventDefault();
-    const submitBtn = document.getElementById('save-edit-btn');
-    toggleButtonSpinner(submitBtn, true);
-
-    try {
-        const saleId = document.getElementById('edit-sale-id').value;
-        const newTotal = parseFloat(document.getElementById('edit-accumulated-total').value);
-        const newDateStr = document.getElementById('edit-sale-date').value;
-        const newTimeStr = document.getElementById('edit-sale-time').value;
-
-        if (!newDateStr || !newTimeStr || isNaN(newTotal)) throw new Error("Datos inválidos.");
-
-        const [year, month, day] = newDateStr.split('-').map(Number);
-        const [hour, minute] = newTimeStr.split(':').map(Number);
-        const newTimestamp = Timestamp.fromDate(new Date(year, month - 1, day, hour, minute));
-        
-        const allSales = getAllSales();
-        const saleToEdit = allSales.find(s => s.id === saleId);
-        if (!saleToEdit) throw new Error("No se encontró el registro.");
-
-        const originalDate = saleToEdit.timestamp.toDate();
-        const tempSales = allSales.map(s => ({...s}));
-        const saleToUpdateInMemory = tempSales.find(s => s.id === saleId);
-        
-        saleToUpdateInMemory.timestamp = newTimestamp;
-        saleToUpdateInMemory.accumulatedTotal = newTotal;
-
-        const updates = [];
-        if (originalDate.toDateString() !== newTimestamp.toDate().toDateString()) {
-            const originalDayRecalculations = recalculateSalesForDay(tempSales, saleToEdit.machineId, originalDate);
-            updates.push(...originalDayRecalculations);
-        }
-
-        const newDayRecalculations = recalculateSalesForDay(tempSales, saleToEdit.machineId, newTimestamp.toDate());
-        updates.push(...newDayRecalculations);
-
-        const finalUpdatesMap = new Map();
-        updates.forEach(u => finalUpdatesMap.set(u.id, u.data));
-        const finalUpdates = Array.from(finalUpdatesMap.entries()).map(([id, data]) => ({id, data}));
-
-        await batchUpdateSales(finalUpdates);
-        showToast("Registro actualizado con éxito.", "success");
-        closeEditModal();
-        triggerRefetch();
-
-    } catch (error) {
-        showToast(error.message, "error");
-        console.error(error);
-    } finally {
-        toggleButtonSpinner(submitBtn, false);
-    }
-}
-
-async function handleAddSale(event) {
+export async function handleAddSale(event) {
     event.preventDefault();
     const submitBtn = document.getElementById('add-sale-btn');
     toggleButtonSpinner(submitBtn, true);
@@ -161,7 +42,107 @@ async function handleAddSale(event) {
     }
 }
 
-async function handleCSVUpload() {
+export async function handleDeleteSale(saleId) {
+    const allSales = getAllSales();
+    const saleToDelete = allSales.find(s => s.id === saleId);
+    if (!saleToDelete) return showToast("No se encontró el registro para eliminar.", "error");
+
+    const saleDate = saleToDelete.timestamp.toDate();
+    const salesOnThatDay = allSales
+        .filter(s => {
+            const d = s.timestamp.toDate();
+            return s.machineId === saleToDelete.machineId && d.getFullYear() === saleDate.getFullYear() && d.getMonth() === saleDate.getMonth() && d.getDate() === saleDate.getDate();
+        })
+        .sort((a, b) => a.timestamp.toMillis() - b.timestamp.toMillis());
+
+    const saleIndexInDay = salesOnThatDay.findIndex(s => s.id === saleId);
+    const previousSale = saleIndexInDay > 0 ? salesOnThatDay[saleIndexInDay - 1] : null;
+    const nextSale = saleIndexInDay < salesOnThatDay.length - 1 ? salesOnThatDay[saleIndexInDay + 1] : null;
+
+    let nextSaleUpdate = null;
+    if (nextSale) {
+        const previousTotal = previousSale ? previousSale.accumulatedTotal : 0;
+        nextSaleUpdate = {
+            id: nextSale.id,
+            saleAmount: nextSale.accumulatedTotal - previousTotal
+        };
+    }
+    
+    try {
+        await deleteSaleAndUpdate(saleId, nextSaleUpdate);
+        showToast("Registro eliminado con éxito.", "success");
+        triggerRefetch();
+    } catch (e) {
+        showToast("Error al eliminar el registro.", "error");
+        console.error(e);
+    }
+}
+
+export async function handleUpdateSale(event) {
+    event.preventDefault();
+    const submitBtn = document.getElementById('save-edit-btn');
+    toggleButtonSpinner(submitBtn, true);
+
+    try {
+        const saleId = document.getElementById('edit-sale-id').value;
+        const newTotal = parseFloat(document.getElementById('edit-accumulated-total').value);
+        const newDateStr = document.getElementById('edit-sale-date').value;
+        const newTimeStr = document.getElementById('edit-sale-time').value;
+
+        if (!newDateStr || !newTimeStr || isNaN(newTotal)) throw new Error("Datos inválidos.");
+
+        const [year, month, day] = newDateStr.split('-').map(Number);
+        const [hour, minute] = newTimeStr.split(':').map(Number);
+        const newDate = new Date(year, month - 1, day, hour, minute);
+        const newTimestamp = Timestamp.fromDate(newDate);
+        
+        const allSales = getAllSales();
+        const saleToEdit = allSales.find(s => s.id === saleId);
+        if (!saleToEdit) throw new Error("No se encontró el registro.");
+
+        const originalDate = saleToEdit.timestamp.toDate();
+        // Convertimos todos los timestamps a fechas JS para una manipulación segura.
+        const tempSales = allSales.map(s => ({...s, timestamp: s.timestamp.toDate()}));
+        const saleToUpdateInMemory = tempSales.find(s => s.id === saleId);
+        
+        // Aplicamos los cambios al objeto en memoria.
+        saleToUpdateInMemory.timestamp = newDate;
+        saleToUpdateInMemory.accumulatedTotal = newTotal;
+
+        const updates = [];
+        // Si la fecha del registro cambió, recalculamos el día original (ahora sin el registro movido).
+        if (originalDate.toDateString() !== newDate.toDateString()) {
+            const originalDayRecalculations = recalculateSalesForDay(tempSales, saleToEdit.machineId, originalDate);
+            updates.push(...originalDayRecalculations);
+        }
+
+        // Siempre recalculamos el día de destino del registro.
+        const newDayRecalculations = recalculateSalesForDay(tempSales, saleToEdit.machineId, newDate);
+        updates.push(...newDayRecalculations);
+        
+        // Combinamos las actualizaciones y eliminamos duplicados.
+        const finalUpdatesMap = new Map();
+        updates.forEach(u => {
+            // Convertimos la fecha de JS de nuevo a Timestamp de Firebase antes de guardar.
+            u.data.timestamp = Timestamp.fromDate(u.data.timestamp);
+            finalUpdatesMap.set(u.id, u.data)
+        });
+        const finalUpdates = Array.from(finalUpdatesMap.entries()).map(([id, data]) => ({id, data}));
+
+        await batchUpdateSales(finalUpdates);
+        showToast("Registro actualizado con éxito.", "success");
+        closeEditModal();
+        triggerRefetch();
+
+    } catch (error) {
+        showToast(error.message, "error");
+        console.error(error);
+    } finally {
+        toggleButtonSpinner(submitBtn, false);
+    }
+}
+
+export async function handleCSVUpload() {
     const uploadBtn = document.getElementById('upload-csv-btn');
     const fileInput = document.getElementById('csv-file-input');
     const file = fileInput.files[0];
@@ -189,4 +170,37 @@ async function handleCSVUpload() {
         toggleButtonSpinner(uploadBtn, false);
     }
     reader.readAsText(file);
+}
+
+// --- CONFIGURACIÓN DE LISTENERS (NO SE EXPORTA) ---
+
+function handleTableClick(event) {
+    const editButton = event.target.closest('.edit-btn');
+    const deleteButton = event.target.closest('.delete-btn');
+
+    if (editButton) {
+        openEditModal(editButton.dataset.id);
+    } else if (deleteButton) {
+        openConfirmModal(
+            () => handleDeleteSale(deleteButton.dataset.id)
+        );
+    }
+}
+
+export function setupEventListeners() {
+    document.getElementById('sale-form').addEventListener('submit', handleAddSale);
+    document.getElementById('upload-csv-btn').addEventListener('click', handleCSVUpload);
+    document.getElementById('edit-form').addEventListener('submit', handleUpdateSale);
+    document.getElementById('filter-today').addEventListener('click', () => setFilter({ type: 'today' }));
+    document.getElementById('filter-week').addEventListener('click', () => setFilter({ type: 'week' }));
+    document.getElementById('filter-month').addEventListener('click', () => setFilter({ type: 'month' }));
+    document.getElementById('machine-filter').addEventListener('change', e => setFilter({ machine: e.target.value }));
+    document.getElementById('add-comparison-date').addEventListener('click', addComparisonDate);
+    document.getElementById('comparison-pills').addEventListener('click', handlePillClick);
+    document.getElementById('compare-days-btn').addEventListener('click', () => setFilter({ type: 'comparison' }));
+    document.getElementById('sales-table-body').addEventListener('click', handleTableClick);
+    document.getElementById('cancel-edit').addEventListener('click', closeEditModal);
+    document.getElementById('edit-modal').addEventListener('click', (e) => {
+        if (e.target.id === 'edit-modal') closeEditModal();
+    });
 }
