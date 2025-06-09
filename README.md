@@ -20,6 +20,7 @@ Esta es una aplicación web diseñada para registrar, analizar y visualizar las 
 * **Carga Masiva de Datos:** Sube registros históricos desde un archivo `.csv` para centralizar toda tu información.
 * **Despliegue Automatizado:** Configurado para despliegue continuo a través de **GitHub Actions**.
 * **Manejo de Errores y Carga:** Notificaciones visuales para operaciones exitosas, errores y estados de carga.
+* **Pruebas Automatizadas:** Pruebas unitarias con **Vitest** para garantizar la fiabilidad del código.
 
 ## 3. Estructura del Proyecto
 
@@ -27,19 +28,26 @@ El proyecto está modularizado para facilitar su mantenimiento:
 
 ```
 /
-├── index.html      # Contiene la estructura y el layout de la página.
-├── style.css       # Estilos visuales personalizados.
-├── firebase.json   # Configuración de Firebase Hosting.
-├── README.md       # Este archivo.
-└── js/
-    ├── main.js         # Punto de entrada principal, orquesta la app.
-    ├── auth.js         # Manejo de la autenticación.
-    ├── api.js          # Lógica para hablar con Firebase (CRUD).
-    ├── events.js       # Manejo de todos los eventos del usuario (clics, etc.).
-    ├── state.js        # Manejo del estado global de la aplicación.
-    ├── ui.js           # Funciones que manipulan la interfaz (la tabla, el modal, etc.).
-    ├── chart-config.js # Configuración y lógica de las gráficas.
-    └── utils.js        # Funciones de utilidad (ej: parseo de CSV).
+├── .github/
+│   └── workflows/
+│       └── deploy.yml
+├── js/
+│   ├── main.js
+│   ├── auth.js
+│   ├── api.js
+│   ├── events.js
+│   ├── state.js
+│   ├── ui.js
+│   ├── chart-config.js
+│   ├── utils.js
+│   ├── state.test.js
+│   └── utils.test.js
+├── .gitignore
+├── index.html
+├── style.css
+├── firebase.json
+├── package.json
+└── README.md
 ```
 
 ## 4. Configuración para Desarrollo Local
@@ -56,9 +64,23 @@ Para ejecutar la aplicación en tu máquina local:
 
 1.  Clona el repositorio desde GitHub.
 2.  Abre la carpeta del proyecto en Visual Studio Code.
-3.  Haz clic derecho sobre el archivo `index.html` y selecciona **"Open with Live Server"**.
+3.  Instala las dependencias de desarrollo:
+    ```bash
+    npm install
+    ```
+4.  Haz clic derecho sobre el archivo `index.html` y selecciona **"Open with Live Server"**.
 
-## 5. Configuración de Firebase
+## 5. Pruebas
+
+El proyecto utiliza **Vitest** para las pruebas unitarias. Para ejecutar el set de pruebas:
+
+1.  Asegúrate de haber ejecutado `npm install`.
+2.  Corre el siguiente comando en la terminal:
+    ```bash
+    npm test
+    ```
+
+## 6. Configuración de Firebase
 
 La aplicación está conectada a un proyecto de Firebase. Para apuntarla a tu propio backend, sigue estos pasos:
 
@@ -80,7 +102,7 @@ La aplicación está conectada a un proyecto de Firebase. Para apuntarla a tu pr
     ```
 5.  **Actualiza el Código:** Abre el archivo `js/auth.js` y reemplaza el objeto `firebaseConfig` con el que te proporcionó tu proyecto.
 
-## 6. Despliegue
+## 7. Despliegue
 
 El proyecto está configurado para despliegue automático en **Firebase Hosting** a través de GitHub Actions.
 

@@ -1,42 +1,53 @@
 import { updateTable, updateChart, renderComparisonPills, updateActiveButton } from './ui.js';
 import { auth } from './auth.js';
 
-let allSalesData = [];
-let currentFilter = {
-    type: 'today',
-    date: new Date(),
-    machine: 'all',
-    comparisonDates: []
-};
+let _state = {};
 
-export const getAllSales = () => allSalesData;
+function getInitialState() {
+    return {
+        allSalesData: [],
+        currentFilter: {
+            type: 'today',
+            date: new Date(),
+            machine: 'all',
+            comparisonDates: []
+        }
+    };
+}
+
+export function initializeState() {
+    _state = getInitialState();
+}
+
+export const getState = () => _state;
+export const getAllSales = () => _state.allSalesData;
 export const getUserId = () => auth?.currentUser?.uid;
 
 export function setFilter(newFilter) {
     if (newFilter.type && newFilter.type !== 'custom' && newFilter.type !== 'comparison') {
-        currentFilter.type = newFilter.type;
-        currentFilter.date = new Date();
+        _state.currentFilter.type = newFilter.type;
+        _state.currentFilter.date = new Date();
     } else if (newFilter.type) {
-        currentFilter.type = newFilter.type;
+        _state.currentFilter.type = newFilter.type;
     }
     if (newFilter.date) {
-        currentFilter.date = newFilter.date;
+        _state.currentFilter.date = newFilter.date;
     }
     if (newFilter.machine) {
-        currentFilter.machine = newFilter.machine;
+        _state.currentFilter.machine = newFilter.machine;
     }
-    updateActiveButton(currentFilter.type);
-    applyFiltersAndUpdateUI(allSalesData);
+    updateActiveButton(_state.currentFilter.type);
+    applyFiltersAndUpdateUI(_state.allSalesData);
 }
 
 export function applyFiltersAndUpdateUI(sales) {
-    allSalesData = sales;
-    let filteredSales = allSalesData;
-    if (currentFilter.machine !== 'all') {
-        filteredSales = filteredSales.filter(sale => sale.machineId === currentFilter.machine);
+    _state.allSalesData = sales;
+    let filteredSales = _state.allSalesData;
+    if (_state.currentFilter.machine !== 'all') {
+        filteredSales = filteredSales.filter(sale => sale.machineId === _state.currentFilter.machine);
     }
     updateTable(filteredSales);
-    updateChart(filteredSales, currentFilter);
+    updateChart(filteredSales, _state.currentFilter);
 }
 
 export function addComparisonDate() {
@@ -45,9 +56,9 @@ export function addComparisonDate() {
     const selectedDate = new Date(dateInput.value + 'T00:00:00');
     const dateString = selectedDate.toISOString().split('T')[0];
 
-    if (!currentFilter.comparisonDates.some(d => d.toISOString().split('T')[0] === dateString)) {
-        currentFilter.comparisonDates.push(selectedDate);
-        renderComparisonPills(currentFilter.comparisonDates);
+    if (!_state.currentFilter.comparisonDates.some(d => d.toISOString().split('T')[0] === dateString)) {
+        _state.currentFilter.comparisonDates.push(selectedDate);
+        renderComparisonPills(_state.currentFilter.comparisonDates);
     }
     dateInput.value = '';
 }
@@ -55,7 +66,9 @@ export function addComparisonDate() {
 export function handlePillClick(event) {
     if (event.target.classList.contains('remove-pill-btn')) {
         const dateToRemove = event.target.dataset.date;
-        currentFilter.comparisonDates = currentFilter.comparisonDates.filter(d => d.toISOString().split('T')[0] !== dateToRemove);
-        renderComparisonPills(currentFilter.comparisonDates);
+        _state.currentFilter.comparisonDates = _state.currentFilter.comparisonDates.filter(d => d.toISOString().split('T')[0] !== dateToRemove);
+        renderComparisonPills(_state.currentFilter.comparisonDates);
     }
 }
+
+initializeState();

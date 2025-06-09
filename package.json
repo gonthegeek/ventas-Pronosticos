@@ -1,5 +1,18 @@
 {
+  "name": "pronosticos-ventas",
+  "version": "1.0.0",
+  "description": "Esta es una aplicación web diseñada para registrar, analizar y visualizar las ventas de máquinas vending. Permite llevar un control detallado de las ventas por hora y por día, facilitando el análisis de tendencias y el rendimiento de cada máquina. La aplicación está construida con HTML, CSS y JavaScript puro, utiliza TailwindCSS para el diseño y Chart.js para las gráficas. Como backend, se integra con Firebase (Firestore y Authentication) para ofrecer una base de datos en tiempo real, centralizada y compartida para todos los usuarios.",
+  "main": "index.js",
+  "scripts": {
+    "test": "vitest"
+  },
+  "keywords": [],
+  "author": "gonthegeek",
+  "license": "ISC",
   "dependencies": {
     "firebase": "^11.9.0"
+  },
+  "devDependencies": {
+    "vitest": "^3.2.2"
   }
 }
