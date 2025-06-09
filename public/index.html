@@ -18,6 +18,14 @@
 </head>
 <body class="bg-gray-100 text-gray-800">
 
+    <!-- Indicador de Carga Global -->
+    <div id="global-loader" class="fixed inset-0 bg-gray-900 bg-opacity-50 z-50 flex items-center justify-center hidden">
+        <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-white"></div>
+    </div>
+
+    <!-- Contenedor de Notificaciones (Toasts) -->
+    <div id="toast-container" class="fixed top-5 right-5 z-[1001] w-full max-w-xs space-y-3"></div>
+
     <div class="container mx-auto p-4 md:p-8">
         <header class="text-center mb-8">
             <h1 class="text-3xl md:text-4xl font-bold text-gray-900">Tracker de Ventas de Máquinas</h1>
@@ -41,8 +49,9 @@
                             <label for="sale-amount" class="block text-sm font-medium text-gray-700">Venta Total Acumulada (Hoy)</label>
                             <input type="number" id="sale-amount" name="sale-amount" step="0.01" min="0" required class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Ej: 150.50">
                         </div>
-                        <button type="submit" class="w-full bg-indigo-600 text-white font-bold py-2 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-300">
-                            Registrar Venta
+                        <button type="submit" id="add-sale-btn" class="w-full bg-indigo-600 text-white font-bold py-2 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-300 flex items-center justify-center">
+                            <span class="btn-text">Registrar Venta</span>
+                            <svg class="btn-spinner animate-spin ml-2 h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                         </button>
                     </form>
                 </div>
@@ -52,13 +61,13 @@
                     <p class="text-sm text-gray-600 mb-4">Sube un archivo CSV sin encabezados con las columnas: `fecha (YYYY-MM-DD)`, `hora (HH:MM)`, `maquina`, `total_acumulado_diario`.</p>
                     <div class="space-y-4">
                          <input type="file" id="csv-file-input" accept=".csv" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"/>
-                         <button id="upload-csv-btn" class="w-full bg-green-600 text-white font-bold py-2 px-4 rounded-md hover:bg-green-700 transition-colors duration-300">
-                            Subir Archivo
+                         <button id="upload-csv-btn" class="w-full bg-green-600 text-white font-bold py-2 px-4 rounded-md hover:bg-green-700 transition-colors duration-300 flex items-center justify-center">
+                            <span class="btn-text">Subir Archivo</span>
+                            <svg class="btn-spinner animate-spin ml-2 h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                         </button>
                     </div>
                 </div>
 
-                <div id="feedback-message" class="mt-4 text-center"></div>
             </div>
 
             <div class="lg:col-span-2 space-y-8">
@@ -136,13 +145,16 @@
                 </div>
                 <div class="mt-6 flex justify-end gap-3">
                     <button type="button" id="cancel-edit" class="bg-gray-200 text-gray-700 font-bold py-2 px-4 rounded-md hover:bg-gray-300">Cancelar</button>
-                    <button type="submit" class="bg-indigo-600 text-white font-bold py-2 px-4 rounded-md hover:bg-indigo-700">Guardar Cambios</button>
+                    <button type="submit" id="save-edit-btn" class="bg-indigo-600 text-white font-bold py-2 px-4 rounded-md hover:bg-indigo-700 flex items-center justify-center">
+                        <span class="btn-text">Guardar Cambios</span>
+                        <svg class="btn-spinner animate-spin ml-2 h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                    </button>
                 </div>
             </form>
         </div>
     </div>
     
     <!-- Archivo de Lógica JavaScript -->
-    <script type="module" src="main.js"></script>
+    <script type="module" src="./js/main.js"></script>
 </body>
 </html>
