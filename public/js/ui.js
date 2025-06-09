@@ -10,10 +10,14 @@ const elements = {
     editForm: document.getElementById('edit-form'),
     editSaleId: document.getElementById('edit-sale-id'),
     editMachineId: document.getElementById('edit-machine-id'),
-    editTimestamp: document.getElementById('edit-timestamp'),
+    editSaleDate: document.getElementById('edit-sale-date'),
+    editSaleTime: document.getElementById('edit-sale-time'),
     editAccumulatedTotal: document.getElementById('edit-accumulated-total'),
     comparisonPills: document.getElementById('comparison-pills'),
     compareDaysBtn: document.getElementById('compare-days-btn'),
+    confirmModal: document.getElementById('confirm-modal'),
+    cancelConfirmBtn: document.getElementById('cancel-confirm'),
+    confirmDeleteBtn: document.getElementById('confirm-delete-btn'),
 };
 
 export function toggleGlobalLoader(show) {
@@ -49,9 +53,12 @@ export function updateTable(sales) {
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${sale.accumulatedTotal.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${saleDate.toLocaleDateString('es-MX')}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${saleDate.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    <button class="edit-btn p-1 text-indigo-600 hover:text-indigo-900" data-id="${sale.id}">
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 flex items-center gap-2">
+                    <button class="edit-btn p-1 text-indigo-600 hover:text-indigo-900" data-id="${sale.id}" aria-label="Editar">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" /></svg>
+                    </button>
+                     <button class="delete-btn p-1 text-red-600 hover:text-red-900" data-id="${sale.id}" aria-label="Eliminar">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd" /></svg>
                     </button>
                 </td>
             </tr>
@@ -68,9 +75,18 @@ export function openEditModal(saleId) {
     const allSales = getAllSales();
     const saleData = allSales.find(s => s.id === saleId);
     if (!saleData) return;
+    
+    const saleDate = saleData.timestamp.toDate();
+    const yyyy = saleDate.getFullYear();
+    const mm = String(saleDate.getMonth() + 1).padStart(2, '0');
+    const dd = String(saleDate.getDate()).padStart(2, '0');
+    const hh = String(saleDate.getHours()).padStart(2, '0');
+    const min = String(saleDate.getMinutes()).padStart(2, '0');
+
     elements.editSaleId.value = saleId;
     elements.editMachineId.textContent = saleData.machineId;
-    elements.editTimestamp.textContent = saleData.timestamp.toDate().toLocaleString('es-MX');
+    elements.editSaleDate.value = `${yyyy}-${mm}-${dd}`;
+    elements.editSaleTime.value = `${hh}:${min}`;
     elements.editAccumulatedTotal.value = saleData.accumulatedTotal;
     elements.editModal.classList.add('visible');
 }
@@ -78,6 +94,31 @@ export function openEditModal(saleId) {
 export function closeEditModal() {
     elements.editModal.classList.remove('visible');
     elements.editForm.reset();
+}
+
+export function openConfirmModal(onConfirm) {
+    elements.confirmModal.classList.add('visible');
+
+    const confirmBtn = elements.confirmDeleteBtn;
+    const cancelBtn = elements.cancelConfirmBtn;
+
+    const confirmListener = () => {
+        onConfirm();
+        closeConfirmModal();
+    };
+
+    const closeListener = () => {
+        closeConfirmModal();
+    };
+
+    const closeConfirmModal = () => {
+        elements.confirmModal.classList.remove('visible');
+        confirmBtn.removeEventListener('click', confirmListener);
+        cancelBtn.removeEventListener('click', closeListener);
+    };
+
+    confirmBtn.addEventListener('click', confirmListener, { once: true });
+    cancelBtn.addEventListener('click', closeListener, { once: true });
 }
 
 export function renderComparisonPills(comparisonDates) {

@@ -1,7 +1,8 @@
-import { addSale, updateSaleBatch, uploadHistoricalData } from './api.js';
+import { addSale, batchUpdateSales, deleteSaleAndUpdate } from './api.js';
 import { setFilter, addComparisonDate, handlePillClick, getAllSales, triggerRefetch } from './state.js';
-import { openEditModal, closeEditModal, showToast, toggleButtonSpinner } from './ui.js';
-import { parseCSVAndCalculateSales } from './utils.js';
+import { openEditModal, closeEditModal, showToast, toggleButtonSpinner, openConfirmModal } from './ui.js';
+import { parseCSVAndCalculateSales, recalculateSalesForDay } from './utils.js';
+import { Timestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
 export function setupEventListeners() {
     document.getElementById('sale-form').addEventListener('submit', handleAddSale);
@@ -19,6 +20,109 @@ export function setupEventListeners() {
     document.getElementById('edit-modal').addEventListener('click', (e) => {
         if (e.target.id === 'edit-modal') closeEditModal();
     });
+}
+
+function handleTableClick(event) {
+    const editButton = event.target.closest('.edit-btn');
+    const deleteButton = event.target.closest('.delete-btn');
+
+    if (editButton) {
+        openEditModal(editButton.dataset.id);
+    } else if (deleteButton) {
+        openConfirmModal(
+            () => handleDeleteSale(deleteButton.dataset.id)
+        );
+    }
+}
+
+async function handleDeleteSale(saleId) {
+    const allSales = getAllSales();
+    const saleToDelete = allSales.find(s => s.id === saleId);
+    if (!saleToDelete) return showToast("No se encontró el registro para eliminar.", "error");
+
+    const saleDate = saleToDelete.timestamp.toDate();
+    const salesOnThatDay = allSales
+        .filter(s => {
+            const d = s.timestamp.toDate();
+            return s.machineId === saleToDelete.machineId && d.getFullYear() === saleDate.getFullYear() && d.getMonth() === saleDate.getMonth() && d.getDate() === saleDate.getDate();
+        })
+        .sort((a, b) => a.timestamp.toMillis() - b.timestamp.toMillis());
+
+    const saleIndexInDay = salesOnThatDay.findIndex(s => s.id === saleId);
+    const previousSale = saleIndexInDay > 0 ? salesOnThatDay[saleIndexInDay - 1] : null;
+    const nextSale = saleIndexInDay < salesOnThatDay.length - 1 ? salesOnThatDay[saleIndexInDay + 1] : null;
+
+    let nextSaleUpdate = null;
+    if (nextSale) {
+        const previousTotal = previousSale ? previousSale.accumulatedTotal : 0;
+        nextSaleUpdate = {
+            id: nextSale.id,
+            saleAmount: nextSale.accumulatedTotal - previousTotal
+        };
+    }
+    
+    try {
+        await deleteSaleAndUpdate(saleId, nextSaleUpdate);
+        showToast("Registro eliminado con éxito.", "success");
+        triggerRefetch();
+    } catch (e) {
+        showToast("Error al eliminar el registro.", "error");
+        console.error(e);
+    }
+}
+
+async function handleUpdateSale(event) {
+    event.preventDefault();
+    const submitBtn = document.getElementById('save-edit-btn');
+    toggleButtonSpinner(submitBtn, true);
+
+    try {
+        const saleId = document.getElementById('edit-sale-id').value;
+        const newTotal = parseFloat(document.getElementById('edit-accumulated-total').value);
+        const newDateStr = document.getElementById('edit-sale-date').value;
+        const newTimeStr = document.getElementById('edit-sale-time').value;
+
+        if (!newDateStr || !newTimeStr || isNaN(newTotal)) throw new Error("Datos inválidos.");
+
+        const [year, month, day] = newDateStr.split('-').map(Number);
+        const [hour, minute] = newTimeStr.split(':').map(Number);
+        const newTimestamp = Timestamp.fromDate(new Date(year, month - 1, day, hour, minute));
+        
+        const allSales = getAllSales();
+        const saleToEdit = allSales.find(s => s.id === saleId);
+        if (!saleToEdit) throw new Error("No se encontró el registro.");
+
+        const originalDate = saleToEdit.timestamp.toDate();
+        const tempSales = allSales.map(s => ({...s}));
+        const saleToUpdateInMemory = tempSales.find(s => s.id === saleId);
+        
+        saleToUpdateInMemory.timestamp = newTimestamp;
+        saleToUpdateInMemory.accumulatedTotal = newTotal;
+
+        const updates = [];
+        if (originalDate.toDateString() !== newTimestamp.toDate().toDateString()) {
+            const originalDayRecalculations = recalculateSalesForDay(tempSales, saleToEdit.machineId, originalDate);
+            updates.push(...originalDayRecalculations);
+        }
+
+        const newDayRecalculations = recalculateSalesForDay(tempSales, saleToEdit.machineId, newTimestamp.toDate());
+        updates.push(...newDayRecalculations);
+
+        const finalUpdatesMap = new Map();
+        updates.forEach(u => finalUpdatesMap.set(u.id, u.data));
+        const finalUpdates = Array.from(finalUpdatesMap.entries()).map(([id, data]) => ({id, data}));
+
+        await batchUpdateSales(finalUpdates);
+        showToast("Registro actualizado con éxito.", "success");
+        closeEditModal();
+        triggerRefetch();
+
+    } catch (error) {
+        showToast(error.message, "error");
+        console.error(error);
+    } finally {
+        toggleButtonSpinner(submitBtn, false);
+    }
 }
 
 async function handleAddSale(event) {
@@ -48,50 +152,10 @@ async function handleAddSale(event) {
         await addSale({ machineId, saleAmount: saleForPeriod, accumulatedTotal: newAccumulatedTotal });
         showToast("Venta registrada con éxito.", "success");
         event.target.reset();
-        triggerRefetch(); // Vuelve a cargar los datos para asegurar consistencia
+        triggerRefetch();
     } catch (e) {
         showToast(e.message, "error");
         console.error(e);
-    } finally {
-        toggleButtonSpinner(submitBtn, false);
-    }
-}
-
-function handleTableClick(event) {
-    const editButton = event.target.closest('.edit-btn');
-    if (editButton) openEditModal(editButton.dataset.id);
-}
-
-async function handleUpdateSale(event) {
-    event.preventDefault();
-    const submitBtn = document.getElementById('save-edit-btn');
-    toggleButtonSpinner(submitBtn, true);
-    try {
-        const saleId = document.getElementById('edit-sale-id').value;
-        const newAccumulatedTotal = parseFloat(document.getElementById('edit-accumulated-total').value);
-        const allSales = getAllSales();
-        const saleToEdit = allSales.find(s => s.id === saleId);
-        if (!saleToEdit) throw new Error("No se encontró el registro.");
-        const saleDate = saleToEdit.timestamp.toDate();
-        const salesOnThatDay = allSales.filter(s => {
-                const d = s.timestamp.toDate();
-                return s.machineId === saleToEdit.machineId && d.getFullYear() === saleDate.getFullYear() && d.getMonth() === saleDate.getMonth() && d.getDate() === saleDate.getDate();
-            }).sort((a, b) => a.timestamp.toMillis() - b.timestamp.toMillis());
-        const saleIndexInDay = salesOnThatDay.findIndex(s => s.id === saleId);
-        const previousSale = saleIndexInDay > 0 ? salesOnThatDay[saleIndexInDay - 1] : null;
-        const nextSale = saleIndexInDay < salesOnThatDay.length - 1 ? salesOnThatDay[saleIndexInDay + 1] : null;
-        const previousAccumulated = previousSale ? previousSale.accumulatedTotal : 0;
-        if (newAccumulatedTotal < previousAccumulated || (nextSale && newAccumulatedTotal > nextSale.accumulatedTotal)) {
-            throw new Error("El total acumulado es inconsistente con los registros adyacentes del mismo día.");
-        }
-        const newSaleAmount = newAccumulatedTotal - previousAccumulated;
-        await updateSaleBatch(saleId, newAccumulatedTotal, newSaleAmount, nextSale);
-        showToast("Registro actualizado con éxito.", "success");
-        closeEditModal();
-        triggerRefetch();
-    } catch (error) {
-        showToast(error.message, "error");
-        console.error(error);
     } finally {
         toggleButtonSpinner(submitBtn, false);
     }

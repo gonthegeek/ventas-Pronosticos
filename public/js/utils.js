@@ -1,6 +1,5 @@
 import { Timestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-// Parsea el texto de un archivo CSV y calcula las ventas por período
 export function parseCSVAndCalculateSales(csvText) {
     const lines = csvText.split(/\r?\n/).filter(line => line.trim() !== '');
     
@@ -51,4 +50,36 @@ export function parseCSVAndCalculateSales(csvText) {
     });
 
     return parsedData;
+}
+
+export function recalculateSalesForDay(allSales, machineId, date) {
+    const salesOnDay = allSales
+        .filter(s => {
+            const d = s.timestamp.toDate();
+            return s.machineId === machineId &&
+                d.getFullYear() === date.getFullYear() &&
+                d.getMonth() === date.getMonth() &&
+                d.getDate() === date.getDate();
+        })
+        .sort((a, b) => a.timestamp.toMillis() - b.timestamp.toMillis());
+
+    let lastTotal = 0;
+    const updates = [];
+
+    salesOnDay.forEach(sale => {
+        const newSaleAmount = sale.accumulatedTotal - lastTotal;
+        
+        updates.push({
+            id: sale.id,
+            data: { 
+                saleAmount: newSaleAmount,
+                accumulatedTotal: sale.accumulatedTotal,
+                timestamp: sale.timestamp,
+             }
+        });
+        
+        lastTotal = sale.accumulatedTotal;
+    });
+
+    return updates;
 }
