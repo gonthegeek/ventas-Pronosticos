@@ -1,11 +1,11 @@
 import { updateChartConfig } from './chart-config.js';
 import { getAllSales } from './state.js';
 
-// --- Selectores del DOM ---
 const elements = {
+    globalLoader: document.getElementById('global-loader'),
+    toastContainer: document.getElementById('toast-container'),
     userIdDisplay: document.getElementById('user-id-display'),
     tableBody: document.getElementById('sales-table-body'),
-    feedbackMessage: document.getElementById('feedback-message'),
     editModal: document.getElementById('edit-modal'),
     editForm: document.getElementById('edit-form'),
     editSaleId: document.getElementById('edit-sale-id'),
@@ -15,6 +15,24 @@ const elements = {
     comparisonPills: document.getElementById('comparison-pills'),
     compareDaysBtn: document.getElementById('compare-days-btn'),
 };
+
+export function toggleGlobalLoader(show) {
+    elements.globalLoader.classList.toggle('hidden', !show);
+}
+
+export function toggleButtonSpinner(button, show) {
+    const btnText = button.querySelector('.btn-text');
+    const spinner = button.querySelector('.btn-spinner');
+    if (show) {
+        button.disabled = true;
+        btnText.classList.add('hidden');
+        spinner.classList.remove('hidden');
+    } else {
+        button.disabled = false;
+        btnText.classList.remove('hidden');
+        spinner.classList.add('hidden');
+    }
+}
 
 export function updateUserIdDisplay(uid) {
     elements.userIdDisplay.textContent = uid;
@@ -94,8 +112,29 @@ export function updateActiveButton(activeType) {
     }
 }
 
-export function displayFeedback(message, type) {
-    elements.feedbackMessage.textContent = message;
-    elements.feedbackMessage.className = `mt-4 text-center font-medium ${type === 'success' ? 'text-green-600' : 'text-red-600'}`;
-    setTimeout(() => elements.feedbackMessage.textContent = '', 4000);
+export function showToast(message, type = 'info') {
+    const toastColors = { success: 'bg-green-500', error: 'bg-red-500', info: 'bg-blue-500' };
+    const toastIcons = {
+        success: `<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>`,
+        error: `<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.21 3.03-1.742 3.03H4.42c-1.532 0-2.492-1.696-1.742-3.03l5.58-9.92zM10 13a1 1 0 110-2 1 1 0 010 2zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg>`,
+        info: `<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path></svg>`
+    };
+    const toast = document.createElement('div');
+    toast.className = `flex items-center p-4 w-full max-w-xs text-white ${toastColors[type]} rounded-lg shadow-lg transform transition-all duration-300 opacity-0`;
+    toast.innerHTML = `
+        <div class="inline-flex items-center justify-center flex-shrink-0 w-8 h-8 rounded-lg">${toastIcons[type]}</div>
+        <div class="ml-3 text-sm font-normal">${message}</div>
+        <button type="button" class="ml-auto -mx-1.5 -my-1.5 bg-white bg-opacity-20 text-white rounded-lg focus:ring-2 focus:ring-gray-300 p-1.5 hover:bg-opacity-30 inline-flex h-8 w-8">
+            <span class="sr-only">Cerrar</span>
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+        </button>
+    `;
+    elements.toastContainer.appendChild(toast);
+    setTimeout(() => toast.style.opacity = '1', 10);
+    const removeToast = () => {
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 300);
+    };
+    toast.querySelector('button').addEventListener('click', removeToast);
+    setTimeout(removeToast, 5000);
 }

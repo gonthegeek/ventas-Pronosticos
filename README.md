@@ -19,6 +19,7 @@ Esta es una aplicación web diseñada para registrar, analizar y visualizar las 
 * **Edición de Registros:** Modifica registros existentes a través de una interfaz segura que recalcula automáticamente los datos dependientes para mantener la consistencia.
 * **Carga Masiva de Datos:** Sube registros históricos desde un archivo `.csv` para centralizar toda tu información.
 * **Despliegue Automatizado:** Configurado para despliegue continuo a través de **GitHub Actions**.
+* **Manejo de Errores y Carga:** Notificaciones visuales para operaciones exitosas, errores y estados de carga.
 
 ## 3. Estructura del Proyecto
 
@@ -27,10 +28,18 @@ El proyecto está modularizado para facilitar su mantenimiento:
 ```
 /
 ├── index.html      # Contiene la estructura y el layout de la página.
-├── main.js         # Toda la lógica de la aplicación, interacción con Firebase y manipulación del DOM.
 ├── style.css       # Estilos visuales personalizados.
 ├── firebase.json   # Configuración de Firebase Hosting.
-└── README.md       # Este archivo.
+├── README.md       # Este archivo.
+└── js/
+    ├── main.js         # Punto de entrada principal, orquesta la app.
+    ├── auth.js         # Manejo de la autenticación.
+    ├── api.js          # Lógica para hablar con Firebase (CRUD).
+    ├── events.js       # Manejo de todos los eventos del usuario (clics, etc.).
+    ├── state.js        # Manejo del estado global de la aplicación.
+    ├── ui.js           # Funciones que manipulan la interfaz (la tabla, el modal, etc.).
+    ├── chart-config.js # Configuración y lógica de las gráficas.
+    └── utils.js        # Funciones de utilidad (ej: parseo de CSV).
 ```
 
 ## 4. Configuración para Desarrollo Local
@@ -69,7 +78,7 @@ La aplicación está conectada a un proyecto de Firebase. Para apuntarla a tu pr
       }
     }
     ```
-5.  **Actualiza el Código:** Abre el archivo `main.js` y reemplaza el objeto `firebaseConfig` con el que te proporcionó tu proyecto.
+5.  **Actualiza el Código:** Abre el archivo `js/auth.js` y reemplaza el objeto `firebaseConfig` con el que te proporcionó tu proyecto.
 
 ## 6. Despliegue
 

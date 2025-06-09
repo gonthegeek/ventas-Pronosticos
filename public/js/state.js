@@ -1,7 +1,6 @@
 import { updateTable, updateChart, renderComparisonPills, updateActiveButton } from './ui.js';
 import { auth } from './auth.js';
 
-// Almacena el estado global de la aplicación
 let allSalesData = [];
 let currentFilter = {
     type: 'today',
@@ -10,19 +9,9 @@ let currentFilter = {
     comparisonDates: []
 };
 
-// --- GETTERS (para acceder al estado desde otros módulos) ---
 export const getAllSales = () => allSalesData;
 export const getUserId = () => auth?.currentUser?.uid;
-export const getState = () => ({ allSalesData, currentFilter });
 
-// --- SETTERS y Lógica de Estado ---
-
-// Actualiza los datos de ventas y refresca la UI
-export function setAllSales(sales) {
-    allSalesData = sales;
-}
-
-// Actualiza el filtro actual y refresca la UI
 export function setFilter(newFilter) {
     if (newFilter.type && newFilter.type !== 'custom' && newFilter.type !== 'comparison') {
         currentFilter.type = newFilter.type;
@@ -36,14 +25,12 @@ export function setFilter(newFilter) {
     if (newFilter.machine) {
         currentFilter.machine = newFilter.machine;
     }
-    
     updateActiveButton(currentFilter.type);
     applyFiltersAndUpdateUI(allSalesData);
 }
 
-// Aplica los filtros a los datos y actualiza la tabla y la gráfica
 export function applyFiltersAndUpdateUI(sales) {
-    setAllSales(sales);
+    allSalesData = sales;
     let filteredSales = allSalesData;
     if (currentFilter.machine !== 'all') {
         filteredSales = filteredSales.filter(sale => sale.machineId === currentFilter.machine);
@@ -52,7 +39,6 @@ export function applyFiltersAndUpdateUI(sales) {
     updateChart(filteredSales, currentFilter);
 }
 
-// Lógica para el modo de comparación
 export function addComparisonDate() {
     const dateInput = document.getElementById('date-comparison-input');
     if (!dateInput.value) return;

@@ -2,9 +2,8 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebas
 import { getFirestore, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 import { listenForSales } from './api.js';
-import { updateUserIdDisplay } from './ui.js';
+import { toggleGlobalLoader, updateUserIdDisplay, showToast } from './ui.js';
 
-// Configuración de tu proyecto de Firebase
 const firebaseConfig = {
     apiKey: "***REMOVED***",
     authDomain: "***REMOVED***",
@@ -16,13 +15,12 @@ const firebaseConfig = {
 };
 const appId = 'ventas-pronosticos';
 
-// Variables exportadas para ser usadas en otros módulos
 export let db;
 export let auth;
 export let salesCollection;
 
-// Inicializa Firebase y la autenticación
 export function initFirebase() {
+    toggleGlobalLoader(true);
     try {
         const app = initializeApp(firebaseConfig);
         db = getFirestore(app);
@@ -30,20 +28,23 @@ export function initFirebase() {
         onAuthStateChanged(auth, handleAuthState);
     } catch (e) {
         console.error("Error inicializando Firebase:", e);
+        showToast("Error crítico al inicializar la aplicación.", "error");
+        toggleGlobalLoader(false);
     }
 }
 
-// Maneja los cambios en el estado de autenticación
 async function handleAuthState(user) {
-    if (user) {
-        updateUserIdDisplay(user.uid);
-        salesCollection = collection(db, `public_data/${appId}/sales`);
-        listenForSales(salesCollection); // Empieza a escuchar los datos una vez autenticado
-    } else {
-        try {
+    try {
+        if (user) {
+            updateUserIdDisplay(user.uid);
+            salesCollection = collection(db, `public_data/${appId}/sales`);
+            listenForSales(salesCollection);
+        } else {
             await signInAnonymously(auth);
-        } catch (error) {
-            console.error("Error en la autenticación anónima:", error);
         }
+    } catch (error) {
+        console.error("Error en el estado de autenticación:", error);
+        showToast("No se pudo conectar al servidor.", "error");
+        toggleGlobalLoader(false);
     }
 }

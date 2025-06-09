@@ -1,6 +1,5 @@
 let salesChart;
 
-// Punto central para actualizar la configuración y renderizar la gráfica
 export function updateChartConfig(salesData, currentFilter) {
     const chartTitleEl = document.getElementById('chart-title');
     let chartConfig;
