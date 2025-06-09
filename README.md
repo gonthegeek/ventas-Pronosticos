@@ -9,6 +9,7 @@ Esta es una aplicación web diseñada para registrar, analizar y visualizar las 
 * **Registro de Ventas Diarias:** Formulario simple para registrar el total acumulado de ventas de cada máquina al final de un período.
 * **Cálculo Automático:** La aplicación calcula automáticamente la venta real del período (la diferencia con el registro anterior del mismo día).
 * **Base de Datos Centralizada:** Todos los usuarios acceden y escriben en la misma base de datos, permitiendo un trabajo colaborativo en tiempo real.
+* **Optimización y Escalabilidad:** Carga de datos bajo demanda. La aplicación solo solicita a la base de datos la información necesaria para la vista actual, asegurando un rendimiento rápido incluso con un gran volumen de datos históricos.
 * **Visualización de Datos:**
     * **Gráficas de Tendencia:** Visualiza las ventas por hora (en modo diario) o por día (en modo semanal/mensual).
     * **Modo Comparativo:** Selecciona múltiples días y compáralos en una sola gráfica de líneas para identificar patrones.

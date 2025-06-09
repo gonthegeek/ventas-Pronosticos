@@ -1,18 +1,31 @@
-import { collection, addDoc, query, onSnapshot, orderBy, doc, writeBatch, Timestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+import { collection, addDoc, query, onSnapshot, orderBy, doc, writeBatch, Timestamp, where } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 import { applyFiltersAndUpdateUI, getUserId } from './state.js';
 import { db, salesCollection } from './auth.js';
 import { toggleGlobalLoader } from './ui.js';
 
-export function listenForSales(collectionRef) {
-    const q = query(collectionRef, orderBy("timestamp", "desc"));
-    let isFirstLoad = true;
-    onSnapshot(q, snapshot => {
+let unsubscribe; // Variable para mantener la función de cancelación de la suscripción actual
+
+// Se suscribe a los datos de un rango de fechas específico
+export function subscribeToSalesData(startDate, endDate) {
+    // Si hay una suscripción anterior, la cancelamos para evitar fugas de memoria
+    if (unsubscribe) {
+        unsubscribe();
+    }
+    
+    toggleGlobalLoader(true);
+
+    const q = query(
+        salesCollection,
+        where("timestamp", ">=", startDate),
+        where("timestamp", "<", endDate), // Usar '<' en lugar de '<=' para evitar incluir el inicio del día siguiente
+        orderBy("timestamp", "desc")
+    );
+
+    unsubscribe = onSnapshot(q, snapshot => {
         const salesData = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+        // Pasamos los datos ya filtrados por fecha al estado
         applyFiltersAndUpdateUI(salesData);
-        if (isFirstLoad) {
-            toggleGlobalLoader(false);
-            isFirstLoad = false;
-        }
+        toggleGlobalLoader(false);
     }, error => {
         console.error("Error escuchando los datos de ventas:", error);
         toggleGlobalLoader(false);

@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 import { getFirestore, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-import { listenForSales } from './api.js';
+import { setFilter } from './state.js';
 import { toggleGlobalLoader, updateUserIdDisplay, showToast } from './ui.js';
 
 const firebaseConfig = {
@@ -38,7 +38,8 @@ async function handleAuthState(user) {
         if (user) {
             updateUserIdDisplay(user.uid);
             salesCollection = collection(db, `public_data/${appId}/sales`);
-            listenForSales(salesCollection);
+            // Dispara el filtro inicial para cargar los datos de hoy
+            setFilter({ type: 'today' });
         } else {
             await signInAnonymously(auth);
         }

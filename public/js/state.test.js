@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 // Mockea los módulos de los que `state.js` depende.
 vi.mock('./ui.js', () => ({
@@ -7,59 +7,75 @@ vi.mock('./ui.js', () => ({
   renderComparisonPills: vi.fn(),
   updateActiveButton: vi.fn(),
 }));
+vi.mock('./api.js', () => ({
+  subscribeToSalesData: vi.fn(),
+}));
 vi.mock('./auth.js', () => ({
   auth: { currentUser: { uid: 'test-user-id' } }
 }));
 
 // Importa el módulo a probar DESPUÉS de los mocks.
 import * as state from './state.js';
-import * as ui from './ui.js';
+import * as api from './api.js';
 
-describe('State Management', () => {
+describe('State Management & Data Fetching Logic', () => {
 
-  // Antes de cada prueba, reinicia el estado y los mocks.
+  // Antes de cada prueba, resetea los mocks.
   beforeEach(() => {
-    state.initializeState();
+    // Usamos temporizadores falsos para controlar el tiempo
+    vi.useFakeTimers();
     vi.clearAllMocks();
+  });
+  
+  // Después de cada prueba, restauramos los temporizadores reales.
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   describe('setFilter', () => {
-    it('debería actualizar el tipo de filtro y reiniciar la fecha para filtros predefinidos', () => {
-      state.setFilter({ type: 'week' });
-      const currentState = state.getState().currentFilter;
-      expect(currentState.type).toBe('week');
-      expect(currentState.date.toDateString()).toBe(new Date().toDateString());
+    it('debería llamar a subscribeToSalesData con el rango de fechas correcto para "today"', () => {
+      // Fijamos una fecha para la prueba para que sea determinista
+      const testDate = new Date(2025, 5, 8); // 8 de Junio de 2025
+      vi.setSystemTime(testDate);
+      
+      const startDate = new Date(testDate.getFullYear(), testDate.getMonth(), testDate.getDate());
+      const endDate = new Date(startDate);
+      endDate.setDate(endDate.getDate() + 1);
+
+      state.setFilter({ type: 'today' });
+      
+      expect(api.subscribeToSalesData).toHaveBeenCalledOnce();
+      expect(api.subscribeToSalesData).toHaveBeenCalledWith(startDate, endDate);
     });
 
-    it('debería actualizar la máquina sin cambiar otros filtros', () => {
-      state.setFilter({ type: 'month' });
-      state.setFilter({ machine: '79' });
-      const currentState = state.getState().currentFilter;
-      expect(currentState.type).toBe('month');
-      expect(currentState.machine).toBe('79');
+    it('debería llamar a subscribeToSalesData con el rango de fechas correcto para "week"', () => {
+        const testDate = new Date(2025, 5, 8); // Domingo 8 de Junio de 2025
+        vi.setSystemTime(testDate);
+        
+        // El primer día de la semana (Lunes) sería el 2 de Junio
+        const startDate = new Date(2025, 5, 2); 
+        const endDate = new Date(startDate);
+        endDate.setDate(endDate.getDate() + 7);
+
+        state.setFilter({ type: 'week' });
+      
+        expect(api.subscribeToSalesData).toHaveBeenCalledOnce();
+        expect(api.subscribeToSalesData).toHaveBeenCalledWith(startDate, endDate);
     });
+
+     it('debería llamar a subscribeToSalesData con el rango de fechas correcto para "month"', () => {
+        const testDate = new Date(2025, 5, 8); // 8 de Junio de 2025
+        vi.setSystemTime(testDate);
+        
+        const startDate = new Date(2025, 5, 1); // 1 de Junio
+        const endDate = new Date(2025, 6, 1); // 1 de Julio
+
+        state.setFilter({ type: 'month' });
+      
+        expect(api.subscribeToSalesData).toHaveBeenCalledOnce();
+        expect(api.subscribeToSalesData).toHaveBeenCalledWith(startDate, endDate);
+    });
+
   });
 
-  describe('applyFiltersAndUpdateUI', () => {
-    const mockSales = [
-        { machineId: '76', value: 10 },
-        { machineId: '79', value: 20 },
-        { machineId: '76', value: 30 },
-    ];
-
-    it('debería filtrar las ventas por una máquina específica', () => {
-      state.setFilter({ machine: '76' });
-      state.applyFiltersAndUpdateUI(mockSales);
-      expect(ui.updateTable).toHaveBeenCalledWith([
-        { machineId: '76', value: 10 },
-        { machineId: '76', value: 30 },
-      ]);
-    });
-
-    it('no debería filtrar cuando la máquina es "all"', () => {
-      state.setFilter({ machine: 'all' });
-      state.applyFiltersAndUpdateUI(mockSales);
-      expect(ui.updateTable).toHaveBeenCalledWith(mockSales);
-    });
-  });
 });

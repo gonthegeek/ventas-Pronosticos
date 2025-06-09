@@ -1,5 +1,5 @@
 import { addSale, updateSaleBatch, uploadHistoricalData } from './api.js';
-import { setFilter, addComparisonDate, handlePillClick, getAllSales } from './state.js';
+import { setFilter, addComparisonDate, handlePillClick, getAllSales, triggerRefetch } from './state.js';
 import { openEditModal, closeEditModal, showToast, toggleButtonSpinner } from './ui.js';
 import { parseCSVAndCalculateSales } from './utils.js';
 
@@ -48,6 +48,7 @@ async function handleAddSale(event) {
         await addSale({ machineId, saleAmount: saleForPeriod, accumulatedTotal: newAccumulatedTotal });
         showToast("Venta registrada con éxito.", "success");
         event.target.reset();
+        triggerRefetch(); // Vuelve a cargar los datos para asegurar consistencia
     } catch (e) {
         showToast(e.message, "error");
         console.error(e);
@@ -87,6 +88,7 @@ async function handleUpdateSale(event) {
         await updateSaleBatch(saleId, newAccumulatedTotal, newSaleAmount, nextSale);
         showToast("Registro actualizado con éxito.", "success");
         closeEditModal();
+        triggerRefetch();
     } catch (error) {
         showToast(error.message, "error");
         console.error(error);
@@ -110,6 +112,7 @@ async function handleCSVUpload() {
             await uploadHistoricalData(records);
             showToast(`¡${records.length} registros históricos subidos con éxito!`, 'success');
             fileInput.value = '';
+            triggerRefetch();
         } catch (e) {
             showToast(`Error procesando el archivo: ${e.message}`, 'error');
             console.error(e);
@@ -123,4 +126,3 @@ async function handleCSVUpload() {
     }
     reader.readAsText(file);
 }
-
