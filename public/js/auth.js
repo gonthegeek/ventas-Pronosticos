@@ -1,8 +1,8 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 import { getFirestore, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 import { setFilter } from './state.js';
-import { toggleGlobalLoader, updateUserIdDisplay, showToast } from './ui.js';
+import { toggleGlobalLoader, updateUserIdDisplay, showToast, showLoginForm, showMainContent } from './ui.js';
 
 const firebaseConfig = {
     apiKey: "***REMOVED***",
@@ -13,7 +13,7 @@ const firebaseConfig = {
     appId: "1:***REMOVED***:web:f57acbf580012df5ef4751",
     measurementId: "***REMOVED***"
 };
-const appId = 'ventas-pronosticos';
+const appId = '1:***REMOVED***:web:f57acbf580012df5ef475';
 
 export let db;
 export let auth;
@@ -33,19 +33,43 @@ export function initFirebase() {
     }
 }
 
+// Add Firebase authentication functions here
+export async function signInWithEmail(email, password) {
+    try {
+        toggleGlobalLoader(true);
+        await signInWithEmailAndPassword(auth, email, password);
+    } catch (error) {
+        console.error("Error signing in with email and password:", error);
+        showToast(`Error al iniciar sesión: ${error.message}`, "error");
+    } finally { toggleGlobalLoader(false); }
+}
+
 async function handleAuthState(user) {
     try {
         if (user) {
             updateUserIdDisplay(user.uid);
-            salesCollection = collection(db, `public_data/${appId}/sales`);
+            // Use the correct appId from firebaseConfig if it's different from the constant appId
+            // Based on your firebaseConfig [3], your appId is "1:***REMOVED***:web:f57acbf580012df5ef4751"
+            // and your security rules use {appId}. Make sure the appId here matches your security rules.
+            const currentAppId = firebaseConfig.appId; // Or use the constant 'appId' if it matches your rules
+            salesCollection = collection(db, `artifacts/${currentAppId}/public/data/sales`);
+
             // Dispara el filtro inicial para cargar los datos de hoy
             setFilter({ type: 'today' });
+
+            // Assuming you have a function to show the main app content
+            showMainContent(); // Call the function to show the main content
+            toggleGlobalLoader(false); // Turn off loader after showing main content
         } else {
-            await signInAnonymously(auth);
+            // If no user is authenticated (neither email/password nor anonymous),
+            // show the login form.
+            showLoginForm(); // Call the function to show the login form
+            toggleGlobalLoader(false); // Turn off loader after showing login form
         }
     } catch (error) {
         console.error("Error en el estado de autenticación:", error);
         showToast("No se pudo conectar al servidor.", "error");
-        toggleGlobalLoader(false);
+        toggleGlobalLoader(false); // Also turn off loader in case of error
     }
 }
+

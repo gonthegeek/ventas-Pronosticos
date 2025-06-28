@@ -1,8 +1,9 @@
 import { addSale, batchUpdateSales, deleteSaleAndUpdate } from './api.js';
 import { setFilter, addComparisonDate, handlePillClick, getAllSales, triggerRefetch } from './state.js';
-import { openEditModal, closeEditModal, showToast, toggleButtonSpinner, openConfirmModal } from './ui.js';
+import { openEditModal, closeEditModal, showToast, toggleButtonSpinner, openConfirmModal, displayAuthError } from './ui.js';
 import { parseCSVAndCalculateSales, recalculateSalesForDay } from './utils.js';
 import { Timestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+import { signInWithEmail, auth } from './auth.js';
 
 // --- MANEJADORES DE EVENTOS (EXPORTADOS PARA TESTING) ---
 
@@ -67,7 +68,7 @@ export async function handleDeleteSale(saleId) {
             saleAmount: nextSale.accumulatedTotal - previousTotal
         };
     }
-    
+
     try {
         await deleteSaleAndUpdate(saleId, nextSaleUpdate);
         showToast("Registro eliminado con éxito.", "success");
@@ -95,16 +96,16 @@ export async function handleUpdateSale(event) {
         const [hour, minute] = newTimeStr.split(':').map(Number);
         const newDate = new Date(year, month - 1, day, hour, minute);
         const newTimestamp = Timestamp.fromDate(newDate);
-        
+
         const allSales = getAllSales();
         const saleToEdit = allSales.find(s => s.id === saleId);
         if (!saleToEdit) throw new Error("No se encontró el registro.");
 
         const originalDate = saleToEdit.timestamp.toDate();
         // Convertimos todos los timestamps a fechas JS para una manipulación segura.
-        const tempSales = allSales.map(s => ({...s, timestamp: s.timestamp.toDate()}));
+        const tempSales = allSales.map(s => ({ ...s, timestamp: s.timestamp.toDate() }));
         const saleToUpdateInMemory = tempSales.find(s => s.id === saleId);
-        
+
         // Aplicamos los cambios al objeto en memoria.
         saleToUpdateInMemory.timestamp = newDate;
         saleToUpdateInMemory.accumulatedTotal = newTotal;
@@ -119,7 +120,7 @@ export async function handleUpdateSale(event) {
         // Siempre recalculamos el día de destino del registro.
         const newDayRecalculations = recalculateSalesForDay(tempSales, saleToEdit.machineId, newDate);
         updates.push(...newDayRecalculations);
-        
+
         // Combinamos las actualizaciones y eliminamos duplicados.
         const finalUpdatesMap = new Map();
         updates.forEach(u => {
@@ -127,7 +128,7 @@ export async function handleUpdateSale(event) {
             u.data.timestamp = Timestamp.fromDate(u.data.timestamp);
             finalUpdatesMap.set(u.id, u.data)
         });
-        const finalUpdates = Array.from(finalUpdatesMap.entries()).map(([id, data]) => ({id, data}));
+        const finalUpdates = Array.from(finalUpdatesMap.entries()).map(([id, data]) => ({ id, data }));
 
         await batchUpdateSales(finalUpdates);
         showToast("Registro actualizado con éxito.", "success");
@@ -172,6 +173,58 @@ export async function handleCSVUpload() {
     reader.readAsText(file);
 }
 
+// Function to handle login form submission
+export async function handleLoginSubmit(event) {
+    event.preventDefault(); // Prevent default form submission
+
+    // Correctly get the submit button using a more specific selector
+    const submitBtn = document.querySelector('#login-form button[type="submit"]');
+
+    // Check if the submit button was found before calling toggleButtonSpinner
+    if (submitBtn) {
+        toggleButtonSpinner(submitBtn, true); // Show spinner on the login button
+    } else {
+        console.warn("Login submit button not found."); // Log a warning if the button is not found
+    }
+
+    const emailInput = document.getElementById('login-email');
+    const passwordInput = document.getElementById('login-password');
+
+    const email = emailInput.value;
+    const password = passwordInput.value;
+
+    try {
+        await signInWithEmail(email, password);
+        // onAuthStateChanged in auth.js will handle showing the main content on success.
+        // showToast("Login successful!", "success"); // Optional: show a success toast
+        displayAuthError(''); // Clear any previous error messages
+
+    } catch (error) {
+        console.error("Login error:", error);
+        // Display the error message to the user
+        displayAuthError(`Error al iniciar sesión: ${error.message}`);
+        showToast(`Error al iniciar sesión: ${error.message}`, "error"); // Also show a toast
+
+    } finally {
+        // Turn off the spinner regardless of success or failure, only if button was found
+        if (submitBtn) {
+            toggleButtonSpinner(submitBtn, false);
+        }
+    }
+}
+
+// Function to handle logout
+export async function handleLogout() {
+    try {
+        await auth.signOut();
+        // onAuthStateChanged in auth.js will handle showing the login form on logout
+        showToast("Sesión cerrada con éxito.", "success");
+    } catch (error) {
+        console.error("Error logging out:", error);
+        showToast(`Error al cerrar sesión: ${error.message}`, "error");
+    }
+}
+
 // --- CONFIGURACIÓN DE LISTENERS (NO SE EXPORTA) ---
 
 function handleTableClick(event) {
@@ -187,7 +240,10 @@ function handleTableClick(event) {
     }
 }
 
+
+
 export function setupEventListeners() {
+    document.getElementById('login-form').addEventListener('submit', handleLoginSubmit); // Add event listener for login form
     document.getElementById('sale-form').addEventListener('submit', handleAddSale);
     document.getElementById('upload-csv-btn').addEventListener('click', handleCSVUpload);
     document.getElementById('edit-form').addEventListener('submit', handleUpdateSale);
@@ -203,4 +259,10 @@ export function setupEventListeners() {
     document.getElementById('edit-modal').addEventListener('click', (e) => {
         if (e.target.id === 'edit-modal') closeEditModal();
     });
+    const logoutButton = document.getElementById('logout-button');
+    if (logoutButton) {
+        logoutButton.addEventListener('click', handleLogout);
+    } else {
+        console.warn("Logout button not found.");
+    }
 }

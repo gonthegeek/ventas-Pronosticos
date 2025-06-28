@@ -3,6 +3,7 @@ import { subscribeToSalesData } from './api.js';
 import { auth } from './auth.js';
 
 let allSalesData = [];
+let isAuthenticated = false;
 let currentFilter = {
     type: 'today',
     date: new Date(),
@@ -12,6 +13,9 @@ let currentFilter = {
 
 export const getAllSales = () => allSalesData;
 export const getUserId = () => auth?.currentUser?.uid;
+
+export const setIsAuthenticated = (status) => { isAuthenticated = status; };
+export const getIsAuthenticated = () => isAuthenticated;
 
 function calculateDateRange() {
     const now = new Date();

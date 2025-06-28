@@ -1,8 +1,10 @@
 import { updateChartConfig } from './chart-config.js';
 import { getAllSales } from './state.js';
 
+// Add references to login form and main content elements
 const elements = {
     globalLoader: document.getElementById('global-loader'),
+    loginFormContainer: document.getElementById('login-form-container'), // Assuming you wrap your form in a div with this ID
     toastContainer: document.getElementById('toast-container'),
     userIdDisplay: document.getElementById('user-id-display'),
     tableBody: document.getElementById('sales-table-body'),
@@ -18,6 +20,7 @@ const elements = {
     confirmModal: document.getElementById('confirm-modal'),
     cancelConfirmBtn: document.getElementById('cancel-confirm'),
     confirmDeleteBtn: document.getElementById('confirm-delete-btn'),
+    mainContent: document.getElementById('main-content'), // Assuming your main app content is in a div with this ID
 };
 
 export function toggleGlobalLoader(show) {
@@ -40,6 +43,16 @@ export function toggleButtonSpinner(button, show) {
 
 export function updateUserIdDisplay(uid) {
     elements.userIdDisplay.textContent = uid;
+}
+
+export function showLoginForm() {
+    elements.loginFormContainer.classList.remove('hidden');
+    elements.mainContent.classList.add('hidden');
+}
+
+export function showMainContent() {
+    elements.loginFormContainer.classList.add('hidden');
+    elements.mainContent.classList.remove('hidden');
 }
 
 export function updateTable(sales) {
@@ -178,4 +191,16 @@ export function showToast(message, type = 'info') {
     };
     toast.querySelector('button').addEventListener('click', removeToast);
     setTimeout(removeToast, 5000);
+}
+
+// Function to display authentication error messages
+export function displayAuthError(message) {
+    // Find or create an element to display errors within the login form
+    let errorElement = document.getElementById('auth-error-message');
+    if (!errorElement) {
+        errorElement = document.createElement('p');
+        errorElement.id = 'auth-error-message';
+        elements.loginFormContainer.appendChild(errorElement); // Or a more specific error container
+    }
+    errorElement.textContent = message;
 }
