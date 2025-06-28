@@ -5,6 +5,7 @@ import { setFilter } from './state.js';
 import { toggleGlobalLoader, updateUserIdDisplay, showToast, showLoginForm, showMainContent } from './ui.js';
 
 const firebaseConfig = {
+    // file deepcode ignore HardcodedNonCryptoSecret: <please specify a reason of ignoring this>
     apiKey: "***REMOVED***",
     authDomain: "***REMOVED***",
     projectId: "***REMOVED***",

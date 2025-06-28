@@ -175,7 +175,7 @@ export function showToast(message, type = 'info') {
     };
     const toast = document.createElement('div');
     toast.className = `flex items-center p-4 w-full max-w-xs text-white ${toastColors[type]} rounded-lg shadow-lg transform transition-all duration-300 opacity-0`;
-    toast.innerHTML = `
+    toast.textContent = `
         <div class="inline-flex items-center justify-center flex-shrink-0 w-8 h-8 rounded-lg">${toastIcons[type]}</div>
         <div class="ml-3 text-sm font-normal">${message}</div>
         <button type="button" class="ml-auto -mx-1.5 -my-1.5 bg-white bg-opacity-20 text-white rounded-lg focus:ring-2 focus:ring-gray-300 p-1.5 hover:bg-opacity-30 inline-flex h-8 w-8">
