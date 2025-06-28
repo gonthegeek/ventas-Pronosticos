@@ -2,7 +2,7 @@ import { addSale, batchUpdateSales, deleteSaleAndUpdate } from './api.js';
 import { setFilter, addComparisonDate, handlePillClick, getAllSales, triggerRefetch } from './state.js';
 import { openEditModal, closeEditModal, showToast, toggleButtonSpinner, openConfirmModal, displayAuthError } from './ui.js';
 import { parseCSVAndCalculateSales, recalculateSalesForDay } from './utils.js';
-import { Timestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+import { Timestamp } from "firebase/firestore";
 import { signInWithEmail, auth } from './auth.js';
 
 // --- MANEJADORES DE EVENTOS (EXPORTADOS PARA TESTING) ---

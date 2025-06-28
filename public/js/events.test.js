@@ -20,7 +20,7 @@ vi.mock('./ui.js', () => ({
 }));
 
 // Mock corregido para incluir toMillis()
-vi.mock('https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js', () => {
+vi.mock('firebase/firestore', () => {
     class MockTimestamp {
         constructor(date) { this.date = date; }
         static fromDate(date) { return new MockTimestamp(date); }
@@ -35,7 +35,7 @@ import { handleAddSale, handleDeleteSale } from './events.js';
 import * as api from './api.js';
 import * as state from './state.js';
 import * as ui from './ui.js';
-import { Timestamp } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
+import { Timestamp } from 'firebase/firestore';
 
 // --- Configuración del DOM simulado ---
 const dom = new JSDOM(`

@@ -1,6 +1,6 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-import { getFirestore, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-import { getAuth, onAuthStateChanged, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+import { initializeApp } from "firebase/app";
+import { getFirestore, collection } from "firebase/firestore";
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword } from "firebase/auth";
 import { setFilter } from './state.js';
 import { toggleGlobalLoader, updateUserIdDisplay, showToast, showLoginForm, showMainContent } from './ui.js';
 
@@ -44,7 +44,7 @@ export async function signInWithEmail(email, password) {
     } finally { toggleGlobalLoader(false); }
 }
 
-async function handleAuthState(user) {
+export async function handleAuthState(user) {
     try {
         if (user) {
             updateUserIdDisplay(user.uid);

@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 
 // Simula (hace un "mock") del módulo de Firebase antes de que cualquier otro código lo importe.
 // Esto evita que Vitest intente descargar el archivo desde una URL https://.
-vi.mock('https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js', () => {
+vi.mock('firebase/firestore', () => {
   // Creamos una clase falsa 'Timestamp' que imita a la real de Firebase
   class MockTimestamp {
     constructor(date) {

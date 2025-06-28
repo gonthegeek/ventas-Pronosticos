@@ -1,4 +1,4 @@
-import { collection, addDoc, query, onSnapshot, orderBy, doc, writeBatch, Timestamp, where, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+import { collection, addDoc, query, onSnapshot, orderBy, doc, writeBatch, Timestamp, where, deleteDoc } from "firebase/firestore";
 import { applyFiltersAndUpdateUI, getUserId } from './state.js';
 import { db, salesCollection } from './auth.js';
 import { toggleGlobalLoader } from './ui.js';
