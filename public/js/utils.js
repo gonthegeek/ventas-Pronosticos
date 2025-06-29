@@ -1,4 +1,6 @@
-import { Timestamp } from "firebase/firestore";
+/* uncoment this line for test and comment the next line import { Timestamp } from "firebase/firestore";
+ */
+import { Timestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
 export function parseCSVAndCalculateSales(csvText) {
     const lines = csvText.split(/\r?\n/).filter(line => line.trim() !== '');
