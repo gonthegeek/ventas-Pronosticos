@@ -8,17 +8,17 @@ import { getAuth, onAuthStateChanged, signInWithEmailAndPassword } from "https:/
 import { setFilter } from './state.js';
 import { toggleGlobalLoader, updateUserIdDisplay, showToast, showLoginForm, showMainContent } from './ui.js';
 
+// Firebase configuration - values will be injected during build
 const firebaseConfig = {
-    // file deepcode ignore HardcodedNonCryptoSecret: <please specify a reason of ignoring this>
-    apiKey: "***REMOVED***",
-    authDomain: "***REMOVED***",
-    projectId: "***REMOVED***",
-    storageBucket: "***REMOVED***.firebasestorage.app",
-    messagingSenderId: "***REMOVED***",
-    appId: "1:***REMOVED***:web:f57acbf580012df5ef4751",
-    measurementId: "***REMOVED***"
+    apiKey: window.FIREBASE_CONFIG?.apiKey || "YOUR_API_KEY",
+    authDomain: window.FIREBASE_CONFIG?.authDomain || "YOUR_AUTH_DOMAIN",
+    projectId: window.FIREBASE_CONFIG?.projectId || "YOUR_PROJECT_ID",
+    storageBucket: window.FIREBASE_CONFIG?.storageBucket || "YOUR_STORAGE_BUCKET",
+    messagingSenderId: window.FIREBASE_CONFIG?.messagingSenderId || "YOUR_MESSAGING_SENDER_ID",
+    appId: window.FIREBASE_CONFIG?.appId || "YOUR_APP_ID",
+    measurementId: window.FIREBASE_CONFIG?.measurementId || "YOUR_MEASUREMENT_ID"
 };
-const appId = '1:***REMOVED***:web:f57acbf580012df5ef475';
+const appId = '1:611374798340:web:f57acbf580012df5ef475';
 
 export let db;
 export let auth;
@@ -54,7 +54,7 @@ export async function handleAuthState(user) {
         if (user) {
             updateUserIdDisplay(user.uid);
             // Use the correct appId from firebaseConfig if it's different from the constant appId
-            // Based on your firebaseConfig [3], your appId is "1:***REMOVED***:web:f57acbf580012df5ef4751"
+            // Based on your firebaseConfig [3], your appId is "1:611374798340:web:f57acbf580012df5ef4751"
             // and your security rules use {appId}. Make sure the appId here matches your security rules.
             const currentAppId = firebaseConfig.appId; // Or use the constant 'appId' if it matches your rules
             salesCollection = collection(db, `artifacts/${currentAppId}/public/data/sales`);

@@ -65,11 +65,28 @@ Para ejecutar la aplicación en tu máquina local:
 
 1.  Clona el repositorio desde GitHub.
 2.  Abre la carpeta del proyecto en Visual Studio Code.
-3.  Instala las dependencias de desarrollo:
+3.  Copia `.env.example` a `.env` y actualiza con tus credenciales de Firebase:
+    ```bash
+    cp .env.example .env
+    # Edita .env con tus credenciales reales de Firebase
+    ```
+4.  Ejecuta el script de configuración automática:
+    ```bash
+    ./setup.sh
+    ```
+5.  Instala las dependencias de desarrollo:
     ```bash
     npm install
     ```
-4.  Haz clic derecho sobre el archivo `index.html` y selecciona **"Open with Live Server"**.
+6.  Inicia el servidor de desarrollo:
+    ```bash
+    npm start
+    ```
+
+El script `setup.sh` automaticamente:
+- Configura `.firebaserc` con tu project ID
+- Genera `firebase-config.js` desde tus variables de entorno
+- Valida que todo esté correctamente configurado
 
 ## 5. Pruebas
 
@@ -83,25 +100,35 @@ El proyecto utiliza **Vitest** para las pruebas unitarias. Para ejecutar el set 
 
 ## 6. Configuración de Firebase
 
-La aplicación está conectada a un proyecto de Firebase. Para apuntarla a tu propio backend, sigue estos pasos:
+La aplicación utiliza Firebase como backend. Para configurar tu propio proyecto:
 
 1.  **Crea un Proyecto en Firebase:** Ve a la [Consola de Firebase](https://console.firebase.google.com/) y crea un nuevo proyecto.
 2.  **Registra una App Web:** Dentro de tu proyecto, registra una nueva aplicación web (`</>`) para obtener tu objeto de configuración.
 3.  **Activa los Servicios:**
-    * **Authentication:** En la pestaña "Sign-in method", activa el proveedor **Anónimo**.
+    * **Authentication:** En la pestaña "Sign-in method", activa el proveedor **Email/Password**.
     * **Firestore:** Crea una base de datos de Firestore en **modo de producción**.
 4.  **Actualiza las Reglas de Seguridad:** Ve a la pestaña "Reglas" de Firestore y pega lo siguiente:
     ```
     rules_version = '2';
     service cloud.firestore {
       match /databases/{database}/documents {
-        match /public_data/ventas-pronosticos/sales/{saleId} {
+        match /artifacts/{appId}/public/data/sales/{saleId} {
           allow read, write: if request.auth != null;
         }
       }
     }
     ```
-5.  **Actualiza el Código:** Abre el archivo `js/auth.js` y reemplaza el objeto `firebaseConfig` con el que te proporcionó tu proyecto.
+5.  **Configura las Variables de Entorno:** 
+    * Para desarrollo local: Copia `.firebaserc.template` a `.firebaserc` y actualiza con tu project ID
+    * Actualiza `public/firebase-config.js` con tus credenciales de Firebase
+    * Para producción: Configura los siguientes secretos en GitHub Actions:
+      - `FIREBASE_API_KEY`
+      - `FIREBASE_AUTH_DOMAIN`
+      - `FIREBASE_PROJECT_ID`
+      - `FIREBASE_STORAGE_BUCKET`
+      - `FIREBASE_MESSAGING_SENDER_ID`
+      - `FIREBASE_APP_ID`
+      - `FIREBASE_MEASUREMENT_ID`
 
 ## 7. Despliegue
 
@@ -118,4 +145,15 @@ firebase deploy
 
 ### Despliegue Automático (CI/CD)
 
-El repositorio contiene un archivo de flujo de trabajo en `.github/workflows/deploy.yml`. Este se activa automáticamente cada vez que se hace un `push` a la rama `main`, desplegando la versión más reciente del código a Firebase Hosting. Para que funcione, es necesario configurar un secreto en el repositorio de GitHub llamado `FIREBASE_SERVICE_ACCOUNT_ADMINISTRACIONPRONOSTICOS` con las credenciales de una cuenta de servicio de tu proyecto.
+El repositorio contiene un archivo de flujo de trabajo en `.github/workflows/deploy.yml`. Este se activa automáticamente cada vez que se hace un `push` a la rama `main`, desplegando la versión más reciente del código a Firebase Hosting. 
+
+**Configuración requerida:**
+1. Configura los secretos de Firebase en GitHub (Settings → Secrets and variables → Actions):
+   - `FIREBASE_API_KEY`
+   - `FIREBASE_AUTH_DOMAIN` 
+   - `FIREBASE_PROJECT_ID`
+   - `FIREBASE_STORAGE_BUCKET`
+   - `FIREBASE_MESSAGING_SENDER_ID`
+   - `FIREBASE_APP_ID`
+   - `FIREBASE_MEASUREMENT_ID`
+2. Configura el secreto `FIREBASE_SERVICE_ACCOUNT_[PROJECT_ID]` con las credenciales de una cuenta de servicio de tu proyecto.

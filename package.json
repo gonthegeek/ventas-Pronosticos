@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "vitest",
-    "start": "live-server public"
+    "start": "npx live-server public"
   },
   "keywords": [],
   "author": "gonthegeek",
@@ -15,6 +15,7 @@
   },
   "devDependencies": {
     "jsdom": "^26.1.0",
+    "live-server": "^1.2.2",
     "vitest": "^3.2.2"
   }
 }
