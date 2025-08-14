@@ -1,0 +1,22 @@
+Contact: mailto:security@gonzaloronzon.com
+Expires: 2025-12-31T23:59:59.000Z
+Encryption: https://gonzaloronzon.com/pgp-key.txt
+Preferred-Languages: es, en
+Canonical: https://ventas.gonzaloronzon.com/.well-known/security.txt
+Policy: https://ventas.gonzaloronzon.com/security-policy
+
+# Business Information
+# This is a legitimate business application for vending machine sales tracking
+# Application Purpose: Internal sales management and inventory tracking system
+# Business Owner: Gonzalo Ronzon
+# Application Type: Enterprise Sales Management Tool
+
+# Security Notice
+# This application is a legitimate business tool for tracking vending machine sales
+# It is not intended for public access and requires authorized user authentication
+# If you believe this site has been compromised or contains malicious content, please contact security@gonzaloronzon.com
+
+# Responsible Disclosure
+# We appreciate responsible disclosure of security vulnerabilities
+# Please report any security issues to the contact above
+# We will respond within 48 hours to acknowledged security reports

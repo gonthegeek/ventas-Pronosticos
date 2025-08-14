@@ -1,8 +1,21 @@
 # Tracker de Ventas para Máquinas Vending
 
+> **🛡️ Aplicación Empresarial Legítima** - Sistema interno de gestión de ventas para máquinas vending con medidas de seguridad implementadas.
+
 ## 1. Descripción del Proyecto
 
 Esta es una aplicación web diseñada para registrar, analizar y visualizar las ventas de máquinas vending. Permite llevar un control detallado de las ventas por hora y por día, facilitando el análisis de tendencias y el rendimiento de cada máquina. La aplicación está construida con HTML, CSS y JavaScript puro, utiliza TailwindCSS para el diseño y Chart.js para las gráficas. Como backend, se integra con **Firebase** (Firestore y Authentication) para ofrecer una base de datos en tiempo real, centralizada y compartida para todos los usuarios.
+
+### 🔒 Medidas de Seguridad
+
+Esta aplicación implementa múltiples capas de seguridad para prevenir ataques y garantizar la integridad de los datos:
+- **Headers de seguridad HTTP** (CSP, X-Frame-Options, XSS Protection)
+- **Validación y sanitización** de todas las entradas del usuario
+- **Reglas de seguridad de Firebase** restrictivas
+- **Identificación explícita** como aplicación empresarial legítima
+- **Contacto de seguridad** para divulgación responsable: security@gonzaloronzon.com
+
+Ver [SECURITY.md](./SECURITY.md) para detalles completos.
 
 ## 2. Características Principales
 
