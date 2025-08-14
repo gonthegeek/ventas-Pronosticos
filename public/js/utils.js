@@ -2,26 +2,88 @@
  */
 import { Timestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
+// Security and input validation utilities
+export function sanitizeInput(input) {
+    if (typeof input !== 'string') return input;
+    
+    // Remove potentially dangerous characters and HTML
+    return input
+        .replace(/[<>'"]/g, '')
+        .replace(/javascript:/gi, '')
+        .replace(/on\w+=/gi, '')
+        .replace(/data:/gi, '')
+        .trim();
+}
+
+export function validateEmail(email) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email) && email.length <= 254;
+}
+
+export function validateMachineId(machineId) {
+    // Only allow alphanumeric characters and basic symbols
+    const machineRegex = /^[a-zA-Z0-9_-]+$/;
+    return machineRegex.test(machineId) && machineId.length <= 10;
+}
+
+export function validateSaleAmount(amount) {
+    const num = parseFloat(amount);
+    return !isNaN(num) && num >= 0 && num <= 999999.99;
+}
+
 export function parseCSVAndCalculateSales(csvText) {
-    const lines = csvText.split(/\r?\n/).filter(line => line.trim() !== '');
+    // Sanitize input
+    const sanitizedCSV = sanitizeInput(csvText);
+    if (!sanitizedCSV || sanitizedCSV.length > 1000000) { // 1MB limit
+        throw new Error('Archivo CSV inválido o demasiado grande');
+    }
+    
+    const lines = sanitizedCSV.split(/\r?\n/).filter(line => line.trim() !== '');
+    
+    if (lines.length > 10000) { // Limit number of records
+        throw new Error('Archivo CSV contiene demasiados registros (máximo 10,000)');
+    }
     
     let parsedData = lines.map((line, index) => {
         const [dateStr, timeStr, machine, total] = line.split(',');
-        if (!dateStr || !timeStr || !machine || !total) throw new Error(`Línea ${index + 1}: formato incorrecto.`);
+        if (!dateStr || !timeStr || !machine || !total) {
+            throw new Error(`Línea ${index + 1}: formato incorrecto.`);
+        }
         
-        const dateParts = dateStr.trim().split('-');
-        const timeParts = timeStr.trim().split(':');
-        if (dateParts.length !== 3 || timeParts.length !== 2) throw new Error(`Línea ${index + 1}: formato de fecha/hora incorrecto.`);
+        const sanitizedMachine = sanitizeInput(machine.trim());
+        if (!validateMachineId(sanitizedMachine)) {
+            throw new Error(`Línea ${index + 1}: ID de máquina inválido.`);
+        }
+        
+        const sanitizedTotal = sanitizeInput(total.trim());
+        const totalNum = parseFloat(sanitizedTotal);
+        if (!validateSaleAmount(totalNum)) {
+            throw new Error(`Línea ${index + 1}: monto de venta inválido.`);
+        }
+        
+        const dateParts = sanitizeInput(dateStr.trim()).split('-');
+        const timeParts = sanitizeInput(timeStr.trim()).split(':');
+        if (dateParts.length !== 3 || timeParts.length !== 2) {
+            throw new Error(`Línea ${index + 1}: formato de fecha/hora incorrecto.`);
+        }
 
         const [year, month, day] = dateParts.map(p => parseInt(p, 10));
         const [hour, minute] = timeParts.map(p => parseInt(p, 10));
+        
+        // Validate date ranges
+        if (year < 2020 || year > 2030 || month < 1 || month > 12 || day < 1 || day > 31 || hour < 0 || hour > 23 || minute < 0 || minute > 59) {
+            throw new Error(`Línea ${index + 1}: fecha u hora fuera de rango válido.`);
+        }
+        
         const timestamp = new Date(year, month - 1, day, hour, minute);
-        if (isNaN(timestamp.getTime())) throw new Error(`Línea ${index + 1}: fecha u hora inválida.`);
+        if (isNaN(timestamp.getTime())) {
+            throw new Error(`Línea ${index + 1}: fecha u hora inválida.`);
+        }
 
         return {
             timestamp: Timestamp.fromDate(timestamp),
-            machineId: machine.trim(),
-            accumulatedTotal: parseFloat(total.trim()),
+            machineId: sanitizedMachine,
+            accumulatedTotal: totalNum,
             saleAmount: 0 
         };
     });

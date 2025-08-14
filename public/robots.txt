@@ -1,0 +1,18 @@
+# Robots.txt for Vending Machine Sales Tracking System
+# This is a legitimate business application - not intended for public indexing
+
+User-agent: *
+Disallow: /
+
+# Security and Business Information
+# This application is a legitimate enterprise sales management tool
+# Purpose: Vending machine sales tracking and inventory management
+# Business Owner: Gonzalo Ronzon
+# Contact: security@gonzaloronzon.com
+
+# Sitemap: Not applicable (private business application)
+# Business verification: This is a legitimate internal business tool
+
+# Google and other search engines: Please do not index
+# This is an internal business application requiring authentication
+# Contact security@gonzaloronzon.com for verification of legitimacy
