@@ -12,11 +12,21 @@ export async function handleAddSale(event) {
     const submitBtn = document.getElementById('add-sale-btn');
     toggleButtonSpinner(submitBtn, true);
     try {
-        const machineId = document.getElementById('machine-id').value;
-        const newAccumulatedTotal = parseFloat(document.getElementById('sale-amount').value);
-        if (!machineId || isNaN(newAccumulatedTotal) || newAccumulatedTotal < 0) {
-            throw new Error("Datos de venta inválidos.");
+        const machineIdInput = document.getElementById('machine-id').value;
+        const saleAmountInput = document.getElementById('sale-amount').value;
+        
+        // Sanitize and validate inputs
+        const machineId = sanitizeInput(machineIdInput);
+        const newAccumulatedTotal = parseFloat(sanitizeInput(saleAmountInput));
+        
+        if (!machineId || !validateMachineId(machineId)) {
+            throw new Error("ID de máquina inválido.");
         }
+        
+        if (!validateSaleAmount(newAccumulatedTotal)) {
+            throw new Error("Monto de venta inválido.");
+        }
+        
         const allSales = getAllSales();
         const today = new Date();
         const lastSaleToday = allSales.find(sale => {
@@ -225,8 +235,28 @@ export async function handleLoginSubmit(event) {
     const emailInput = document.getElementById('login-email');
     const passwordInput = document.getElementById('login-password');
 
-    const email = emailInput.value;
-    const password = passwordInput.value;
+    const emailValue = emailInput.value;
+    const passwordValue = passwordInput.value;
+    
+    // Sanitize and validate inputs
+    const email = sanitizeInput(emailValue);
+    const password = sanitizeInput(passwordValue);
+    
+    // Validate email format
+    if (!validateEmail(email)) {
+        displayAuthError('Formato de correo electrónico inválido');
+        showToast('Formato de correo electrónico inválido', 'error');
+        if (submitBtn) toggleButtonSpinner(submitBtn, false);
+        return;
+    }
+    
+    // Validate password length (basic security)
+    if (!password || password.length < 6 || password.length > 100) {
+        displayAuthError('La contraseña debe tener entre 6 y 100 caracteres');
+        showToast('La contraseña debe tener entre 6 y 100 caracteres', 'error');
+        if (submitBtn) toggleButtonSpinner(submitBtn, false);
+        return;
+    }
 
     try {
         await signInWithEmail(email, password);
@@ -236,9 +266,10 @@ export async function handleLoginSubmit(event) {
 
     } catch (error) {
         console.error("Login error:", error);
-        // Display the error message to the user
-        displayAuthError(`Error al iniciar sesión: ${error.message}`);
-        showToast(`Error al iniciar sesión: ${error.message}`, "error"); // Also show a toast
+        // Display the error message to the user (sanitized)
+        const errorMsg = sanitizeInput(error.message || 'Error de autenticación');
+        displayAuthError(`Error al iniciar sesión: ${errorMsg}`);
+        showToast(`Error al iniciar sesión: ${errorMsg}`, "error"); // Also show a toast
 
     } finally {
         // Turn off the spinner regardless of success or failure, only if button was found
