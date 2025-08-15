@@ -1,6 +1,4 @@
-/* uncomment this for test and comment the line after import { collection, addDoc, query, onSnapshot, orderBy, doc, writeBatch, Timestamp, where, deleteDoc } from "firebase/firestore";
- */
-import { collection, addDoc, query, onSnapshot, orderBy, doc, writeBatch, Timestamp, where, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+import { collection, addDoc, query, onSnapshot, orderBy, doc, writeBatch, Timestamp, where, deleteDoc, getDocs, limit, startAfter } from './firebase-firestore-wrapper.js';
 import { applyFiltersAndUpdateUI, getUserId } from './state.js';
 import { db, salesCollection } from './auth.js';
 import { toggleGlobalLoader } from './ui.js';
@@ -52,4 +50,25 @@ export async function deleteSaleAndUpdate(deleteId, nextSaleUpdate) {
         batch.update(nextSaleRef, { saleAmount: nextSaleUpdate.saleAmount });
     }
     return await batch.commit();
+}
+
+// Paginate through ALL sales (bypasses current UI filter) for backup/export.
+// Returns array of raw documents {id, ...data}
+export async function fetchAllSalesPaginated(batchSize = 500) {
+    if (!salesCollection) throw new Error('Colección no inicializada');
+    let results = [];
+    let lastDoc = null;
+    // Firestore requires an orderBy for startAfter
+    while (true) {
+        let qRef = query(salesCollection, orderBy('timestamp', 'asc'), limit(batchSize));
+        if (lastDoc) {
+            qRef = query(salesCollection, orderBy('timestamp', 'asc'), startAfter(lastDoc), limit(batchSize));
+        }
+        const snap = await getDocs(qRef);
+        if (snap.empty) break;
+        snap.docs.forEach(d => results.push({ id: d.id, ...d.data() }));
+        lastDoc = snap.docs[snap.docs.length - 1];
+        if (snap.size < batchSize) break; // no more docs
+    }
+    return results;
 }

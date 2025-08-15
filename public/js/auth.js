@@ -1,10 +1,7 @@
-/* iuncomment this line for test and comment the  next line mport { initializeApp } from "firebase/app";
-import { getFirestore, collection } from "firebase/firestore";
-import { getAuth, onAuthStateChanged, signInWithEmailAndPassword } from "firebase/auth";
- */
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-import { getFirestore, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-import { getAuth, onAuthStateChanged, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+// Unified Firebase imports (wrapper chooses CDN in browser, npm in tests/node)
+import { initializeApp } from './firebase-app-wrapper.js';
+import { getFirestore, collection, __firestoreLoadPromise } from './firebase-firestore-wrapper.js';
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, __authLoadPromise } from './firebase-auth-wrapper.js';
 import { setFilter } from './state.js';
 import { toggleGlobalLoader, updateUserIdDisplay, showToast, showLoginForm, showMainContent } from './ui.js';
 
@@ -24,10 +21,11 @@ export let db;
 export let auth;
 export let salesCollection;
 
-export function initFirebase() {
+export async function initFirebase() {
     toggleGlobalLoader(true);
     try {
-        const app = initializeApp(firebaseConfig);
+        const app = await initializeApp(firebaseConfig);
+        await Promise.all([__firestoreLoadPromise, __authLoadPromise]);
         db = getFirestore(app);
         auth = getAuth(app);
         onAuthStateChanged(auth, handleAuthState);

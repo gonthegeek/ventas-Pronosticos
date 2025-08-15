@@ -1,5 +1,7 @@
 {
   "projects": {
-    "default": "administracionpronosticos"
-  }
+    "default": "casapronosticos"
+  },
+  "targets": {},
+  "etags": {}
 }

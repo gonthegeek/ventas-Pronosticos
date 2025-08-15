@@ -1,10 +1,8 @@
-import { addSale, batchUpdateSales, deleteSaleAndUpdate } from './api.js';
+import { addSale, batchUpdateSales, deleteSaleAndUpdate, fetchAllSalesPaginated } from './api.js';
 import { setFilter, addComparisonDate, handlePillClick, getAllSales, triggerRefetch } from './state.js';
 import { openEditModal, closeEditModal, showToast, toggleButtonSpinner, openConfirmModal, displayAuthError } from './ui.js';
-import { parseCSVAndCalculateSales, recalculateSalesForDay } from './utils.js';
-/* uncomment this line for changes and coment the next line import { Timestamp } from "firebase/firestore";
- */
-import { Timestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+import { parseCSVAndCalculateSales, recalculateSalesForDay, generateAndDownloadBackups, normalizeSalesForExport, buildImportCompatibleCSV, downloadTextFile } from './utils.js';
+import { Timestamp } from './firebase-firestore-wrapper.js';
 import { signInWithEmail, auth } from './auth.js';
 
 // --- MANEJADORES DE EVENTOS (EXPORTADOS PARA TESTING) ---
@@ -175,6 +173,41 @@ export async function handleCSVUpload() {
     reader.readAsText(file);
 }
 
+// Export visible (currently loaded & filtered) sales to CSV & JSON
+export function handleExportCSV() {
+    try {
+        const sales = getAllSales();
+        if (!sales.length) {
+            showToast('No hay datos para exportar con el filtro actual.', 'info');
+            return;
+        }
+        generateAndDownloadBackups(sales);
+        showToast('Exportación iniciada (CSV y JSON).', 'success');
+    } catch (e) {
+        console.error(e);
+        showToast('Error al exportar los datos.', 'error');
+    }
+}
+
+export async function handleExportAll() {
+    try {
+        showToast('Preparando exportación completa...', 'info');
+        const all = await fetchAllSalesPaginated();
+        if (!all.length) {
+            showToast('No hay registros para exportar.', 'info');
+            return;
+        }
+    const normalized = normalizeSalesForExport(all);
+    const csv = buildImportCompatibleCSV(normalized);
+    const stamp = new Date().toISOString().replace(/[:T]/g,'-').split('.')[0];
+    downloadTextFile(`ventas-historico-${stamp}.csv`, csv);
+    showToast(`Exportados ${normalized.length} registros (CSV compatible).`, 'success');
+    } catch (e) {
+        console.error(e);
+        showToast('Error al exportar el histórico.', 'error');
+    }
+}
+
 // Function to handle login form submission
 export async function handleLoginSubmit(event) {
     event.preventDefault(); // Prevent default form submission
@@ -257,6 +290,10 @@ export function setupEventListeners() {
     document.getElementById('comparison-pills').addEventListener('click', handlePillClick);
     document.getElementById('compare-days-btn').addEventListener('click', () => setFilter({ type: 'comparison' }));
     document.getElementById('sales-table-body').addEventListener('click', handleTableClick);
+    const exportBtn = document.getElementById('export-csv-btn');
+    if (exportBtn) exportBtn.addEventListener('click', handleExportCSV);
+    const exportAllBtn = document.getElementById('export-all-btn');
+    if (exportAllBtn) exportAllBtn.addEventListener('click', handleExportAll);
     document.getElementById('cancel-edit').addEventListener('click', closeEditModal);
     document.getElementById('edit-modal').addEventListener('click', (e) => {
         if (e.target.id === 'edit-modal') closeEditModal();

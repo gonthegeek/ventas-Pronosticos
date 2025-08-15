@@ -1,6 +1,11 @@
-/* uncoment this line for test and comment the next line import { Timestamp } from "firebase/firestore";
- */
-import { Timestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+import { Timestamp as FirestoreTimestamp } from './firebase-firestore-wrapper.js';
+// Fallback simple Timestamp for test environment if wrapper hasn't loaded
+const Timestamp = FirestoreTimestamp || class SimpleTimestamp {
+    constructor(date) { this._d = date; }
+    static fromDate(date){ return new SimpleTimestamp(date); }
+    toDate(){ return this._d; }
+    toMillis(){ return this._d.getTime(); }
+};
 
 export function parseCSVAndCalculateSales(csvText) {
     const lines = csvText.split(/\r?\n/).filter(line => line.trim() !== '');
@@ -86,4 +91,56 @@ export function recalculateSalesForDay(allSales, machineId, date) {
     });
 
     return updates;
+}
+
+// --- EXPORT / BACKUP HELPERS ---
+
+// Convert sales array (Firestore docs) to plain JS objects with primitive values
+export function normalizeSalesForExport(sales) {
+    return sales.map(s => {
+        const dateObj = s.timestamp?.toDate ? s.timestamp.toDate() : (s.timestamp instanceof Date ? s.timestamp : new Date(s.timestamp));
+        return {
+            id: s.id || '',
+            machineId: s.machineId,
+            saleAmount: s.saleAmount,
+            accumulatedTotal: s.accumulatedTotal,
+            timestamp: dateObj.toISOString(),
+            date: dateObj.toISOString().split('T')[0],
+            time: dateObj.toTimeString().slice(0,5)
+        };
+    });
+}
+
+export function buildCSVFromSales(sales) {
+    const rows = ['date,time,machineId,accumulatedTotal,saleAmount,id'];
+    sales.forEach(r => {
+        rows.push(`${r.date},${r.time},${r.machineId},${r.accumulatedTotal},${r.saleAmount},${r.id}`);
+    });
+    return rows.join('\n');
+}
+
+// Build CSV matching the import format (NO header): date, time, machineId, accumulatedTotal
+export function buildImportCompatibleCSV(sales) {
+    return sales.map(r => `${r.date},${r.time},${r.machineId},${r.accumulatedTotal}`).join('\n');
+}
+
+export function downloadTextFile(filename, content) {
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }, 0);
+}
+
+export function generateAndDownloadBackups(rawSales) {
+    const normalized = normalizeSalesForExport(rawSales);
+    const csv = buildImportCompatibleCSV(normalized);
+    const timestamp = new Date().toISOString().replace(/[:T]/g,'-').split('.')[0];
+    downloadTextFile(`ventas-export-${timestamp}.csv`, csv);
 }
