@@ -1,7 +1,18 @@
 import { addSale, batchUpdateSales, deleteSaleAndUpdate, fetchAllSalesPaginated } from './api.js';
 import { setFilter, addComparisonDate, handlePillClick, getAllSales, triggerRefetch } from './state.js';
 import { openEditModal, closeEditModal, showToast, toggleButtonSpinner, openConfirmModal, displayAuthError } from './ui.js';
-import { parseCSVAndCalculateSales, recalculateSalesForDay, generateAndDownloadBackups, normalizeSalesForExport, buildImportCompatibleCSV, downloadTextFile } from './utils.js';
+import { 
+    parseCSVAndCalculateSales, 
+    recalculateSalesForDay, 
+    generateAndDownloadBackups, 
+    normalizeSalesForExport, 
+    buildImportCompatibleCSV, 
+    downloadTextFile,
+    sanitizeInput,
+    validateMachineId,
+    validateSaleAmount,
+    validateEmail
+} from './utils.js';
 import { Timestamp } from './firebase-firestore-wrapper.js';
 import { signInWithEmail, auth } from './auth.js';
 
