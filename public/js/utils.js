@@ -1,10 +1,35 @@
 import { Timestamp as FirestoreTimestamp } from './firebase-firestore-wrapper.js';
 // Fallback simple Timestamp for test environment if wrapper hasn't loaded
+// Use Firebase Timestamp with fallback for testing
 const Timestamp = FirestoreTimestamp || class SimpleTimestamp {
-    constructor(date) { this._d = date; }
-    static fromDate(date){ return new SimpleTimestamp(date); }
-    toDate(){ return this._d; }
-    toMillis(){ return this._d.getTime(); }
+    constructor(seconds, nanoseconds) {
+        this.seconds = seconds;
+        this.nanoseconds = nanoseconds || 0;
+    }
+    
+    static fromDate(date) {
+        return new SimpleTimestamp(Math.floor(date.getTime() / 1000), 0);
+    }
+    
+    toDate() {
+        return new Date(this.seconds * 1000 + this.nanoseconds / 1000000);
+    }
+};
+
+// For production, ensure we use the real Firebase Timestamp
+const createTimestamp = (date) => {
+    if (FirestoreTimestamp) {
+        return FirestoreTimestamp.fromDate(date);
+    }
+    return Timestamp.fromDate(date);
+};
+
+// Helper to get timestamp value for comparison (works with both Firebase Timestamp and fallback)
+const getTimestampValue = (timestamp) => {
+    if (timestamp.toMillis) {
+        return timestamp.toMillis();
+    }
+    return timestamp.toDate().getTime();
 };
 
 // Security and input validation utilities
@@ -80,13 +105,18 @@ export function parseCSVAndCalculateSales(csvText) {
             throw new Error(`Línea ${index + 1}: fecha u hora fuera de rango válido.`);
         }
         
-        const timestamp = new Date(year, month - 1, day, hour, minute);
+        // Create timestamp that matches the business timezone used in export
+        // The exported data represents Mexico City business time, so we need to convert back
+        const offsetHours = 6; // Mexico City offset from UTC
+        const businessDate = new Date(Date.UTC(year, month - 1, day, hour, minute));
+        const timestamp = new Date(businessDate.getTime() + (offsetHours * 60 * 60 * 1000));
+        
         if (isNaN(timestamp.getTime())) {
             throw new Error(`Línea ${index + 1}: fecha u hora inválida.`);
         }
 
         return {
-            timestamp: Timestamp.fromDate(timestamp),
+            timestamp: createTimestamp(timestamp),
             machineId: sanitizedMachine,
             accumulatedTotal: totalNum,
             saleAmount: 0 
@@ -96,7 +126,7 @@ export function parseCSVAndCalculateSales(csvText) {
     parsedData.sort((a, b) => {
         if (a.machineId < b.machineId) return -1;
         if (a.machineId > b.machineId) return 1;
-        return a.timestamp.toMillis() - b.timestamp.toMillis();
+        return getTimestampValue(a.timestamp) - getTimestampValue(b.timestamp);
     });
 
     const lastTotals = {};
@@ -158,19 +188,70 @@ export function recalculateSalesForDay(allSales, machineId, date) {
 // --- EXPORT / BACKUP HELPERS ---
 
 // Convert sales array (Firestore docs) to plain JS objects with primitive values
+// This function preserves the logical day boundaries as they appear in the business context
 export function normalizeSalesForExport(sales) {
-    return sales.map(s => {
-        const dateObj = s.timestamp?.toDate ? s.timestamp.toDate() : (s.timestamp instanceof Date ? s.timestamp : new Date(s.timestamp));
+    if (!Array.isArray(sales)) {
+        console.warn('normalizeSalesForExport: expected array, got:', typeof sales);
+        return [];
+    }
+    
+    return sales.map((s, index) => {
+        // Validate input data
+        if (!s || typeof s !== 'object') {
+            console.warn(`normalizeSalesForExport: invalid sale object at index ${index}:`, s);
+            return null;
+        }
+        
+        // Validate required fields
+        if (typeof s.machineId !== 'string' || typeof s.saleAmount !== 'number' || typeof s.accumulatedTotal !== 'number') {
+            console.warn(`normalizeSalesForExport: missing or invalid required fields at index ${index}:`, s);
+            return null;
+        }
+        
+        // Ensure we have a valid Date object
+        let dateObj;
+        if (s.timestamp?.toDate) {
+            dateObj = s.timestamp.toDate();
+        } else if (s.timestamp instanceof Date) {
+            dateObj = s.timestamp;
+        } else if (typeof s.timestamp === 'string' || typeof s.timestamp === 'number') {
+            dateObj = new Date(s.timestamp);
+        } else {
+            console.warn(`normalizeSalesForExport: invalid timestamp at index ${index}:`, s.timestamp);
+            dateObj = new Date(); // fallback to current time
+        }
+        
+        // Validate the date
+        if (isNaN(dateObj.getTime())) {
+            console.warn(`normalizeSalesForExport: invalid timestamp found at index ${index}:`, s);
+            dateObj = new Date(); // fallback to current time
+        }
+        
+        // CRITICAL: Export using the timezone that preserves business logic
+        // Since the data was entered by users thinking in local time (Mexico City = UTC-6),
+        // we need to export in a way that preserves the logical day groupings
+        
+        // For Mexico City timezone (UTC-6), we adjust the date to show the "business day"
+        // This ensures that sales entered on the same business day stay grouped together
+        const offsetHours = 6; // Mexico City offset from UTC
+        const adjustedDate = new Date(dateObj.getTime() - (offsetHours * 60 * 60 * 1000));
+        
+        const year = adjustedDate.getUTCFullYear();
+        const month = String(adjustedDate.getUTCMonth() + 1).padStart(2, '0');
+        const day = String(adjustedDate.getUTCDate()).padStart(2, '0');
+        const hours = String(adjustedDate.getUTCHours()).padStart(2, '0');
+        const minutes = String(adjustedDate.getUTCMinutes()).padStart(2, '0');
+        
         return {
             id: s.id || '',
             machineId: s.machineId,
             saleAmount: s.saleAmount,
             accumulatedTotal: s.accumulatedTotal,
-            timestamp: dateObj.toISOString(),
-            date: dateObj.toISOString().split('T')[0],
-            time: dateObj.toTimeString().slice(0,5)
+            timestamp: dateObj.toISOString(), // Keep original timestamp
+            date: `${year}-${month}-${day}`, // Business day
+            time: `${hours}:${minutes}` // Business time
         };
-    });
+    }).filter(Boolean); // Remove any null entries from validation failures
 }
 
 export function buildCSVFromSales(sales) {
@@ -201,8 +282,34 @@ export function downloadTextFile(filename, content) {
 }
 
 export function generateAndDownloadBackups(rawSales) {
+    if (!rawSales || !Array.isArray(rawSales)) {
+        console.error('generateAndDownloadBackups: Invalid sales data provided');
+        throw new Error('Datos de ventas inválidos para exportar');
+    }
+    
+    if (rawSales.length === 0) {
+        console.warn('generateAndDownloadBackups: No sales data to export');
+        throw new Error('No hay datos de ventas para exportar');
+    }
+    
     const normalized = normalizeSalesForExport(rawSales);
+    
+    if (normalized.length === 0) {
+        console.error('generateAndDownloadBackups: All sales data failed normalization');
+        throw new Error('Todos los registros de ventas contienen datos inválidos');
+    }
+    
+    if (normalized.length !== rawSales.length) {
+        console.warn(`generateAndDownloadBackups: ${rawSales.length - normalized.length} registros fueron excluidos por contener datos inválidos`);
+    }
+    
     const csv = buildImportCompatibleCSV(normalized);
     const timestamp = new Date().toISOString().replace(/[:T]/g,'-').split('.')[0];
     downloadTextFile(`ventas-export-${timestamp}.csv`, csv);
+    
+    return {
+        totalRecords: rawSales.length,
+        exportedRecords: normalized.length,
+        skippedRecords: rawSales.length - normalized.length
+    };
 }

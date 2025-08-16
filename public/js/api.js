@@ -72,3 +72,54 @@ export async function fetchAllSalesPaginated(batchSize = 500) {
     }
     return results;
 }
+
+// Upload historical data from CSV import in batches
+export async function uploadHistoricalData(salesData) {
+    if (!salesCollection) throw new Error('Colección no inicializada');
+    if (!salesData || !Array.isArray(salesData) || salesData.length === 0) {
+        throw new Error('No hay datos válidos para subir');
+    }
+    
+    const batchSize = 500; // Firestore batch limit
+    const batches = [];
+    
+    // Split data into batches
+    for (let i = 0; i < salesData.length; i += batchSize) {
+        const batch = salesData.slice(i, i + batchSize);
+        batches.push(batch);
+    }
+    
+    let totalUploaded = 0;
+    
+    // Process each batch
+    for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
+        const batch = writeBatch(db);
+        const currentBatch = batches[batchIndex];
+        
+        currentBatch.forEach(saleData => {
+            // Validate each record before uploading
+            if (!saleData.machineId || typeof saleData.accumulatedTotal !== 'number' || !saleData.timestamp) {
+                throw new Error(`Registro inválido encontrado: ${JSON.stringify(saleData)}`);
+            }
+            
+            // Create a new document reference for each sale
+            const docRef = doc(salesCollection);
+            batch.set(docRef, {
+                ...saleData,
+                userId: getUserId() || 'anonymous' // Add user ID for security, fallback for safety
+            });
+        });
+        
+        try {
+            await batch.commit();
+            totalUploaded += currentBatch.length;
+            console.log(`Batch ${batchIndex + 1}/${batches.length} uploaded successfully (${currentBatch.length} records)`);
+        } catch (error) {
+            console.error(`Error uploading batch ${batchIndex + 1}:`, error);
+            throw new Error(`Error subiendo lote ${batchIndex + 1}: ${error.message}`);
+        }
+    }
+    
+    console.log(`Successfully uploaded ${totalUploaded} historical records`);
+    return totalUploaded;
+}

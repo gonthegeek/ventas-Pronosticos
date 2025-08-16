@@ -1,4 +1,4 @@
-import { addSale, batchUpdateSales, deleteSaleAndUpdate, fetchAllSalesPaginated } from './api.js';
+import { addSale, batchUpdateSales, deleteSaleAndUpdate, fetchAllSalesPaginated, uploadHistoricalData } from './api.js';
 import { setFilter, addComparisonDate, handlePillClick, getAllSales, triggerRefetch } from './state.js';
 import { openEditModal, closeEditModal, showToast, toggleButtonSpinner, openConfirmModal, displayAuthError } from './ui.js';
 import { 
@@ -202,11 +202,16 @@ export function handleExportCSV() {
             showToast('No hay datos para exportar con el filtro actual.', 'info');
             return;
         }
-        generateAndDownloadBackups(sales);
-        showToast('Exportación iniciada (CSV y JSON).', 'success');
+        const result = generateAndDownloadBackups(sales);
+        
+        if (result.skippedRecords > 0) {
+            showToast(`Exportación completada. ${result.exportedRecords} registros exportados, ${result.skippedRecords} registros omitidos por datos inválidos.`, 'warning');
+        } else {
+            showToast(`Exportación completada exitosamente. ${result.exportedRecords} registros exportados.`, 'success');
+        }
     } catch (e) {
-        console.error(e);
-        showToast('Error al exportar los datos.', 'error');
+        console.error('Error during export:', e);
+        showToast(e.message || 'Error al exportar los datos.', 'error');
     }
 }
 
@@ -218,11 +223,14 @@ export async function handleExportAll() {
             showToast('No hay registros para exportar.', 'info');
             return;
         }
-    const normalized = normalizeSalesForExport(all);
-    const csv = buildImportCompatibleCSV(normalized);
-    const stamp = new Date().toISOString().replace(/[:T]/g,'-').split('.')[0];
-    downloadTextFile(`ventas-historico-${stamp}.csv`, csv);
-    showToast(`Exportados ${normalized.length} registros (CSV compatible).`, 'success');
+        
+        const result = generateAndDownloadBackups(all);
+        
+        if (result.skippedRecords > 0) {
+            showToast(`Exportación completa finalizada. ${result.exportedRecords} registros exportados, ${result.skippedRecords} registros omitidos por datos inválidos.`, 'warning');
+        } else {
+            showToast(`Exportación completa exitosa. ${result.exportedRecords} registros históricos exportados.`, 'success');
+        }
     } catch (e) {
         console.error(e);
         showToast('Error al exportar el histórico.', 'error');
