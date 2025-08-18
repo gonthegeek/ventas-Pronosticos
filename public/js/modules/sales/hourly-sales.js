@@ -29,7 +29,7 @@ export class HourlySalesModule extends BaseModule {
         
         this.showLoading('Cargando ventas por hora...');
         
-        // Show the original content by making it visible
+        // Show the original content without cloning
         setTimeout(() => {
             this.showOriginalContent();
         }, 500);
@@ -41,36 +41,26 @@ export class HourlySalesModule extends BaseModule {
     showOriginalContent() {
         if (!this.contentContainer) return;
 
-        // For now, we'll show the original content within the module
-        // This is a temporary solution while we complete the migration
-        this.contentContainer.innerHTML = `
-            <div class="hourly-sales-wrapper">
-                <div class="mb-6 p-4 bg-blue-50 border-l-4 border-blue-400 text-blue-800">
-                    <div class="font-semibold">🔄 Módulo de Ventas por Hora</div>
-                    <div class="text-sm">Funcionalidad actual migrada al nuevo sistema de navegación</div>
-                </div>
-                <div id="original-content-placeholder">
-                    <!-- El contenido original se mostrará aquí -->
-                </div>
-            </div>
-        `;
+        // Clear loading state
+        this.contentContainer.innerHTML = '';
 
-        // Show the original content
+        // Show the original legacy content directly
         const legacyContent = document.querySelector('.container.mx-auto.p-4');
         if (legacyContent) {
+            // Simply show the original content
             legacyContent.style.display = 'block';
-            // Move it into our module container temporarily
-            const placeholder = document.getElementById('original-content-placeholder');
-            if (placeholder) {
-                // Clone the content to avoid moving the original
-                const clonedContent = legacyContent.cloneNode(true);
-                placeholder.appendChild(clonedContent);
-                // Hide the original
-                legacyContent.style.display = 'none';
-            }
+            console.log('⏰ Original hourly sales content displayed');
+        } else {
+            // If legacy content not found, show a message
+            this.contentContainer.innerHTML = `
+                <div class="p-6">
+                    <div class="mb-6 p-4 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-800">
+                        <div class="font-semibold">⚠️ Contenido Original No Encontrado</div>
+                        <div class="text-sm">No se pudo cargar el contenido de ventas por hora original</div>
+                    </div>
+                </div>
+            `;
         }
-
-        console.log('⏰ Original hourly sales content displayed');
     }
 
     /**
@@ -79,10 +69,10 @@ export class HourlySalesModule extends BaseModule {
     async onDestroy() {
         console.log('⏰ Hourly Sales module cleaning up...');
         
-        // Restore original content visibility
+        // Hide the original content when leaving this module
         const legacyContent = document.querySelector('.container.mx-auto.p-4');
         if (legacyContent) {
-            legacyContent.style.display = 'block';
+            legacyContent.style.display = 'none';
         }
     }
 }

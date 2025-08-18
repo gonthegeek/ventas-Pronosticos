@@ -96,31 +96,44 @@ export class BaseModule {
     }
 
     /**
-     * Create main content container
+     * Create and setup the content container for this module
      */
     createContentContainer() {
-        // Hide existing content
-        this.hideExistingContent();
+        // Remove existing container
+        const existing = document.getElementById(`module-${this.id}`);
+        if (existing) {
+            existing.remove();
+        }
+
+        // Create new container
+        this.contentContainer = document.createElement('div');
+        this.contentContainer.id = `module-${this.id}`;
+        this.contentContainer.className = 'module-content';
         
-        // Create new content container
-        const container = document.createElement('div');
-        container.id = `module-${this.name}`;
-        container.className = 'module-content';
+        // Apply sidebar layout immediately
+        const sidebar = document.getElementById('sidebar');
+        if (sidebar && sidebar.classList.contains('collapsed')) {
+            this.contentContainer.classList.add('sidebar-collapsed');
+        }
+
+        // Hide all other module content and legacy content
+        document.querySelectorAll('.module-content').forEach(el => {
+            el.style.display = 'none';
+        });
         
+        // Hide legacy content by default (modules can choose to show it)
+        const legacyContent = document.querySelector('.container.mx-auto.p-4');
+        if (legacyContent) {
+            legacyContent.style.display = 'none';
+        }
+
         // Add to main content area
         const mainContent = document.getElementById('main-content');
         if (mainContent) {
-            mainContent.appendChild(container);
-            this.contentContainer = container;
-            
-            // Apply sidebar layout immediately
-            const sidebar = document.getElementById('sidebar');
-            if (sidebar && sidebar.classList.contains('collapsed')) {
-                container.classList.add('sidebar-collapsed');
-            }
-        } else {
-            throw new Error('Main content container not found');
+            mainContent.appendChild(this.contentContainer);
         }
+
+        this.contentContainer.style.display = 'block';
     }
 
     /**
