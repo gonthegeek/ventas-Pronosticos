@@ -132,6 +132,12 @@ function createPlaceholderModule(name, title, icon) {
                 container.id = `module-${name}`;
                 container.className = 'module-content';
                 
+                // Apply sidebar layout immediately
+                const sidebar = document.getElementById('sidebar');
+                if (sidebar && sidebar.classList.contains('collapsed')) {
+                    container.classList.add('sidebar-collapsed');
+                }
+                
                 const mainContent = document.getElementById('main-content');
                 if (mainContent) {
                     mainContent.appendChild(container);

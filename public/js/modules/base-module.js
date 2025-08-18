@@ -112,6 +112,12 @@ export class BaseModule {
         if (mainContent) {
             mainContent.appendChild(container);
             this.contentContainer = container;
+            
+            // Apply sidebar layout immediately
+            const sidebar = document.getElementById('sidebar');
+            if (sidebar && sidebar.classList.contains('collapsed')) {
+                container.classList.add('sidebar-collapsed');
+            }
         } else {
             throw new Error('Main content container not found');
         }

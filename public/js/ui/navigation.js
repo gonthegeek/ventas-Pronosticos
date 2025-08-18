@@ -273,15 +273,22 @@ export class Navigation {
         const mainContent = document.getElementById('main-content');
         if (mainContent && !mainContent.classList.contains('with-sidebar')) {
             mainContent.classList.add('with-sidebar');
+            if (this.isCollapsed) {
+                mainContent.classList.add('sidebar-collapsed');
+            }
         }
 
-        // Adjust content area padding based on sidebar state
-        const contentArea = document.querySelector('.content-area') || 
-                           document.querySelector('.container');
-        if (contentArea) {
-            contentArea.style.marginLeft = this.isCollapsed ? '60px' : '250px';
-            contentArea.style.transition = 'margin-left 0.3s ease';
-        }
+        // Adjust all content containers
+        const contentContainers = [
+            document.querySelector('.container.mx-auto.p-4'),
+            ...document.querySelectorAll('.module-content')
+        ];
+
+        contentContainers.forEach(container => {
+            if (container) {
+                container.classList.toggle('sidebar-collapsed', this.isCollapsed);
+            }
+        });
     }
 
     /**
@@ -321,6 +328,7 @@ export class Navigation {
         const userText = document.querySelector('.user-text');
         const userInfo = document.querySelector('.user-info');
         const sidebarBrand = document.querySelector('.sidebar-brand');
+        const mainContent = document.getElementById('main-content');
 
         if (sidebar) {
             sidebar.classList.toggle('collapsed', this.isCollapsed);
@@ -339,8 +347,22 @@ export class Navigation {
         if (userInfo) userInfo.classList.toggle('collapsed', this.isCollapsed);
         if (sidebarBrand) sidebarBrand.classList.toggle('collapsed', this.isCollapsed);
 
-        // Update main content layout
-        this.updateMainContentLayout();
+        // Update main content and all containers
+        if (mainContent) {
+            mainContent.classList.toggle('sidebar-collapsed', this.isCollapsed);
+        }
+
+        // Update all content containers
+        const contentContainers = [
+            document.querySelector('.container.mx-auto.p-4'),
+            ...document.querySelectorAll('.module-content')
+        ];
+
+        contentContainers.forEach(container => {
+            if (container) {
+                container.classList.toggle('sidebar-collapsed', this.isCollapsed);
+            }
+        });
 
         console.log(`🧭 Sidebar ${this.isCollapsed ? 'collapsed' : 'expanded'}`);
     }
@@ -383,14 +405,21 @@ export class Navigation {
         // Reset main content layout
         const mainContent = document.getElementById('main-content');
         if (mainContent) {
-            mainContent.classList.remove('with-sidebar');
+            mainContent.classList.remove('with-sidebar', 'sidebar-collapsed');
         }
 
-        const contentArea = document.querySelector('.content-area') || 
-                           document.querySelector('.container');
-        if (contentArea) {
-            contentArea.style.marginLeft = '';
-        }
+        // Reset all content containers
+        const contentContainers = [
+            document.querySelector('.container.mx-auto.p-4'),
+            ...document.querySelectorAll('.module-content')
+        ];
+
+        contentContainers.forEach(container => {
+            if (container) {
+                container.classList.remove('sidebar-collapsed');
+                container.style.marginLeft = '';
+            }
+        });
 
         console.log('🧭 Navigation destroyed');
     }

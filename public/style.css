@@ -197,11 +197,38 @@ body {
 
 /* Main content adjustments */
 .with-sidebar {
+    margin-left: 250px;
     transition: margin-left 0.3s ease;
+}
+
+.with-sidebar.sidebar-collapsed {
+    margin-left: 60px;
 }
 
 .content-area {
     transition: margin-left 0.3s ease;
+}
+
+/* Module content wrapper */
+.module-content {
+    margin-left: 250px;
+    transition: margin-left 0.3s ease;
+    min-height: 100vh;
+    padding: 0;
+}
+
+.module-content.sidebar-collapsed {
+    margin-left: 60px;
+}
+
+/* Original container adjustments */
+.container.mx-auto.p-4 {
+    margin-left: 250px;
+    transition: margin-left 0.3s ease;
+}
+
+.container.mx-auto.p-4.sidebar-collapsed {
+    margin-left: 60px;
 }
 
 /* ==========================================
