@@ -5,7 +5,10 @@
   "main": "index.js",
   "scripts": {
     "test": "vitest",
-    "start": "npx live-server public"
+    "start": "npx live-server public",
+    "progress": "node progress-tracker.js",
+    "status": "node progress-tracker.js status",
+    "report": "node progress-tracker.js report"
   },
   "keywords": [],
   "author": "gonthegeek",

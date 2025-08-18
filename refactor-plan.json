@@ -1,0 +1,735 @@
+{
+  "project": "Sistema de análisis de ventas y sorteos - Plan de Refactor",
+  "version": "1.0",
+  "created": "2025-08-18",
+  "status": "planning",
+  "overview": {
+    "description": "Plan completo para evolucionar el sistema actual de 'Ventas por hora' hacia el sistema completo especificado en srs.json",
+    "current_state": "Sistema con funcionalidad de ventas por hora completamente funcional",
+    "target_state": "Sistema completo con 9 funcionalidades, panel de administración y roles",
+    "approach": "Refactor incremental sin romper funcionalidad existente"
+  },
+  "current_analysis": {
+    "strengths": [
+      {
+        "item": "Arquitectura modular sólida",
+        "description": "Separación clara en módulos (auth, api, state, ui, events, utils)",
+        "status": "completed"
+      },
+      {
+        "item": "UI/UX excelente",
+        "description": "Interfaz amigable, responsive, con feedback visual inmediato",
+        "status": "completed"
+      },
+      {
+        "item": "Sistema de autenticación robusto",
+        "description": "Firebase Auth implementado correctamente",
+        "status": "completed"
+      },
+      {
+        "item": "Gestión de estado eficiente",
+        "description": "Estado centralizado con reactividad",
+        "status": "completed"
+      },
+      {
+        "item": "Características avanzadas",
+        "description": "Export/import CSV, filtros, comparaciones, edición en línea",
+        "status": "completed"
+      },
+      {
+        "item": "Seguridad implementada",
+        "description": "Validación, sanitización, reglas de Firestore",
+        "status": "completed"
+      }
+    ],
+    "weaknesses": [
+      {
+        "item": "Modelo de datos fijo",
+        "description": "Solo maneja 'ventas por hora'",
+        "status": "needs_refactor"
+      },
+      {
+        "item": "UI monolítica",
+        "description": "Una sola pantalla para una funcionalidad",
+        "status": "needs_refactor"
+      },
+      {
+        "item": "Falta de roles/permisos",
+        "description": "No hay panel de administración ni control de acceso",
+        "status": "needs_implementation"
+      },
+      {
+        "item": "Sin dashboards",
+        "description": "Solo gráficas básicas, falta vista general",
+        "status": "needs_implementation"
+      }
+    ]
+  },
+  "target_architecture": {
+    "navigation": {
+      "type": "SPA con menú lateral",
+      "description": "Navegación por categorías con sub-menús",
+      "structure": {
+        "dashboard": "Vista resumen con KPIs principales",
+        "ventas": {
+          "por_hora": "Funcionalidad actual (refactorizada)",
+          "diarias": "Nueva funcionalidad",
+          "semanales": "Nueva funcionalidad"
+        },
+        "finanzas": {
+          "comisiones": "Nueva funcionalidad",
+          "boletos": "Nueva funcionalidad",
+          "premiados": "Nueva funcionalidad"
+        },
+        "sorteos": {
+          "raspados": "Nueva funcionalidad",
+          "primeros": "Nueva funcionalidad"
+        },
+        "operacion": {
+          "cambio_rollos": "Nueva funcionalidad"
+        },
+        "admin": {
+          "usuarios": "Nueva funcionalidad",
+          "configuracion": "Nueva funcionalidad"
+        }
+      }
+    },
+    "roles": {
+      "operador": {
+        "permissions": [
+          "dashboard:read",
+          "ventas:all",
+          "boletos:create",
+          "rollos:create"
+        ],
+        "menu_access": [
+          "dashboard",
+          "ventas",
+          "operacion"
+        ]
+      },
+      "supervisor": {
+        "permissions": [
+          "operador:all",
+          "comisiones:all",
+          "premiados:all",
+          "sorteos:all"
+        ],
+        "menu_access": [
+          "dashboard",
+          "ventas",
+          "finanzas",
+          "sorteos",
+          "operacion"
+        ]
+      },
+      "admin": {
+        "permissions": [
+          "supervisor:all",
+          "admin:all",
+          "users:all"
+        ],
+        "menu_access": [
+          "all"
+        ]
+      }
+    }
+  },
+  "data_model": {
+    "collections": [
+      {
+        "name": "hourly_sales",
+        "path": "artifacts/{appId}/public/data/hourly_sales",
+        "status": "exists_needs_enhancement",
+        "fields": {
+          "existing": [
+            "id",
+            "machineId",
+            "saleAmount",
+            "accumulatedTotal",
+            "timestamp",
+            "userId"
+          ],
+          "new": [
+            "date",
+            "hour",
+            "weekNumber"
+          ]
+        },
+        "description": "Ventas por hora - funcionalidad #1 del SRS"
+      },
+      {
+        "name": "monthly_commissions",
+        "path": "artifacts/{appId}/public/data/monthly_commissions",
+        "status": "needs_implementation",
+        "fields": [
+          "id",
+          "machineId",
+          "month",
+          "totalSystem",
+          "totalPaper",
+          "difference",
+          "timestamp",
+          "userId"
+        ],
+        "description": "Comisiones mensuales - funcionalidad #2 del SRS"
+      },
+      {
+        "name": "roll_changes",
+        "path": "artifacts/{appId}/public/data/roll_changes",
+        "status": "needs_implementation",
+        "fields": [
+          "id",
+          "machineId",
+          "date",
+          "timestamp",
+          "userId",
+          "notes"
+        ],
+        "description": "Cambio de rollo - funcionalidad #3 del SRS"
+      },
+      {
+        "name": "daily_weekly_sales",
+        "path": "artifacts/{appId}/public/data/daily_weekly_sales",
+        "status": "needs_implementation",
+        "fields": [
+          "id",
+          "machineId",
+          "date",
+          "dayOfWeek",
+          "weekNumber",
+          "dailySale",
+          "weeklySale",
+          "timestamp",
+          "userId"
+        ],
+        "description": "Ventas diarias y semanales - funcionalidad #4 del SRS"
+      },
+      {
+        "name": "tickets_sold",
+        "path": "artifacts/{appId}/public/data/tickets_sold",
+        "status": "needs_implementation",
+        "fields": [
+          "id",
+          "machineId",
+          "date",
+          "weekNumber",
+          "ticketsDay",
+          "ticketsTotal",
+          "timestamp",
+          "userId"
+        ],
+        "description": "Boletos vendidos - funcionalidad #5 del SRS"
+      },
+      {
+        "name": "ticket_averages",
+        "path": "artifacts/{appId}/public/data/ticket_averages",
+        "status": "needs_implementation",
+        "fields": [
+          "id",
+          "machineId",
+          "date",
+          "weekNumber",
+          "ticketsSold",
+          "totalSale",
+          "averagePerTicket",
+          "timestamp",
+          "userId"
+        ],
+        "description": "Promedio por boleto - funcionalidad #6 del SRS"
+      },
+      {
+        "name": "scratch_prizes",
+        "path": "artifacts/{appId}/public/data/scratch_prizes",
+        "status": "needs_implementation",
+        "fields": [
+          "id",
+          "date",
+          "weekNumber",
+          "lottery",
+          "winningTicket",
+          "prizeAmount",
+          "timestamp",
+          "userId"
+        ],
+        "description": "Raspados premiados - funcionalidad #7 del SRS"
+      },
+      {
+        "name": "paid_prizes",
+        "path": "artifacts/{appId}/public/data/paid_prizes",
+        "status": "needs_implementation",
+        "fields": [
+          "id",
+          "date",
+          "weekNumber",
+          "amountPaid",
+          "ticketCount",
+          "timestamp",
+          "userId"
+        ],
+        "description": "Boletos premiados pagados - funcionalidad #8 del SRS"
+      },
+      {
+        "name": "first_places",
+        "path": "artifacts/{appId}/public/data/first_places",
+        "status": "needs_implementation",
+        "fields": [
+          "id",
+          "date",
+          "lottery",
+          "accumulatedJackpot",
+          "winnerCount",
+          "timestamp",
+          "userId"
+        ],
+        "description": "Primeros lugares de sorteos - funcionalidad #9 del SRS"
+      },
+      {
+        "name": "users",
+        "path": "artifacts/{appId}/public/data/users",
+        "status": "needs_implementation",
+        "fields": [
+          "id",
+          "email",
+          "role",
+          "name",
+          "isActive",
+          "createdAt",
+          "lastLogin"
+        ],
+        "description": "Usuarios y roles del sistema"
+      }
+    ]
+  },
+  "file_structure": {
+    "current": {
+      "public/js/": [
+        "main.js",
+        "auth.js",
+        "api.js",
+        "state.js",
+        "ui.js",
+        "events.js",
+        "utils.js",
+        "chart-config.js",
+        "firebase-*-wrapper.js"
+      ]
+    },
+    "target": {
+      "public/js/": {
+        "core/": [
+          "auth.js",
+          "api.js",
+          "state.js",
+          "router.js"
+        ],
+        "modules/": {
+          "dashboard/": [
+            "dashboard.js",
+            "dashboard-ui.js"
+          ],
+          "sales/": [
+            "hourly-sales.js",
+            "daily-sales.js",
+            "weekly-sales.js"
+          ],
+          "finances/": [
+            "commissions.js",
+            "tickets.js",
+            "prizes.js"
+          ],
+          "lottery/": [
+            "scratches.js",
+            "first-places.js"
+          ],
+          "operations/": [
+            "roll-changes.js"
+          ],
+          "admin/": [
+            "users.js",
+            "settings.js"
+          ]
+        },
+        "components/": [
+          "form-builder.js",
+          "table-builder.js",
+          "chart-wrapper.js",
+          "filters.js",
+          "export.js"
+        ],
+        "ui/": [
+          "ui.js",
+          "navigation.js",
+          "modals.js",
+          "toasts.js"
+        ],
+        "utils/": [
+          "utils.js",
+          "validation.js",
+          "permissions.js",
+          "data-transform.js"
+        ]
+      }
+    }
+  },
+  "implementation_phases": [
+    {
+      "phase": 1,
+      "name": "PREPARACIÓN Y BASE",
+      "duration": "1 semana",
+      "status": "pending",
+      "objective": "Preparar infraestructura sin romper funcionalidad actual",
+      "tasks": [
+        {
+          "id": "1.1",
+          "name": "Crear sistema de navegación",
+          "description": "Agregar menú lateral colapsable y router básico SPA",
+          "status": "pending",
+          "files_affected": [
+            "index.html",
+            "style.css",
+            "js/core/router.js",
+            "js/ui/navigation.js"
+          ],
+          "estimated_hours": 8,
+          "actual_hours": 0
+        },
+        {
+          "id": "1.2",
+          "name": "Reestructurar archivos",
+          "description": "Crear estructura modular y mover código actual",
+          "status": "pending",
+          "files_affected": [
+            "js/modules/sales/hourly-sales.js",
+            "js/core/api.js"
+          ],
+          "estimated_hours": 6
+        },
+        {
+          "id": "1.3",
+          "name": "Sistema de roles básico",
+          "description": "Agregar colección users y middleware de permisos",
+          "status": "pending",
+          "files_affected": [
+            "js/utils/permissions.js",
+            "firestore.rules"
+          ],
+          "estimated_hours": 4
+        }
+      ],
+      "deliverable": "Sistema funcionando igual pero con navegación lateral",
+      "success_criteria": [
+        "Menú lateral funcional",
+        "Código reestructurado",
+        "Permisos básicos implementados"
+      ]
+    },
+    {
+      "phase": 2,
+      "name": "MÓDULOS BÁSICOS",
+      "duration": "2 semanas",
+      "status": "pending",
+      "objective": "Implementar funcionalidades básicas del SRS",
+      "tasks": [
+        {
+          "id": "2.1",
+          "name": "Módulo de Dashboard",
+          "description": "Vista resumen con KPIs principales y gráficas de tendencias",
+          "status": "pending",
+          "files_affected": [
+            "js/modules/dashboard/dashboard.js",
+            "js/modules/dashboard/dashboard-ui.js"
+          ],
+          "estimated_hours": 12
+        },
+        {
+          "id": "2.2",
+          "name": "Módulo de Cambio de Rollos",
+          "description": "Formulario de registro, tabla de historial y exportación",
+          "status": "pending",
+          "files_affected": [
+            "js/modules/operations/roll-changes.js"
+          ],
+          "estimated_hours": 8
+        },
+        {
+          "id": "2.3",
+          "name": "Módulo de Boletos Vendidos",
+          "description": "Registro diario y cálculos automáticos semanales",
+          "status": "pending",
+          "files_affected": [
+            "js/modules/finances/tickets.js"
+          ],
+          "estimated_hours": 10
+        }
+      ],
+      "deliverable": "3 funcionalidades nuevas completamente operativas",
+      "success_criteria": [
+        "Dashboard funcional",
+        "Cambio de rollos operativo",
+        "Boletos vendidos implementado"
+      ]
+    },
+    {
+      "phase": 3,
+      "name": "FUNCIONALIDADES AVANZADAS",
+      "duration": "2 semanas",
+      "status": "pending",
+      "objective": "Implementar funcionalidades de finanzas y sorteos",
+      "tasks": [
+        {
+          "id": "3.1",
+          "name": "Módulo de Comisiones Mensuales",
+          "description": "Formulario mensual y comparativa sistema vs papel",
+          "status": "pending",
+          "files_affected": [
+            "js/modules/finances/commissions.js"
+          ],
+          "estimated_hours": 10
+        },
+        {
+          "id": "3.2",
+          "name": "Módulo de Raspados y Premiados",
+          "description": "Registro de raspados y control de boletos pagados",
+          "status": "pending",
+          "files_affected": [
+            "js/modules/lottery/scratches.js",
+            "js/modules/finances/prizes.js"
+          ],
+          "estimated_hours": 12
+        },
+        {
+          "id": "3.3",
+          "name": "Módulo de Primeros Lugares",
+          "description": "Registro de ganadores y seguimiento de bolsas",
+          "status": "pending",
+          "files_affected": [
+            "js/modules/lottery/first-places.js"
+          ],
+          "estimated_hours": 8
+        }
+      ],
+      "deliverable": "Sistema completo según SRS básico",
+      "success_criteria": [
+        "Comisiones operativas",
+        "Sorteos implementados",
+        "Todas las 9 funcionalidades funcionando"
+      ]
+    },
+    {
+      "phase": 4,
+      "name": "PANEL DE ADMINISTRACIÓN",
+      "duration": "1 semana",
+      "status": "pending",
+      "objective": "Completar sistema con administración",
+      "tasks": [
+        {
+          "id": "4.1",
+          "name": "Panel de Administración",
+          "description": "Gestión de usuarios, import/export masivo y configuración",
+          "status": "pending",
+          "files_affected": [
+            "js/modules/admin/users.js",
+            "js/modules/admin/settings.js"
+          ],
+          "estimated_hours": 16
+        },
+        {
+          "id": "4.2",
+          "name": "Optimizaciones finales",
+          "description": "Cacheo, paginación, performance y testing",
+          "status": "pending",
+          "files_affected": [
+            "js/core/api.js",
+            "js/utils/cache.js"
+          ],
+          "estimated_hours": 8
+        }
+      ],
+      "deliverable": "Sistema completo, escalable y administrable",
+      "success_criteria": [
+        "Panel admin funcional",
+        "Performance optimizada",
+        "Testing completo"
+      ]
+    }
+  ],
+  "components": {
+    "reusable": [
+      {
+        "name": "FormBuilder",
+        "file": "js/components/form-builder.js",
+        "description": "Generador dinámico de formularios",
+        "status": "needs_implementation",
+        "usage": [
+          "Todos los módulos para formularios de registro"
+        ]
+      },
+      {
+        "name": "TableBuilder",
+        "file": "js/components/table-builder.js",
+        "description": "Generador de tablas con filtros y paginación",
+        "status": "needs_implementation",
+        "usage": [
+          "Todos los módulos para listados de datos"
+        ]
+      },
+      {
+        "name": "ChartWrapper",
+        "file": "js/components/chart-wrapper.js",
+        "description": "Wrapper reutilizable para Chart.js",
+        "status": "needs_refactor",
+        "usage": [
+          "Dashboard y módulos con gráficas"
+        ]
+      },
+      {
+        "name": "FilterComponent",
+        "file": "js/components/filters.js",
+        "description": "Filtros reutilizables (fecha, máquina, etc.)",
+        "status": "needs_refactor",
+        "usage": [
+          "Todos los módulos con filtros"
+        ]
+      },
+      {
+        "name": "ExportComponent",
+        "file": "js/components/export.js",
+        "description": "Export/Import reutilizable para CSV/Excel",
+        "status": "needs_refactor",
+        "usage": [
+          "Todos los módulos con funcionalidad de exportación"
+        ]
+      }
+    ]
+  },
+  "srs_mapping": {
+    "functionalities": [
+      {
+        "srs_id": 1,
+        "name": "Ventas por hora",
+        "status": "implemented_needs_enhancement",
+        "current_file": "js/api.js, js/events.js",
+        "target_file": "js/modules/sales/hourly-sales.js",
+        "notes": "Ya implementado, necesita refactor para nueva estructura"
+      },
+      {
+        "srs_id": 2,
+        "name": "Comisiones mensuales",
+        "status": "pending",
+        "current_file": null,
+        "target_file": "js/modules/finances/commissions.js",
+        "notes": "Nueva funcionalidad - Fase 3"
+      },
+      {
+        "srs_id": 3,
+        "name": "Cambio de rollo",
+        "status": "pending",
+        "current_file": null,
+        "target_file": "js/modules/operations/roll-changes.js",
+        "notes": "Nueva funcionalidad - Fase 2"
+      },
+      {
+        "srs_id": 4,
+        "name": "Ventas diarias y semanales",
+        "status": "pending",
+        "current_file": null,
+        "target_file": "js/modules/sales/daily-sales.js",
+        "notes": "Nueva funcionalidad - Fase 2"
+      },
+      {
+        "srs_id": 5,
+        "name": "Boletos vendidos",
+        "status": "pending",
+        "current_file": null,
+        "target_file": "js/modules/finances/tickets.js",
+        "notes": "Nueva funcionalidad - Fase 2"
+      },
+      {
+        "srs_id": 6,
+        "name": "Promedio por boleto",
+        "status": "pending",
+        "current_file": null,
+        "target_file": "js/modules/finances/tickets.js",
+        "notes": "Se implementará junto con boletos vendidos"
+      },
+      {
+        "srs_id": 7,
+        "name": "Raspados premiados",
+        "status": "pending",
+        "current_file": null,
+        "target_file": "js/modules/lottery/scratches.js",
+        "notes": "Nueva funcionalidad - Fase 3"
+      },
+      {
+        "srs_id": 8,
+        "name": "Boletos premiados pagados",
+        "status": "pending",
+        "current_file": null,
+        "target_file": "js/modules/finances/prizes.js",
+        "notes": "Nueva funcionalidad - Fase 3"
+      },
+      {
+        "srs_id": 9,
+        "name": "Primeros lugares de sorteos",
+        "status": "pending",
+        "current_file": null,
+        "target_file": "js/modules/lottery/first-places.js",
+        "notes": "Nueva funcionalidad - Fase 3"
+      }
+    ],
+    "admin_panel": {
+      "user_management": {
+        "status": "pending",
+        "target_file": "js/modules/admin/users.js",
+        "phase": 4
+      },
+      "import_export": {
+        "status": "pending",
+        "target_file": "js/modules/admin/settings.js",
+        "phase": 4
+      },
+      "dashboards": {
+        "status": "pending",
+        "target_file": "js/modules/dashboard/dashboard.js",
+        "phase": 2
+      },
+      "configuration": {
+        "status": "pending",
+        "target_file": "js/modules/admin/settings.js",
+        "phase": 4
+      }
+    }
+  },
+  "tracking": {
+    "total_estimated_hours": 106,
+    "completed_hours": 0,
+    "remaining_hours": 106,
+    "progress_percentage": 0,
+    "last_updated": "2025-08-18",
+    "next_milestone": "Fase 1 - Preparación y Base",
+    "blockers": [],
+    "notes": [
+      "Plan creado basado en análisis del código actual",
+      "Estimaciones conservadoras para permitir testing adecuado",
+      "Priorizar no romper funcionalidad existente"
+    ]
+  },
+  "success_metrics": {
+    "usability": [
+      "Tiempo de registro por funcionalidad <= 2 minutos",
+      "Feedback visual inmediato en todas las acciones",
+      "Navegación intuitiva sin necesidad de entrenamiento"
+    ],
+    "functionality": [
+      "Todas las 9 funcionalidades del SRS implementadas",
+      "Sistema de roles funcionando correctamente",
+      "Import/Export operativo para todas las colecciones"
+    ],
+    "technical": [
+      "Tiempo de carga inicial <= 3 segundos",
+      "Queries optimizadas con paginación",
+      "Cobertura de tests >= 80%"
+    ]
+  }
+}
