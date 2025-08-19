@@ -21,8 +21,8 @@ function proxy(name) {
 }
 export { load as __loadFirestore }; // for potential manual preload
 export const __firestoreLoadPromise = load();
-export let getFirestore, collection, addDoc, query, onSnapshot, orderBy, doc, writeBatch, Timestamp, where, deleteDoc, getDocs, getDoc, limit, startAfter;
+export let getFirestore, collection, addDoc, query, onSnapshot, orderBy, doc, writeBatch, Timestamp, where, deleteDoc, getDocs, getDoc, setDoc, limit, startAfter;
 // Preload immediately in browser; in node tests consumers will mock before usage
 load().then(mod => {
-  ({ getFirestore, collection, addDoc, query, onSnapshot, orderBy, doc, writeBatch, Timestamp, where, deleteDoc, getDocs, getDoc, limit, startAfter } = mod);
+  ({ getFirestore, collection, addDoc, query, onSnapshot, orderBy, doc, writeBatch, Timestamp, where, deleteDoc, getDocs, getDoc, setDoc, limit, startAfter } = mod);
 }).catch(()=>{});

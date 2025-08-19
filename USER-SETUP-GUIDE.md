@@ -5,16 +5,26 @@
 ### 1. **Hacer login en la aplicación**
 Inicia sesión con tu cuenta de Firebase Auth.
 
-### 2. **Abrir consola del navegador**
-Presiona `F12` y ve a la pestaña "Console".
-
-### 3. **Ejecutar setup automático**
-```javascript
-// Configurar tu usuario actual como admin
-await setupInitialAdmin();
+### 2. **Esperar la inicialización completa**
+Espera a que aparezca el mensaje en consola:
+```
+🔧 User setup functions available:
+   - setupInitialAdmin()
+   - addAuthorizedUser(uid, email, role, name)
+   - getUserRole(uid)
+   - setupDemoUsers()
 ```
 
-### 4. **Refrescar la página**
+### 3. **Abrir consola del navegador**
+Presiona `F12` y ve a la pestaña "Console".
+
+### 4. **Ejecutar setup automático**
+```javascript
+// Configurar tu usuario actual como admin
+setupInitialAdmin();
+```
+
+### 5. **Refrescar la página**
 Una vez confirmado, refresca la página para aplicar los cambios.
 
 ## Manual User Setup
@@ -22,22 +32,21 @@ Una vez confirmado, refresca la página para aplicar los cambios.
 ### Agregar usuarios específicos:
 
 ```javascript
-// Agregar un operador
-await addAuthorizedUser('firebase-uid-here', 'operador@example.com', 'operador', 'Juan Pérez');
+// Agregar un operador (ya no necesitas await)
+addAuthorizedUser('firebase-uid-here', 'operador@example.com', 'operador', 'Juan Pérez');
 
 // Agregar un supervisor  
-await addAuthorizedUser('firebase-uid-here', 'supervisor@example.com', 'supervisor', 'María García');
+addAuthorizedUser('firebase-uid-here', 'supervisor@example.com', 'supervisor', 'María García');
 
 // Agregar un admin
-await addAuthorizedUser('firebase-uid-here', 'admin@example.com', 'admin', 'Carlos Admin');
+addAuthorizedUser('firebase-uid-here', 'admin@example.com', 'admin', 'Carlos Admin');
 ```
 
 ### Verificar rol de un usuario:
 
 ```javascript
-// Ver datos de un usuario
-const userData = await getUserRole('firebase-uid-here');
-console.log(userData);
+// Ver datos de un usuario (ya no necesitas await)
+getUserRole('firebase-uid-here').then(userData => console.log(userData));
 ```
 
 ## Roles y Permisos

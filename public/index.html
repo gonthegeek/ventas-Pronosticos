@@ -1,7 +1,5 @@
 <!DOCTYPE html>
-<html     <!-- Content Security Policy -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://www.gstatic.com https://firebaseapp.com https://*.firebaseapp.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://www.googleapis.com https://apis.google.com https://cdn.tailwindcss.com https://cdn.jsdelivr.net https://fonts.googleapis.com https://fonts.gstatic.com https://*.firestore.googleapis.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com https://apis.google.com https://cdn.tailwindcss.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://*.googleapis.com https://apis.google.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://*.firebaseio.com https://*.firestore.googleapis.com wss://*.firebaseio.com ws://*.firestore.googleapis.com;">
-
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -15,14 +13,13 @@
     <meta name="category" content="Business Management Software">
     <meta name="robots" content="noindex, nofollow">
     
-    <!-- Security Headers -->
+    <!-- Security Headers (Note: X-Frame-Options via meta tag is ignored, only works via HTTP headers) -->
     <meta http-equiv="X-Content-Type-Options" content="nosniff">
-    <meta http-equiv="X-Frame-Options" content="DENY">
     <meta http-equiv="X-XSS-Protection" content="1; mode=block">
     <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
     
     <!-- Content Security Policy -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://www.gstatic.com https://firebaseapp.com https://*.firebaseapp.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://www.googleapis.com https://cdn.tailwindcss.com https://cdn.jsdelivr.net https://fonts.googleapis.com https://fonts.gstatic.com; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://cdn.tailwindcss.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://*.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://*.firebaseio.com https://*.firestore.googleapis.com wss://*.firebaseio.com;">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://www.gstatic.com https://firebaseapp.com https://*.firebaseapp.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://www.googleapis.com https://apis.google.com https://cdn.tailwindcss.com https://cdn.jsdelivr.net https://fonts.googleapis.com https://fonts.gstatic.com https://*.firestore.googleapis.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com https://apis.google.com https://cdn.tailwindcss.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://*.googleapis.com https://apis.google.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://*.firebaseio.com https://*.firestore.googleapis.com wss://*.firebaseio.com ws://*.firestore.googleapis.com;">
     
     <!-- Business Verification -->
     <meta name="business-purpose" content="Internal vending machine sales tracking and inventory management system">
@@ -338,6 +335,31 @@
 
     <!-- Archivo de Lógica JavaScript -->
     <script type="module" src="./js/main.js"></script>
+    
+    <!-- Setup Functions for Console Access -->
+    <script type="module">
+        // Import user setup functions and make them globally available
+        import { 
+            addAuthorizedUser, 
+            getUserRole, 
+            setupInitialAdmin, 
+            setupDemoUsers 
+        } from './js/utils/user-setup.js';
+        
+        // Wait for app initialization then make functions available
+        setTimeout(() => {
+            window.addAuthorizedUser = addAuthorizedUser;
+            window.getUserRole = getUserRole;
+            window.setupInitialAdmin = setupInitialAdmin;
+            window.setupDemoUsers = setupDemoUsers;
+            
+            console.log('🔧 User setup functions available:');
+            console.log('   - setupInitialAdmin()');
+            console.log('   - addAuthorizedUser(uid, email, role, name)');
+            console.log('   - getUserRole(uid)');
+            console.log('   - setupDemoUsers()');
+        }, 3000); // Wait 3 seconds for app to initialize
+    </script>
 </body>
 
 </html>

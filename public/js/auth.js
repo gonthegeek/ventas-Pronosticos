@@ -31,8 +31,9 @@ export async function initFirebase() {
         auth = getAuth(app);
         onAuthStateChanged(auth, handleAuthState);
         
-        // Make auth available globally for user setup
+        // Make auth and db available globally for user setup
         window.auth = auth;
+        window.db = db;
     } catch (e) {
         console.error("Error inicializando Firebase:", e);
         showToast("Error crítico al inicializar la aplicación.", "error");

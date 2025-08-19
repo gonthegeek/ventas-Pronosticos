@@ -5,7 +5,6 @@
  */
 
 import { doc, setDoc, getDoc } from '../firebase-firestore-wrapper.js';
-import { db } from '../auth.js';
 
 /**
  * Add or update a user in the authorizedUsers collection
@@ -16,6 +15,13 @@ import { db } from '../auth.js';
  */
 export async function addAuthorizedUser(userId, email, role, name) {
     try {
+        // Get db from global window object
+        const db = window.db;
+        if (!db) {
+            console.error('❌ Database not initialized. Please wait for app to load.');
+            return false;
+        }
+        
         const appId = '1:154235122109:web:3747377946727b2081e2d4';
         const userDocRef = doc(db, `artifacts/${appId}/public/data/config/authorizedUsers`, userId);
         
@@ -43,6 +49,12 @@ export async function addAuthorizedUser(userId, email, role, name) {
  */
 export async function getUserRole(userId) {
     try {
+        const db = window.db;
+        if (!db) {
+            console.error('❌ Database not initialized. Please wait for app to load.');
+            return null;
+        }
+        
         const appId = '1:154235122109:web:3747377946727b2081e2d4';
         const userDocRef = doc(db, `artifacts/${appId}/public/data/config/authorizedUsers`, userId);
         const userSnap = await getDoc(userDocRef);
