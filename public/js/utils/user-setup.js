@@ -23,7 +23,8 @@ export async function addAuthorizedUser(userId, email, role, name) {
         }
         
         const appId = '1:154235122109:web:3747377946727b2081e2d4';
-        const userDocRef = doc(db, `artifacts/${appId}/public/data/config/authorizedUsers`, userId);
+        // Using simplified path for authorizedUsers only (even number of segments)
+        const userDocRef = doc(db, 'authorizedUsers', userId);
         
         const userData = {
             email: email,
@@ -56,7 +57,8 @@ export async function getUserRole(userId) {
         }
         
         const appId = '1:154235122109:web:3747377946727b2081e2d4';
-        const userDocRef = doc(db, `artifacts/${appId}/public/data/config/authorizedUsers`, userId);
+        // Using simplified path for authorizedUsers only (even number of segments)
+        const userDocRef = doc(db, 'authorizedUsers', userId);
         const userSnap = await getDoc(userDocRef);
         
         if (userSnap.exists()) {

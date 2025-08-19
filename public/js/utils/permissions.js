@@ -163,7 +163,8 @@ export async function initializePermissions() {
 export async function getUserRole(userId) {
     try {
         const appId = '1:154235122109:web:3747377946727b2081e2d4';
-        const userDoc = doc(db, `artifacts/${appId}/public/data/config/authorizedUsers`, userId);
+        // Using simplified path for authorizedUsers only (even number of segments)
+        const userDoc = doc(db, 'authorizedUsers', userId);
         const userSnap = await getDoc(userDoc);
         
         if (userSnap.exists()) {
@@ -253,7 +254,8 @@ function getUserEmail() {
 export async function getAllAuthorizedUsers() {
     try {
         const appId = '1:154235122109:web:3747377946727b2081e2d4';
-        const usersCollection = collection(db, `artifacts/${appId}/public/data/config/authorizedUsers`);
+        // Using simplified path for authorizedUsers only (even number of segments)
+        const usersCollection = collection(db, 'authorizedUsers');
         const usersSnap = await getDocs(usersCollection);
         
         const users = [];

@@ -12,7 +12,7 @@ service cloud.firestore {
     }
     
     function getUserData() {
-      return get(/databases/$(database)/documents/artifacts/1:154235122109:web:3747377946727b2081e2d4/public/data/config/authorizedUsers/$(request.auth.uid));
+      return get(/databases/$(database)/documents/authorizedUsers/$(request.auth.uid));
     }
     
     function hasRole(role) {
@@ -29,7 +29,7 @@ service cloud.firestore {
     }
     
     function isAuthorizedUser() {
-      return isAuthenticated() && exists(/databases/$(database)/documents/artifacts/1:154235122109:web:3747377946727b2081e2d4/public/data/config/authorizedUsers/$(request.auth.uid));
+      return isAuthenticated() && exists(/databases/$(database)/documents/authorizedUsers/$(request.auth.uid));
     }
     
     // SRS Functionality #1: Hourly Sales (ventas por hora)
@@ -108,7 +108,15 @@ service cloud.firestore {
     }
     
     // User management for roles system (Phase 1 - Task 1.3)
-    // Existing authorizedUsers collection
+    // New simplified authorizedUsers collection (even number of segments)
+    match /authorizedUsers/{userId} {
+      allow read: if isAuthenticated();
+      allow write: if hasRole('admin');
+      allow create: if hasRole('admin');
+      allow delete: if hasRole('admin');
+    }
+    
+    // Keep the old authorizedUsers path for backward compatibility (if needed)
     match /artifacts/{appId}/public/data/config/authorizedUsers/{userId} {
       allow read: if isAuthenticated();
       allow write: if hasRole('admin');

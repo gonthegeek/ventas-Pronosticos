@@ -102,7 +102,8 @@ console.log('Current user UID:', auth.currentUser?.uid);
 ## Estructura de datos en Firestore
 
 ```javascript
-// Colección: artifacts/1:154235122109:web:3747377946727b2081e2d4/public/data/config/authorizedUsers
+// Nueva colección simplificada: authorizedUsers
+// (Solo cambia la ruta de usuarios, todas las demás colecciones mantienen su estructura original)
 {
   "firebase-uid": {
     "email": "user@example.com",
@@ -114,3 +115,5 @@ console.log('Current user UID:', auth.currentUser?.uid);
   }
 }
 ```
+
+**Nota importante:** Solo se cambió la ruta de la colección de usuarios para solucionar el error de Firestore. Todas las demás colecciones (ventas, etc.) mantienen sus rutas originales con datos existentes intactos.
