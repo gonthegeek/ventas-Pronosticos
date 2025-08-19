@@ -377,7 +377,7 @@
       "phase": 1,
       "name": "PREPARACIÓN Y BASE",
       "duration": "1 semana",
-      "status": "in_progress",
+      "status": "completed",
       "objective": "Preparar infraestructura sin romper funcionalidad actual",
       "tasks": [
         {
@@ -404,18 +404,19 @@
             "js/core/api.js"
           ],
           "estimated_hours": 6,
-          "actual_hours": 3
+          "actual_hours": 2
         },
         {
           "id": "1.3",
           "name": "Sistema de roles básico",
           "description": "Agregar colección users y middleware de permisos",
-          "status": "pending",
+          "status": "completed",
           "files_affected": [
             "js/utils/permissions.js",
             "firestore.rules"
           ],
-          "estimated_hours": 4
+          "estimated_hours": 4,
+          "actual_hours": 3
         }
       ],
       "deliverable": "Sistema funcionando igual pero con navegación lateral",
@@ -703,12 +704,12 @@
     }
   },
   "tracking": {
-    "total_estimated_hours": 106,
-    "completed_hours": 0,
-    "remaining_hours": 106,
-    "progress_percentage": 0,
-    "last_updated": "2025-08-18",
-    "next_milestone": "Fase 1 - Preparación y Base",
+    "total_estimated_hours": 102,
+    "completed_hours": 9,
+    "remaining_hours": 93,
+    "progress_percentage": 27,
+    "last_updated": "2025-08-19",
+    "next_milestone": "Fase 2 - MÓDULOS BÁSICOS",
     "blockers": [],
     "notes": [
       "Plan creado basado en análisis del código actual",

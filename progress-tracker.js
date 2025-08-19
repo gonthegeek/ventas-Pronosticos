@@ -59,7 +59,8 @@ class ProgressTracker {
                 
                 if (task.status === 'completed') {
                     completedTasks++;
-                    completedHours += task.estimated_hours;
+                    // Use actual_hours if available, otherwise fall back to estimated_hours
+                    completedHours += task.actual_hours || task.estimated_hours;
                 }
             });
         });
@@ -82,6 +83,9 @@ class ProgressTracker {
 
     // Commands
     showStatus() {
+        // Update progress before showing status
+        this.updateProgress();
+        
         console.log('\n📊 ESTADO ACTUAL DEL PROYECTO\n');
         console.log(`Progreso General: ${this.plan.tracking.progress_percentage}%`);
         console.log(`Horas Completadas: ${this.plan.tracking.completed_hours}/${this.plan.tracking.total_estimated_hours}`);
@@ -211,6 +215,9 @@ class ProgressTracker {
     }
 
     generateReport() {
+        // Update progress before generating report
+        this.updateProgress();
+        
         console.log('\n📈 REPORTE DETALLADO DE PROGRESO\n');
         
         // Overall stats
@@ -282,6 +289,7 @@ COMANDOS DISPONIBLES:
 📊 Consultar Estado:
    node progress-tracker.js status              - Estado general del proyecto
    node progress-tracker.js report              - Reporte detallado
+   node progress-tracker.js sync                - Sincronizar y guardar progreso
 
 ✅ Actualizar Progreso:
    node progress-tracker.js update-task <id> <status>     - Actualizar tarea
@@ -375,6 +383,12 @@ function main() {
             
         case 'report':
             tracker.generateReport();
+            break;
+            
+        case 'sync':
+            tracker.updateProgress();
+            tracker.savePlan();
+            console.log('✅ Progress synchronized and saved!');
             break;
             
         default:

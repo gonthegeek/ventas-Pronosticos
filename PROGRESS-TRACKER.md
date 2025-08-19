@@ -19,6 +19,9 @@ node progress-tracker.js status
 npm run report  
 # o
 node progress-tracker.js report
+
+# Sincronizar y guardar progreso
+node progress-tracker.js sync
 ```
 
 ### Actualizar Progreso
@@ -53,7 +56,43 @@ node progress-tracker.js set-blocker "Esperando diseño de UI"
 node progress-tracker.js remove-blocker 0
 ```
 
-## 📊 Estados Válidos
+## 📊 Cálculos de Progreso
+
+### Métricas Implementadas
+
+El tracker ahora calcula automáticamente:
+
+- **Progreso General:** Porcentaje basado en tareas completadas vs total de tareas
+- **Horas Reales vs Estimadas:** Usa `actual_hours` cuando están disponibles
+- **Próximo Milestone:** Identifica automáticamente la siguiente fase pendiente
+- **Desglose por Fases:** Estado detallado de cada fase con conteo de tareas
+
+### Ejemplo de Output
+
+```bash
+📊 ESTADO ACTUAL DEL PROYECTO
+
+Progreso General: 27%              # 3 de 11 tareas completadas
+Horas Completadas: 9/102           # Horas reales/estimadas totales
+Próximo Milestone: Fase 2 - MÓDULOS BÁSICOS
+Última Actualización: 2025-08-19
+
+🎯 FASES:
+  ✅ Fase 1: PREPARACIÓN Y BASE (3/3 tareas)    # 100% completada
+  ⏳ Fase 2: MÓDULOS BÁSICOS (0/3 tareas)       # Próxima en la lista
+```
+
+### Comando Sync
+
+El nuevo comando `sync` actualiza automáticamente todos los cálculos y guarda el archivo:
+
+```bash
+node progress-tracker.js sync
+```
+
+Esto es útil cuando has hecho cambios manuales al `refactor-plan.json` y quieres recalcular el progreso.
+
+## 💡 Mejores Prácticas
 
 - **`pending`** - Pendiente de iniciar
 - **`in_progress`** - En progreso actualmente  
