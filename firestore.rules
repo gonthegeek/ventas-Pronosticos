@@ -28,6 +28,16 @@ service cloud.firestore {
       );
     }
     
+    // Helper function to check if any authorized users exist
+    function hasAnyAuthorizedUsers() {
+      return exists(/databases/$(database)/documents/authorizedUsers);
+    }
+    
+    // Helper function to check if this is the first admin setup
+    function isFirstAdminSetup() {
+      return isAuthenticated() && !hasAnyAuthorizedUsers();
+    }
+    
     function isAuthorizedUser() {
       return isAuthenticated() && exists(/databases/$(database)/documents/authorizedUsers/$(request.auth.uid));
     }
@@ -112,7 +122,7 @@ service cloud.firestore {
     match /authorizedUsers/{userId} {
       allow read: if isAuthenticated();
       allow write: if hasRole('admin');
-      allow create: if hasRole('admin');
+      allow create: if hasRole('admin') || (isFirstAdminSetup() && request.auth.uid == userId && request.resource.data.role == 'admin');
       allow delete: if hasRole('admin');
     }
     
@@ -120,7 +130,7 @@ service cloud.firestore {
     match /artifacts/{appId}/public/data/config/authorizedUsers/{userId} {
       allow read: if isAuthenticated();
       allow write: if hasRole('admin');
-      allow create: if hasRole('admin');
+      allow create: if hasRole('admin') || (isFirstAdminSetup() && request.auth.uid == userId && request.resource.data.role == 'admin');
       allow delete: if hasRole('admin');
     }
     
