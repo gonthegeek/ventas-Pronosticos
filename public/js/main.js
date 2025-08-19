@@ -4,6 +4,7 @@ import { router } from './core/router.js';
 import { navigation } from './ui/navigation.js';
 import { dashboardModule } from './modules/dashboard/dashboard.js';
 import { hourlySalesModule } from './modules/sales/hourly-sales.js';
+import { PERMISSIONS } from './utils/permissions.js';
 
 // Initialize the application
 window.onload = async () => {
@@ -16,11 +17,14 @@ window.onload = async () => {
         // Setup global event listeners (auth, navigation)
         setupEventListeners();
         
+        // Make navigation available globally for auth.js
+        window.navigation = navigation;
+        
         // Register routes with modules
         registerRoutes();
         
-        // Render navigation
-        navigation.render();
+        // Note: Navigation will be initialized after successful authentication
+        // in the auth state handler to ensure permissions are loaded
         
         // Initialize router
         router.init();
@@ -41,74 +45,80 @@ function registerRoutes() {
     // Dashboard
     router.register('/dashboard', dashboardModule, {
         title: 'Dashboard',
-        requiresAuth: true
+        requiresAuth: true,
+        permission: PERMISSIONS.DASHBOARD_READ
     });
     
     // Sales routes
     router.register('/sales/hourly', hourlySalesModule, {
         title: 'Ventas por Hora',
-        requiresAuth: true
+        requiresAuth: true,
+        permission: PERMISSIONS.VENTAS_ALL
     });
     
     // Placeholder routes for future modules
     router.register('/sales/daily', createPlaceholderModule('daily-sales', 'Ventas Diarias', '📅'), {
         title: 'Ventas Diarias',
-        requiresAuth: true
+        requiresAuth: true,
+        permission: PERMISSIONS.VENTAS_READ
     });
     
     router.register('/sales/weekly', createPlaceholderModule('weekly-sales', 'Ventas Semanales', '🗓️'), {
         title: 'Ventas Semanales', 
-        requiresAuth: true
+        requiresAuth: true,
+        permission: PERMISSIONS.VENTAS_READ
     });
     
     // Finance routes
     router.register('/finances/commissions', createPlaceholderModule('commissions', 'Comisiones Mensuales', '💵'), {
         title: 'Comisiones',
         requiresAuth: true,
-        requiredRole: 'supervisor'
+        permission: PERMISSIONS.COMISIONES_ALL
     });
     
     router.register('/finances/tickets', createPlaceholderModule('tickets', 'Boletos Vendidos', '🎫'), {
         title: 'Boletos',
-        requiresAuth: true
+        requiresAuth: true,
+        permission: PERMISSIONS.BOLETOS_READ
     });
     
     router.register('/finances/prizes', createPlaceholderModule('prizes', 'Boletos Premiados', '🏆'), {
         title: 'Premiados',
         requiresAuth: true,
-        requiredRole: 'supervisor'
+        permission: PERMISSIONS.PREMIADOS_ALL
     });
     
     // Lottery routes
     router.register('/lottery/scratches', createPlaceholderModule('scratches', 'Raspados Premiados', '🎲'), {
         title: 'Raspados',
         requiresAuth: true,
-        requiredRole: 'supervisor'
+        permission: PERMISSIONS.SORTEOS_ALL
     });
     
     router.register('/lottery/first-places', createPlaceholderModule('first-places', 'Primeros Lugares', '🥇'), {
         title: 'Primeros Lugares',
         requiresAuth: true,
-        requiredRole: 'supervisor'
+        permission: PERMISSIONS.SORTEOS_ALL
     });
     
     // Operations routes
     router.register('/operations/roll-changes', createPlaceholderModule('roll-changes', 'Cambio de Rollos', '📜'), {
         title: 'Cambio de Rollos',
-        requiresAuth: true
+        requiresAuth: true,
+        permission: PERMISSIONS.ROLLOS_CREATE
     });
     
     // Admin routes
     router.register('/admin/users', createPlaceholderModule('users', 'Gestión de Usuarios', '👥'), {
         title: 'Usuarios',
         requiresAuth: true,
-        requiredRole: 'admin'
+        permission: PERMISSIONS.USERS_ALL
     });
     
     router.register('/admin/settings', createPlaceholderModule('settings', 'Configuración', '🛠️'), {
         title: 'Configuración',
         requiresAuth: true,
-        requiredRole: 'admin'
+        permission: PERMISSIONS.ADMIN_ALL
     });
     
     console.log('✅ Routes registered successfully');

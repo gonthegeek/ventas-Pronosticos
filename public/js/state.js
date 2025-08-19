@@ -4,6 +4,7 @@ import { auth } from './auth.js';
 
 let allSalesData = [];
 let isAuthenticated = false;
+let currentUser = null;
 let currentFilter = {
     type: 'today',
     date: new Date(),
@@ -15,9 +16,11 @@ export const getAllSales = () => allSalesData;
 export const getUserId = () => auth?.currentUser?.uid;
 export const getDateRange = () => calculateDateRange();
 export const getCurrentFilter = () => currentFilter;
+export const getCurrentUser = () => currentUser;
 
 export const setIsAuthenticated = (status) => { isAuthenticated = status; };
 export const getIsAuthenticated = () => isAuthenticated;
+export const updateCurrentUser = (user) => { currentUser = user; };
 
 function calculateDateRange() {
     const now = new Date();

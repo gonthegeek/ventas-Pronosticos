@@ -4,6 +4,7 @@ import { getFirestore, collection, __firestoreLoadPromise } from './firebase-fir
 import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, __authLoadPromise } from './firebase-auth-wrapper.js';
 import { setFilter } from './state.js';
 import { toggleGlobalLoader, updateUserIdDisplay, showToast, showLoginForm, showMainContent } from './ui.js';
+import { initializePermissions, clearPermissions, isUserAuthorized } from './utils/permissions.js';
 
 // Firebase configuration - values will be injected during build
 const firebaseConfig = {
@@ -56,6 +57,29 @@ export async function handleAuthState(user) {
             // Keep using 'sales' collection for existing data compatibility
             salesCollection = collection(db, `artifacts/${currentAppId}/public/data/sales`);
 
+            // Check if user is authorized and initialize permissions
+            const isAuthorized = await isUserAuthorized(user.uid);
+            if (!isAuthorized) {
+                console.warn('🔐 User not authorized:', user.email);
+                showToast('Usuario no autorizado. Contacte al administrador.', 'error');
+                await handleSignOut();
+                return;
+            }
+
+            // Initialize user permissions
+            const permissionsInitialized = await initializePermissions();
+            if (!permissionsInitialized) {
+                console.warn('🔐 Failed to initialize permissions');
+                showToast('Error al cargar permisos de usuario.', 'error');
+                return;
+            }
+
+            // Initialize navigation with user permissions
+            if (window.navigation) {
+                window.navigation.initialize();
+                window.navigation.render();
+            }
+
             // Trigger initial filter to load today's data
             setFilter({ type: 'today' });
 
@@ -63,6 +87,8 @@ export async function handleAuthState(user) {
             showMainContent();
             toggleGlobalLoader(false);
         } else {
+            // Clear permissions when user logs out
+            clearPermissions();
             // If no user is authenticated, show the login form
             showLoginForm();
             toggleGlobalLoader(false);

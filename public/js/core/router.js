@@ -3,6 +3,8 @@
  * Manages navigation between different modules without page reload
  */
 
+import { hasPermission, hasRole, getCurrentUser } from '../utils/permissions.js';
+
 export class Router {
     constructor() {
         this.routes = new Map();
@@ -24,7 +26,7 @@ export class Router {
      * Register a route with its corresponding module
      * @param {string} path - Route path (e.g., '/sales/hourly')
      * @param {Object} module - Module object with init() and render() methods
-     * @param {Object} options - Additional options like requiresAuth, role, etc.
+     * @param {Object} options - Additional options like requiresAuth, role, permission, etc.
      */
     register(path, module, options = {}) {
         this.routes.set(path, {
@@ -32,7 +34,35 @@ export class Router {
             options,
             path
         });
-        console.log(`📍 Route registered: ${path}`);
+        console.log(`📍 Route registered: ${path}`, options);
+    }
+
+    /**
+     * Check if user has access to route based on permissions and roles
+     * @param {Object} options - Route options containing permission and role requirements
+     */
+    hasRouteAccess(options) {
+        const currentUser = getCurrentUser();
+        
+        // Check if user is authenticated
+        if (options.requiresAuth && !currentUser.uid) {
+            console.warn('📍 Route access denied: Authentication required');
+            return false;
+        }
+
+        // Check permission requirements
+        if (options.permission && !hasPermission(options.permission)) {
+            console.warn(`📍 Route access denied: Missing permission ${options.permission}`);
+            return false;
+        }
+
+        // Check role requirements
+        if (options.role && !hasRole(options.role)) {
+            console.warn(`📍 Route access denied: Requires role ${options.role}, user has ${currentUser.role}`);
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -52,16 +82,20 @@ export class Router {
             return;
         }
 
-        // Check permissions if needed
-        if (route.options.requiresAuth && !this.isAuthenticated()) {
-            console.warn('📍 Route requires authentication');
-            this.navigate('/login', {}, addToHistory);
-            return;
-        }
-
-        if (route.options.requiredRole && !this.hasRole(route.options.requiredRole)) {
-            console.warn(`📍 Route requires role: ${route.options.requiredRole}`);
-            this.navigate('/unauthorized', {}, addToHistory);
+        // Check permissions and role access
+        if (!this.hasRouteAccess(route.options)) {
+            console.warn(`📍 Access denied to route: ${path}`);
+            // Redirect to appropriate page based on auth status
+            const currentUser = getCurrentUser();
+            if (!currentUser.uid) {
+                // User not authenticated, redirect to login
+                this.showAccessDenied('Por favor, inicie sesión para acceder a esta sección.');
+            } else {
+                // User authenticated but lacks permissions
+                this.showAccessDenied('No tiene permisos para acceder a esta sección.');
+                // Redirect to dashboard or previous page
+                this.navigate(this.defaultRoute, {}, false);
+            }
             return;
         }
 
@@ -86,6 +120,22 @@ export class Router {
         } catch (error) {
             console.error('📍 Navigation error:', error);
             this.navigate('/error', { error: error.message }, false);
+        }
+    }
+
+    /**
+     * Show access denied message
+     */
+    showAccessDenied(message) {
+        // This would typically show a toast or modal
+        console.warn(`📍 Access Denied: ${message}`);
+        
+        // For now, we'll use a simple alert
+        // In a real implementation, this should be a proper UI component
+        if (typeof window !== 'undefined' && window.showToast) {
+            window.showToast(message, 'error');
+        } else {
+            alert(message);
         }
     }
 

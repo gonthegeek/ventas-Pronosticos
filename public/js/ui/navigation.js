@@ -4,26 +4,41 @@
  */
 
 import { router } from '../core/router.js';
+import { getCurrentUser, hasMenuAccess, hasPermission, PERMISSIONS } from '../utils/permissions.js';
 
 export class Navigation {
     constructor() {
         this.isCollapsed = false;
-        this.currentUserRole = 'operador'; // Will be set from auth system
-        this.menuItems = this.getMenuItemsByRole();
+        this.currentUser = null;
+        this.menuItems = [];
         
         console.log('🧭 Navigation component initialized');
     }
 
     /**
-     * Get menu items based on user role
+     * Initialize navigation with current user permissions
+     */
+    initialize() {
+        this.currentUser = getCurrentUser();
+        this.menuItems = this.getMenuItemsByRole();
+        console.log('🧭 Navigation initialized for user:', this.currentUser.role);
+    }
+
+    /**
+     * Get menu items based on user role and permissions
      */
     getMenuItemsByRole() {
+        if (!this.currentUser || !this.currentUser.role) {
+            return [];
+        }
+
         const baseItems = [
             {
                 id: 'dashboard',
                 title: 'Dashboard',
                 icon: '📊',
                 route: '/dashboard',
+                permission: PERMISSIONS.DASHBOARD_READ,
                 roles: ['operador', 'supervisor', 'admin']
             }
         ];
@@ -34,6 +49,7 @@ export class Navigation {
                 title: 'Ventas',
                 icon: '📈',
                 isSection: true,
+                permission: PERMISSIONS.VENTAS_READ,
                 roles: ['operador', 'supervisor', 'admin']
             },
             {
@@ -42,6 +58,7 @@ export class Navigation {
                 icon: '⏰',
                 route: '/sales/hourly',
                 parent: 'sales',
+                permission: PERMISSIONS.VENTAS_ALL,
                 roles: ['operador', 'supervisor', 'admin']
             },
             {
@@ -50,6 +67,7 @@ export class Navigation {
                 icon: '📅',
                 route: '/sales/daily',
                 parent: 'sales',
+                permission: PERMISSIONS.VENTAS_READ,
                 roles: ['operador', 'supervisor', 'admin']
             },
             {
@@ -58,6 +76,7 @@ export class Navigation {
                 icon: '🗓️',
                 route: '/sales/weekly',
                 parent: 'sales',
+                permission: PERMISSIONS.VENTAS_READ,
                 roles: ['operador', 'supervisor', 'admin']
             }
         ];
@@ -68,6 +87,7 @@ export class Navigation {
                 title: 'Finanzas',
                 icon: '💰',
                 isSection: true,
+                permission: PERMISSIONS.COMISIONES_READ,
                 roles: ['supervisor', 'admin']
             },
             {
@@ -76,6 +96,7 @@ export class Navigation {
                 icon: '💵',
                 route: '/finances/commissions',
                 parent: 'finances',
+                permission: PERMISSIONS.COMISIONES_ALL,
                 roles: ['supervisor', 'admin']
             },
             {
@@ -84,6 +105,7 @@ export class Navigation {
                 icon: '🎫',
                 route: '/finances/tickets',
                 parent: 'finances',
+                permission: PERMISSIONS.BOLETOS_READ,
                 roles: ['operador', 'supervisor', 'admin']
             },
             {
@@ -92,6 +114,7 @@ export class Navigation {
                 icon: '🏆',
                 route: '/finances/prizes',
                 parent: 'finances',
+                permission: PERMISSIONS.PREMIADOS_ALL,
                 roles: ['supervisor', 'admin']
             }
         ];
@@ -102,6 +125,7 @@ export class Navigation {
                 title: 'Sorteos',
                 icon: '🎰',
                 isSection: true,
+                permission: PERMISSIONS.SORTEOS_READ,
                 roles: ['supervisor', 'admin']
             },
             {
@@ -110,6 +134,7 @@ export class Navigation {
                 icon: '🎲',
                 route: '/lottery/scratches',
                 parent: 'lottery',
+                permission: PERMISSIONS.SORTEOS_ALL,
                 roles: ['supervisor', 'admin']
             },
             {
@@ -118,6 +143,7 @@ export class Navigation {
                 icon: '🥇',
                 route: '/lottery/first-places',
                 parent: 'lottery',
+                permission: PERMISSIONS.SORTEOS_ALL,
                 roles: ['supervisor', 'admin']
             }
         ];
@@ -128,6 +154,7 @@ export class Navigation {
                 title: 'Operación',
                 icon: '🔧',
                 isSection: true,
+                permission: PERMISSIONS.ROLLOS_READ,
                 roles: ['operador', 'supervisor', 'admin']
             },
             {
@@ -136,6 +163,7 @@ export class Navigation {
                 icon: '📜',
                 route: '/operations/roll-changes',
                 parent: 'operations',
+                permission: PERMISSIONS.ROLLOS_CREATE,
                 roles: ['operador', 'supervisor', 'admin']
             }
         ];
@@ -146,6 +174,7 @@ export class Navigation {
                 title: 'Admin',
                 icon: '⚙️',
                 isSection: true,
+                permission: PERMISSIONS.ADMIN_ALL,
                 roles: ['admin']
             },
             {
@@ -154,6 +183,7 @@ export class Navigation {
                 icon: '👥',
                 route: '/admin/users',
                 parent: 'admin',
+                permission: PERMISSIONS.USERS_ALL,
                 roles: ['admin']
             },
             {
@@ -162,11 +192,12 @@ export class Navigation {
                 icon: '🛠️',
                 route: '/admin/settings',
                 parent: 'admin',
+                permission: PERMISSIONS.ADMIN_ALL,
                 roles: ['admin']
             }
         ];
 
-        return [
+        const allItems = [
             ...baseItems,
             ...salesItems,
             ...financeItems,
@@ -174,15 +205,24 @@ export class Navigation {
             ...operationItems,
             ...adminItems
         ];
+
+        // Filter by role and permissions
+        return allItems.filter(item => {
+            // Check role access
+            const hasRoleAccess = !item.roles || item.roles.includes(this.currentUser.role);
+            
+            // Check permission access
+            const hasPermissionAccess = !item.permission || hasPermission(item.permission);
+            
+            return hasRoleAccess && hasPermissionAccess;
+        });
     }
 
     /**
-     * Filter menu items by user role
+     * Filter menu items by user role (legacy method for compatibility)
      */
     getFilteredMenuItems() {
-        return this.menuItems.filter(item => 
-            item.roles.includes(this.currentUserRole)
-        );
+        return this.getMenuItemsByRole();
     }
 
     /**
