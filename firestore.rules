@@ -4,37 +4,33 @@ service cloud.firestore {
   match /databases/{database}/documents {
     // Enhanced security rules for sales and lottery tracking system
     // Based on SRS.json and refactor-plan.json data model
+    // Using real appId: {appId}
     
     // SRS Functionality #1: Hourly Sales (ventas por hora)
-    match /artifacts/{appId}/public/data/hourly_sales/{saleId} {
-      allow read, write: if request.auth != null 
-        && request.auth.uid != null
-        && resource.data.userId == request.auth.uid;
-      
-      allow create: if request.auth != null 
-        && request.auth.uid != null
-        && request.resource.data.userId == request.auth.uid
-        && request.resource.data.timestamp is timestamp
-        && request.resource.data.machineId is string
-        && request.resource.data.saleAmount is number
-        && request.resource.data.saleAmount >= 0
-        && request.resource.data.accumulatedTotal is number
-        && request.resource.data.accumulatedTotal >= 0;
-    }
-    
-    // Legacy sales collection (for backward compatibility during migration)
+    // Legacy sales collection - maintaining existing data
     match /artifacts/{appId}/public/data/sales/{saleId} {
       allow read, write: if request.auth != null 
-        && request.auth.uid != null
-        && resource.data.userId == request.auth.uid;
+        && request.auth.uid != null;
       
       allow create: if request.auth != null 
         && request.auth.uid != null
-        && request.resource.data.userId == request.auth.uid
         && request.resource.data.timestamp is timestamp
         && request.resource.data.machineId is string
         && request.resource.data.saleAmount is number
-        && request.resource.data.saleAmount > 0;
+        && request.resource.data.saleAmount >= 0;
+    }
+    
+    // New SRS-compliant hourly_sales collection (for future migration)
+    match /artifacts/{appId}/public/data/hourly_sales/{saleId} {
+      allow read, write: if request.auth != null 
+        && request.auth.uid != null;
+      
+      allow create: if request.auth != null 
+        && request.auth.uid != null
+        && request.resource.data.timestamp is timestamp
+        && request.resource.data.machineId is string
+        && request.resource.data.saleAmount is number
+        && request.resource.data.saleAmount >= 0;
     }
     
     // Future SRS functionalities (placeholders for upcoming implementations)

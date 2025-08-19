@@ -51,7 +51,9 @@ class GenericDataAPI {
      */
     getCollection(functionalityType) {
         if (!this.collections.has(functionalityType)) {
-            const collectionPath = `artifacts/app/public/data/${functionalityType}`;
+            // Use real appId to maintain access to existing data
+            const appId = '1:154235122109:web:3747377946727b2081e2d4';
+            const collectionPath = `artifacts/${appId}/public/data/${functionalityType}`;
             const collectionRef = collection(db, collectionPath);
             this.collections.set(functionalityType, collectionRef);
         }
@@ -270,7 +272,8 @@ export const dataAPI = new GenericDataAPI();
 
 // Backward compatibility - Legacy API for hourly sales
 // These functions maintain compatibility with existing code
-const HOURLY_SALES_TYPE = 'hourly_sales';
+// Using 'sales' collection to preserve existing data
+const HOURLY_SALES_TYPE = 'sales'; // Keep using 'sales' for existing data
 
 export function subscribeToSalesData(startDate, endDate, onDataUpdate, onError) {
     return dataAPI.subscribeToData(

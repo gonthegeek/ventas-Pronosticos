@@ -51,9 +51,10 @@ export async function handleAuthState(user) {
     try {
         if (user) {
             updateUserIdDisplay(user.uid);
-            // Using standardized collection name from SRS: hourly_sales
-            // Changed from 'sales' to 'hourly_sales' as per refactor-plan.json data model
-            salesCollection = collection(db, `artifacts/app/public/data/hourly_sales`);
+            // Using real appId to maintain access to existing data
+            const currentAppId = firebaseConfig.appId; // 1:154235122109:web:3747377946727b2081e2d4
+            // Keep using 'sales' collection for existing data compatibility
+            salesCollection = collection(db, `artifacts/${currentAppId}/public/data/sales`);
 
             // Trigger initial filter to load today's data
             setFilter({ type: 'today' });
