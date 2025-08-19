@@ -30,6 +30,9 @@ export async function initFirebase() {
         db = getFirestore(app);
         auth = getAuth(app);
         onAuthStateChanged(auth, handleAuthState);
+        
+        // Make auth available globally for user setup
+        window.auth = auth;
     } catch (e) {
         console.error("Error inicializando Firebase:", e);
         showToast("Error crítico al inicializar la aplicación.", "error");

@@ -6,14 +6,39 @@ service cloud.firestore {
     // Based on SRS.json and refactor-plan.json data model
     // Using real appId: {appId}
     
+    // Helper functions for role-based access control
+    function isAuthenticated() {
+      return request.auth != null && request.auth.uid != null;
+    }
+    
+    function getUserData() {
+      return get(/databases/$(database)/documents/artifacts/1:154235122109:web:3747377946727b2081e2d4/public/data/config/authorizedUsers/$(request.auth.uid));
+    }
+    
+    function hasRole(role) {
+      return isAuthenticated() && getUserData().data.role == role;
+    }
+    
+    function hasMinimumRole(requiredRole) {
+      let userRole = getUserData().data.role;
+      return isAuthenticated() && (
+        (requiredRole == 'operador' && userRole in ['operador', 'supervisor', 'admin']) ||
+        (requiredRole == 'supervisor' && userRole in ['supervisor', 'admin']) ||
+        (requiredRole == 'admin' && userRole == 'admin')
+      );
+    }
+    
+    function isAuthorizedUser() {
+      return isAuthenticated() && exists(/databases/$(database)/documents/artifacts/1:154235122109:web:3747377946727b2081e2d4/public/data/config/authorizedUsers/$(request.auth.uid));
+    }
+    
     // SRS Functionality #1: Hourly Sales (ventas por hora)
     // Legacy sales collection - maintaining existing data
     match /artifacts/{appId}/public/data/sales/{saleId} {
-      allow read, write: if request.auth != null 
-        && request.auth.uid != null;
+      allow read: if isAuthorizedUser();
+      allow write: if hasMinimumRole('operador');
       
-      allow create: if request.auth != null 
-        && request.auth.uid != null
+      allow create: if hasMinimumRole('operador')
         && request.resource.data.timestamp is timestamp
         && request.resource.data.machineId is string
         && request.resource.data.saleAmount is number
@@ -22,78 +47,84 @@ service cloud.firestore {
     
     // New SRS-compliant hourly_sales collection (for future migration)
     match /artifacts/{appId}/public/data/hourly_sales/{saleId} {
-      allow read, write: if request.auth != null 
-        && request.auth.uid != null;
+      allow read: if isAuthorizedUser();
+      allow write: if hasMinimumRole('operador');
       
-      allow create: if request.auth != null 
-        && request.auth.uid != null
+      allow create: if hasMinimumRole('operador')
         && request.resource.data.timestamp is timestamp
         && request.resource.data.machineId is string
         && request.resource.data.saleAmount is number
         && request.resource.data.saleAmount >= 0;
     }
     
-    // Future SRS functionalities (placeholders for upcoming implementations)
+    // Future SRS functionalities with role-based access
     
-    // SRS Functionality #2: Monthly Commissions
+    // SRS Functionality #2: Monthly Commissions (supervisor+)
     match /artifacts/{appId}/public/data/monthly_commissions/{commissionId} {
-      allow read, write: if request.auth != null && request.auth.uid != null;
+      allow read: if hasMinimumRole('supervisor');
+      allow write: if hasMinimumRole('supervisor');
     }
     
-    // SRS Functionality #3: Roll Changes
+    // SRS Functionality #3: Roll Changes (operador+)
     match /artifacts/{appId}/public/data/roll_changes/{rollId} {
-      allow read, write: if request.auth != null && request.auth.uid != null;
+      allow read: if isAuthorizedUser();
+      allow write: if hasMinimumRole('operador');
     }
     
-    // SRS Functionality #4: Daily/Weekly Sales
+    // SRS Functionality #4: Daily/Weekly Sales (operador+)
     match /artifacts/{appId}/public/data/daily_weekly_sales/{saleId} {
-      allow read, write: if request.auth != null && request.auth.uid != null;
+      allow read: if isAuthorizedUser();
+      allow write: if hasMinimumRole('operador');
     }
     
-    // SRS Functionality #5: Tickets Sold
+    // SRS Functionality #5: Tickets Sold (operador+)
     match /artifacts/{appId}/public/data/tickets_sold/{ticketId} {
-      allow read, write: if request.auth != null && request.auth.uid != null;
+      allow read: if isAuthorizedUser();
+      allow write: if hasMinimumRole('operador');
     }
     
-    // SRS Functionality #6: Ticket Averages
+    // SRS Functionality #6: Ticket Averages (operador+)
     match /artifacts/{appId}/public/data/ticket_averages/{avgId} {
-      allow read, write: if request.auth != null && request.auth.uid != null;
+      allow read: if isAuthorizedUser();
+      allow write: if hasMinimumRole('operador');
     }
     
-    // SRS Functionality #7: Scratch Prizes
+    // SRS Functionality #7: Scratch Prizes (supervisor+)
     match /artifacts/{appId}/public/data/scratch_prizes/{prizeId} {
-      allow read, write: if request.auth != null && request.auth.uid != null;
+      allow read: if hasMinimumRole('supervisor');
+      allow write: if hasMinimumRole('supervisor');
     }
     
-    // SRS Functionality #8: Paid Prizes
+    // SRS Functionality #8: Paid Prizes (supervisor+)
     match /artifacts/{appId}/public/data/paid_prizes/{paidId} {
-      allow read, write: if request.auth != null && request.auth.uid != null;
+      allow read: if hasMinimumRole('supervisor');
+      allow write: if hasMinimumRole('supervisor');
     }
     
-    // SRS Functionality #9: First Places
+    // SRS Functionality #9: First Places (supervisor+)
     match /artifacts/{appId}/public/data/first_places/{firstId} {
-      allow read, write: if request.auth != null && request.auth.uid != null;
+      allow read: if hasMinimumRole('supervisor');
+      allow write: if hasMinimumRole('supervisor');
     }
     
     // User management for roles system (Phase 1 - Task 1.3)
     // Existing authorizedUsers collection
     match /artifacts/{appId}/public/data/config/authorizedUsers/{userId} {
-      allow read: if request.auth != null && request.auth.uid != null;
-      allow write: if request.auth != null && request.auth.uid != null;
-      // Note: Admin operations will require additional rules in future phases
+      allow read: if isAuthenticated();
+      allow write: if hasRole('admin');
+      allow create: if hasRole('admin');
+      allow delete: if hasRole('admin');
     }
     
     // Future users collection (for enhanced user management)
     match /artifacts/{appId}/public/data/users/{userId} {
-      allow read: if request.auth != null && request.auth.uid == userId;
-      allow write: if request.auth != null && request.auth.uid == userId;
-      // Note: Admin operations will require additional rules
+      allow read: if isAuthenticated() && (request.auth.uid == userId || hasMinimumRole('supervisor'));
+      allow write: if isAuthenticated() && (request.auth.uid == userId || hasRole('admin'));
     }
     
     // User profile data (legacy - kept for compatibility)
     match /users/{userId} {
-      allow read, write: if request.auth != null 
-        && request.auth.uid == userId;
+      allow read, write: if isAuthenticated() && request.auth.uid == userId;
     }
     
     // Deny all other access by default

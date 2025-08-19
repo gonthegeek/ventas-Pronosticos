@@ -5,6 +5,10 @@ import { navigation } from './ui/navigation.js';
 import { dashboardModule } from './modules/dashboard/dashboard.js';
 import { hourlySalesModule } from './modules/sales/hourly-sales.js';
 import { PERMISSIONS } from './utils/permissions.js';
+import userSetup from './utils/user-setup.js';
+
+// Make user setup available globally for console access
+window.userSetup = userSetup;
 
 // Initialize the application
 window.onload = async () => {

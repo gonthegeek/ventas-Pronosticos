@@ -259,8 +259,10 @@ export function getCurrentUser() {
  * Get user email (helper function)
  */
 function getUserEmail() {
-    // This would typically come from Firebase Auth
-    // For now, return a placeholder
+    // Get email from Firebase Auth
+    if (typeof window !== 'undefined' && window.auth?.currentUser) {
+        return window.auth.currentUser.email || 'user@example.com';
+    }
     return 'user@example.com';
 }
 
