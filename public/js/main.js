@@ -13,7 +13,7 @@ window.onload = async () => {
         // Initialize Firebase and auth
         await initFirebase();
         
-        // Setup original event listeners (for legacy functionality)
+        // Setup global event listeners (auth, navigation)
         setupEventListeners();
         
         // Register routes with modules

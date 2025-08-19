@@ -51,28 +51,25 @@ export async function handleAuthState(user) {
     try {
         if (user) {
             updateUserIdDisplay(user.uid);
-            // Use the correct appId from firebaseConfig if it's different from the constant appId
-            // Based on your firebaseConfig [3], your appId is "1:611374798340:web:f57acbf580012df5ef4751"
-            // and your security rules use {appId}. Make sure the appId here matches your security rules.
-            const currentAppId = firebaseConfig.appId; // Or use the constant 'appId' if it matches your rules
-            salesCollection = collection(db, `artifacts/${currentAppId}/public/data/sales`);
+            // Using standardized collection name from SRS: hourly_sales
+            // Changed from 'sales' to 'hourly_sales' as per refactor-plan.json data model
+            salesCollection = collection(db, `artifacts/app/public/data/hourly_sales`);
 
-            // Dispara el filtro inicial para cargar los datos de hoy
+            // Trigger initial filter to load today's data
             setFilter({ type: 'today' });
 
-            // Assuming you have a function to show the main app content
-            showMainContent(); // Call the function to show the main content
-            toggleGlobalLoader(false); // Turn off loader after showing main content
+            // Show the main app content
+            showMainContent();
+            toggleGlobalLoader(false);
         } else {
-            // If no user is authenticated (neither email/password nor anonymous),
-            // show the login form.
-            showLoginForm(); // Call the function to show the login form
-            toggleGlobalLoader(false); // Turn off loader after showing login form
+            // If no user is authenticated, show the login form
+            showLoginForm();
+            toggleGlobalLoader(false);
         }
     } catch (error) {
         console.error("Error en el estado de autenticación:", error);
         showToast("No se pudo conectar al servidor.", "error");
-        toggleGlobalLoader(false); // Also turn off loader in case of error
+        toggleGlobalLoader(false);
     }
 }
 

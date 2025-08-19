@@ -1,5 +1,5 @@
-import { updateTable, updateChart, renderComparisonPills, updateActiveButton } from './ui.js';
-import { subscribeToSalesData } from './api.js';
+import { updateTable, updateChart, renderComparisonPills, updateActiveButton, toggleGlobalLoader } from './ui.js';
+import { subscribeToSalesData } from './core/api.js';
 import { auth } from './auth.js';
 
 let allSalesData = [];
@@ -13,6 +13,8 @@ let currentFilter = {
 
 export const getAllSales = () => allSalesData;
 export const getUserId = () => auth?.currentUser?.uid;
+export const getDateRange = () => calculateDateRange();
+export const getCurrentFilter = () => currentFilter;
 
 export const setIsAuthenticated = (status) => { isAuthenticated = status; };
 export const getIsAuthenticated = () => isAuthenticated;
@@ -67,7 +69,20 @@ export function setFilter(newFilter) {
     updateActiveButton(currentFilter.type);
     
     const { startDate, endDate } = calculateDateRange();
-    subscribeToSalesData(startDate, endDate);
+    
+    // Use the new API with proper callbacks
+    subscribeToSalesData(
+        startDate, 
+        endDate,
+        (salesData) => {
+            applyFiltersAndUpdateUI(salesData);
+            toggleGlobalLoader(false);
+        },
+        (error) => {
+            console.error("Error in subscription:", error);
+            toggleGlobalLoader(false);
+        }
+    );
 }
 
 export function triggerRefetch() {

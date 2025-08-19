@@ -392,18 +392,19 @@
             "js/ui/navigation.js"
           ],
           "estimated_hours": 8,
-          "actual_hours": 5
+          "actual_hours": 4
         },
         {
           "id": "1.2",
           "name": "Reestructurar archivos",
           "description": "Crear estructura modular y mover código actual",
-          "status": "pending",
+          "status": "completed",
           "files_affected": [
             "js/modules/sales/hourly-sales.js",
             "js/core/api.js"
           ],
-          "estimated_hours": 6
+          "estimated_hours": 6,
+          "actual_hours": 3
         },
         {
           "id": "1.3",
