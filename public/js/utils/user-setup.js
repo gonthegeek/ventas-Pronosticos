@@ -18,7 +18,6 @@ export async function addAuthorizedUser(userId, email, role, name) {
         // Get db from global window object
         const db = window.db;
         if (!db) {
-            console.error('❌ Database not initialized. Please wait for app to load.');
             return false;
         }
         
@@ -36,10 +35,8 @@ export async function addAuthorizedUser(userId, email, role, name) {
         };
         
         await setDoc(userDocRef, userData, { merge: true });
-        console.log(`✅ User ${email} added with role: ${role}`);
         return true;
     } catch (error) {
-        console.error('❌ Error adding user:', error);
         return false;
     }
 }
@@ -52,7 +49,6 @@ export async function getUserRole(userId) {
     try {
         const db = window.db;
         if (!db) {
-            console.error('❌ Database not initialized. Please wait for app to load.');
             return null;
         }
         
@@ -64,11 +60,9 @@ export async function getUserRole(userId) {
         if (userSnap.exists()) {
             return userSnap.data();
         } else {
-            console.log('User not found in authorized users');
             return null;
         }
     } catch (error) {
-        console.error('Error getting user role:', error);
         return null;
     }
 }
@@ -81,13 +75,11 @@ export async function setupInitialAdmin() {
     // Get current authenticated user
     const currentUser = window.auth?.currentUser;
     if (!currentUser) {
-        console.error('❌ No authenticated user found. Please login first.');
         return false;
     }
     
     const confirm = window.confirm(`Add ${currentUser.email} as admin user?`);
     if (!confirm) {
-        console.log('❌ Setup cancelled by user');
         return false;
     }
     
@@ -107,12 +99,11 @@ export async function setupInitialAdmin() {
 
 /**
  * Quick setup function for demo users
- * Only use for testing/demo purposes
+ * Only use for testing/demo purposes - ADMIN ONLY
  */
 export async function setupDemoUsers() {
     const currentUser = window.auth?.currentUser;
     if (!currentUser) {
-        console.error('❌ No authenticated user found. Please login first.');
         return;
     }
     
@@ -123,18 +114,6 @@ export async function setupDemoUsers() {
         'admin',
         'Admin User'
     );
-    
-    console.log('✅ Demo users setup complete!');
-    console.log('📝 To add more users, use: addAuthorizedUser(userId, email, role, name)');
-    console.log('📝 Available roles: "operador", "supervisor", "admin"');
-}
-
-// Make functions available globally for console usage
-if (typeof window !== 'undefined') {
-    window.addAuthorizedUser = addAuthorizedUser;
-    window.getUserRole = getUserRole;
-    window.setupInitialAdmin = setupInitialAdmin;
-    window.setupDemoUsers = setupDemoUsers;
 }
 
 export default {

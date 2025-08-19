@@ -1,7 +1,6 @@
 /**
  * Hourly Sales Events Module
- * Migrated from events.js - handles all events specific to hourly sales functionality
- * Implements SRS Functionality #1: Ventas por hora
+ * Handles all events specific to hourly sales functionality
  */
 
 import { addSale, batchUpdateSales, deleteSaleAndUpdate, fetchAllSalesPaginated, uploadHistoricalData } from '../../core/api.js';
@@ -19,8 +18,7 @@ import { Timestamp } from '../../firebase-firestore-wrapper.js';
 
 /**
  * Hourly Sales Event Handlers
- * Based on SRS.json Functionality #1: Ventas por hora
- * Fields: ["fecha (YYYY-MM-DD)", "hora (HH:mm)", "máquina", "venta"]
+ * Event handling for sales data management
  */
 
 export async function handleAddSale(event) {

@@ -21,7 +21,6 @@ export class Navigation {
     initialize() {
         this.currentUser = getCurrentUser();
         this.menuItems = this.getMenuItemsByRole();
-        console.log('🧭 Navigation initialized for user:', this.currentUser.role);
     }
 
     /**
@@ -415,7 +414,6 @@ export class Navigation {
             this.currentUserRole = role;
             this.menuItems = this.getMenuItemsByRole();
             this.render(); // Re-render with new role permissions
-            console.log(`🧭 User role updated to: ${role}`);
         }
     }
 

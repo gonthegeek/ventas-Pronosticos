@@ -64,9 +64,7 @@ export async function handleAuthState(user) {
             // Check if user is authorized and initialize permissions
             const isAuthorized = await isUserAuthorized(user.uid);
             if (!isAuthorized) {
-                console.warn('🔐 User not authorized:', user.email);
-                console.log('🔧 You can setup this user by running: setupInitialAdmin()');
-                showToast('Usuario no autorizado. Usa setupInitialAdmin() en la consola para configurar.', 'warning');
+                showToast('Usuario no autorizado. Contacte al administrador.', 'warning');
                 
                 // Don't sign out immediately - allow user to setup their account
                 // Show a simplified interface or instructions
@@ -78,9 +76,14 @@ export async function handleAuthState(user) {
             // Initialize user permissions
             const permissionsInitialized = await initializePermissions();
             if (!permissionsInitialized) {
-                console.warn('🔐 Failed to initialize permissions');
                 showToast('Error al cargar permisos de usuario.', 'error');
                 return;
+            }
+
+            // Initialize admin panel if user is admin
+            if (window.getCurrentUser && window.getCurrentUser()?.role === 'admin') {
+                const { initializeAdminPanel } = await import('./utils/admin-panel.js');
+                initializeAdminPanel();
             }
 
             // Initialize navigation with user permissions
@@ -116,7 +119,6 @@ export async function handleSignOut() {
         const { signOut } = await import('./firebase-auth-wrapper.js');
         await signOut(auth);
         clearPermissions();
-        console.log('User signed out successfully');
     } catch (error) {
         console.error("Error signing out:", error);
         showToast(`Error al cerrar sesión: ${error.message}`, "error");

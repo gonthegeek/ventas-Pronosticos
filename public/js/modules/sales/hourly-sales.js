@@ -1,8 +1,6 @@
 /**
  * Hourly Sales Module
- * Refactored from legacy functionality - handles sales tracking by hour
- * Implements SRS Functionality #1: Ventas por hora
- * Fields: ["fecha (YYYY-MM-DD)", "hora (HH:mm)", "máquina", "venta"]
+ * Handles sales tracking by hour for vending machines
  */
 
 import { BaseModule } from '../base-module.js';
@@ -15,7 +13,7 @@ export class HourlySalesModule extends BaseModule {
     constructor() {
         super('hourly-sales', {
             title: 'Ventas por Hora',
-            description: 'Registro y análisis de ventas por hora - Funcionalidad #1 del SRS'
+            description: 'Registro y análisis de ventas por hora'
         });
         this.dataSubscription = null;
     }
@@ -86,9 +84,9 @@ export class HourlySalesModule extends BaseModule {
             <div class="flex items-center">
                 <span class="mr-2">📋</span>
                 <div>
-                    <strong>SRS Funcionalidad #1:</strong> Ventas por hora
+                    <strong>Registro de Ventas</strong>
                     <div class="text-xs mt-1">
-                        Campos: fecha (YYYY-MM-DD), hora (HH:mm), máquina, venta | Granularidad: hora
+                        Sistema de seguimiento de ventas por hora
                     </div>
                 </div>
             </div>
@@ -107,15 +105,15 @@ export class HourlySalesModule extends BaseModule {
                     <div class="font-semibold">⚠️ Contenido Original No Encontrado</div>
                     <div class="text-sm">El contenido de ventas por hora original no está disponible.</div>
                     <div class="text-sm mt-2">
-                        <strong>SRS Funcionalidad #1:</strong> Ventas por hora<br>
-                        Campos requeridos: fecha (YYYY-MM-DD), hora (HH:mm), máquina, venta
+                        <strong>Sistema de Ventas:</strong> Registro de ventas por hora<br>
+                        Campos requeridos: fecha, hora, máquina, venta
                     </div>
                 </div>
                 
                 <div class="bg-white p-6 rounded-lg shadow-md">
                     <h2 class="text-xl font-semibold mb-4">Ventas por Hora</h2>
                     <p class="text-gray-600">
-                        Esta funcionalidad permite registrar y analizar ventas por hora de las máquinas 76 y 79.
+                        Esta funcionalidad permite registrar y analizar ventas por hora de las máquinas.
                         Es la base para comparativas históricas por horas entre días.
                     </p>
                 </div>

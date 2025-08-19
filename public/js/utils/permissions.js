@@ -126,11 +126,8 @@ let currentUser = {
  * Initialize permissions system
  */
 export async function initializePermissions() {
-    console.log('🔐 Initializing permissions system...');
-    
     const userId = getUserId();
     if (!userId) {
-        console.log('🔐 No authenticated user, skipping permission initialization');
         return false;
     }
     
@@ -145,14 +142,11 @@ export async function initializePermissions() {
                 menuAccess: getUserMenuAccess(userRole)
             };
             
-            console.log(`🔐 User permissions initialized: ${userRole}`, currentUser.permissions);
             return true;
         } else {
-            console.log('🔐 User not authorized or role not found');
             return false;
         }
     } catch (error) {
-        console.error('🔐 Error initializing permissions:', error);
         return false;
     }
 }
@@ -174,7 +168,6 @@ export async function getUserRole(userId) {
         
         return null; // User not authorized
     } catch (error) {
-        console.error('🔐 Error getting user role:', error);
         return null;
     }
 }
@@ -268,7 +261,6 @@ export async function getAllAuthorizedUsers() {
         
         return users;
     } catch (error) {
-        console.error('🔐 Error getting authorized users:', error);
         return [];
     }
 }
@@ -287,7 +279,6 @@ export async function isUserAuthorized(userId) {
 export function requirePermission(permission) {
     return () => {
         if (!hasPermission(permission)) {
-            console.warn(`🔐 Access denied: Missing permission ${permission}`);
             return false;
         }
         return true;
@@ -300,7 +291,6 @@ export function requirePermission(permission) {
 export function requireRole(role) {
     return () => {
         if (!hasRoleLevel(role)) {
-            console.warn(`🔐 Access denied: Requires role ${role}, user has ${currentUser.role}`);
             return false;
         }
         return true;
@@ -311,12 +301,5 @@ export function requireRole(role) {
  * Clear permissions (for logout)
  */
 export function clearPermissions() {
-    currentUser = {
-        uid: null,
-        email: null,
-        role: null,
-        permissions: [],
-        menuAccess: []
-    };
-    console.log('🔐 Permissions cleared');
+    currentUser = null;
 }
