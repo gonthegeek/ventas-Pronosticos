@@ -62,32 +62,7 @@ export const PERMISSIONS = {
 /**
  * Role permissions mapping based on refactor-plan.json
  */
-export const ROLE_PERMISSIONS = {
-    [ROLES.OPERADOR]: [
-        PERMISSIONS.DASHBOARD_READ,
-        PERMISSIONS.VENTAS_ALL,
-        PERMISSIONS.BOLETOS_CREATE,
-        PERMISSIONS.BOLETOS_READ,
-        PERMISSIONS.ROLLOS_CREATE,
-        PERMISSIONS.ROLLOS_READ
-    ],
-    [ROLES.SUPERVISOR]: [
-        // Inherits all operador permissions
-        ...ROLE_PERMISSIONS?.[ROLES.OPERADOR] || [],
-        PERMISSIONS.COMISIONES_ALL,
-        PERMISSIONS.PREMIADOS_ALL,
-        PERMISSIONS.SORTEOS_ALL
-    ],
-    [ROLES.ADMIN]: [
-        // Inherits all supervisor permissions
-        ...ROLE_PERMISSIONS?.[ROLES.SUPERVISOR] || [],
-        PERMISSIONS.ADMIN_ALL,
-        PERMISSIONS.USERS_ALL
-    ]
-};
-
-// Fix circular reference by defining operador permissions separately
-ROLE_PERMISSIONS[ROLES.OPERADOR] = [
+const operadorPermissions = [
     PERMISSIONS.DASHBOARD_READ,
     PERMISSIONS.VENTAS_ALL,
     PERMISSIONS.BOLETOS_CREATE,
@@ -96,18 +71,24 @@ ROLE_PERMISSIONS[ROLES.OPERADOR] = [
     PERMISSIONS.ROLLOS_READ
 ];
 
-ROLE_PERMISSIONS[ROLES.SUPERVISOR] = [
-    ...ROLE_PERMISSIONS[ROLES.OPERADOR],
+const supervisorPermissions = [
+    ...operadorPermissions,
     PERMISSIONS.COMISIONES_ALL,
     PERMISSIONS.PREMIADOS_ALL,
     PERMISSIONS.SORTEOS_ALL
 ];
 
-ROLE_PERMISSIONS[ROLES.ADMIN] = [
-    ...ROLE_PERMISSIONS[ROLES.SUPERVISOR],
+const adminPermissions = [
+    ...supervisorPermissions,
     PERMISSIONS.ADMIN_ALL,
     PERMISSIONS.USERS_ALL
 ];
+
+export const ROLE_PERMISSIONS = {
+    [ROLES.OPERADOR]: operadorPermissions,
+    [ROLES.SUPERVISOR]: supervisorPermissions,
+    [ROLES.ADMIN]: adminPermissions
+};
 
 /**
  * Menu access mapping based on refactor-plan.json
