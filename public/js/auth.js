@@ -5,6 +5,7 @@ import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, __authLoadProm
 import { setFilter } from './state.js';
 import { toggleGlobalLoader, updateUserIdDisplay, showToast, showLoginForm, showMainContent } from './ui.js';
 import { initializePermissions, clearPermissions, isUserAuthorized } from './utils/permissions.js';
+import { router } from './core/router.js';
 
 // Firebase configuration - values will be injected during build
 const firebaseConfig = {
@@ -86,11 +87,14 @@ export async function handleAuthState(user) {
                 initializeAdminPanel();
             }
 
-            // Initialize navigation with user permissions
+            // Initialize navigation with user permissions (only after auth)
             if (window.navigation) {
                 window.navigation.initialize();
                 window.navigation.render();
             }
+
+            // Start router now that we have an authenticated user
+            router.init();
 
             // Trigger initial filter to load today's data
             setFilter({ type: 'today' });
@@ -101,7 +105,7 @@ export async function handleAuthState(user) {
         } else {
             // Clear permissions when user logs out
             clearPermissions();
-            // If no user is authenticated, show the login form
+            // If no user is authenticated, show the login form (router will initialize later once logged in)
             showLoginForm();
             toggleGlobalLoader(false);
         }

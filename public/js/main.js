@@ -30,10 +30,8 @@ window.onload = async () => {
         // Note: Navigation will be initialized after successful authentication
         // in the auth state handler to ensure permissions are loaded
         
-        // Initialize router
-        router.init();
-        
-        console.log('✅ Application initialized successfully');
+    // Router will be initialized post-auth inside auth state handler
+    console.log('✅ Core services initialized, awaiting authentication');
         
     } catch (error) {
         console.error('❌ Error initializing application:', error);

@@ -134,8 +134,6 @@ export class Router {
         // In a real implementation, this should be a proper UI component
         if (typeof window !== 'undefined' && window.showToast) {
             window.showToast(message, 'error');
-        } else {
-            alert(message);
         }
     }
 
@@ -230,11 +228,20 @@ export class Router {
      */
     init() {
         console.log('📍 Router starting...');
-        
-        // Get initial path from URL hash or use default
+        // Defer initial navigation if user not authenticated yet.
+        // Auth flow will call router.init() again after login.
+        try {
+            const user = getCurrentUser();
+            if (!user || !user.uid) {
+                console.log('📍 Router deferred: no authenticated user yet');
+                return; // Wait for auth state handler
+            }
+        } catch (e) {
+            console.warn('📍 Router could not read current user, deferring navigation');
+            return;
+        }
+
         const initialPath = this.getPathFromHash();
-        
-        // Navigate to initial path
         this.navigate(initialPath, {}, false);
     }
 

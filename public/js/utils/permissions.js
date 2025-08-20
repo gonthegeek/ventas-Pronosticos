@@ -301,5 +301,11 @@ export function requireRole(role) {
  * Clear permissions (for logout)
  */
 export function clearPermissions() {
-    currentUser = null;
+    currentUser = {
+        uid: null,
+        email: null,
+        role: null,
+        permissions: [],
+        menuAccess: []
+    };
 }
