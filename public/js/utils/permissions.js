@@ -5,8 +5,8 @@
  */
 
 import { collection, doc, getDoc, getDocs } from '../firebase-firestore-wrapper.js';
-import { db } from '../auth.js';
-import { getUserId } from '../state.js';
+import { db } from '../core/auth.js';
+import { getUserId } from '../core/state.js';
 
 /**
  * Role definitions based on refactor-plan.json

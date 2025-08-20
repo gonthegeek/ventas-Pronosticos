@@ -1,5 +1,5 @@
 import { updateChartConfig } from './chart-config.js';
-import { getAllSales } from './state.js';
+import { getAllSales } from './core/state.js';
 
 // Add references to login form and main content elements
 const elements = {

@@ -6,7 +6,7 @@
 
 import { displayAuthError, showToast, toggleButtonSpinner } from './ui.js';
 import { sanitizeInput, validateEmail } from './utils.js';
-import { signInWithEmail, auth } from './auth.js';
+import { signInWithEmail, auth } from './core/auth.js';
 
 // --- AUTHENTICATION EVENT HANDLERS ---
 

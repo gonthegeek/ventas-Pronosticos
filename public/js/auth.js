@@ -2,7 +2,7 @@
 import { initializeApp } from './firebase-app-wrapper.js';
 import { getFirestore, collection, __firestoreLoadPromise } from './firebase-firestore-wrapper.js';
 import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, __authLoadPromise } from './firebase-auth-wrapper.js';
-import { setFilter } from './state.js';
+import { setFilter } from './core/state.js';
 import { toggleGlobalLoader, updateUserIdDisplay, showToast, showLoginForm, showMainContent } from './ui.js';
 import { initializePermissions, clearPermissions, isUserAuthorized } from './utils/permissions.js';
 import { router } from './core/router.js';

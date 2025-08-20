@@ -19,8 +19,8 @@ import {
     limit, 
     startAfter 
 } from '../firebase-firestore-wrapper.js';
-import { db } from '../auth.js';
-import { getUserId } from '../state.js';
+import { db } from './auth.js';
+import { getUserId } from './state.js';
 
 /**
  * Generic Data API - supports all SRS functionalities

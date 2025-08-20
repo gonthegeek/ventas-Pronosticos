@@ -1,4 +1,4 @@
-import { initFirebase } from './auth.js';
+import { initFirebase } from './core/auth.js';
 import { setupEventListeners } from './events.js';
 import { router } from './core/router.js';
 import { navigation } from './ui/navigation.js';

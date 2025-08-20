@@ -1,6 +1,6 @@
 import { updateTable, updateChart, renderComparisonPills, updateActiveButton, toggleGlobalLoader } from './ui.js';
 import { subscribeToSalesData } from './core/api.js';
-import { auth } from './auth.js';
+import { auth } from './core/auth.js';
 
 let allSalesData = [];
 let isAuthenticated = false;
