@@ -89,12 +89,6 @@ export function setupEventListeners() {
         loginForm.addEventListener('submit', handleLoginSubmit);
     }
     
-    const logoutButton = document.getElementById('logout-button');
-    if (logoutButton) {
-        logoutButton.addEventListener('click', handleLogout);
-    } else {
-        console.warn("Logout button not found.");
-    }
-    
+    // Note: Logout button is now handled by the navigation component
     console.log('✅ Global event listeners setup complete');
 }

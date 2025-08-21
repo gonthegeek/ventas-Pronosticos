@@ -5,6 +5,7 @@
 
 import { router } from '../core/router.js';
 import { getCurrentUser, hasMenuAccess, hasPermission, PERMISSIONS } from '../utils/permissions.js';
+import { handleSignOut } from '../core/auth.js';
 
 export class Navigation {
     constructor() {
@@ -296,10 +297,17 @@ export class Navigation {
                 <div class="sidebar-footer">
                     <div class="user-info ${this.isCollapsed ? 'collapsed' : ''}">
                         <span class="user-icon">👤</span>
-                        <span class="user-text ${this.isCollapsed ? 'hidden' : ''}">
-                            <small>${this.currentUserRole}</small>
-                        </span>
+                        <div class="user-text ${this.isCollapsed ? 'hidden' : ''}">
+                            <div class="user-role">${this.currentUser?.email || 'Usuario'}</div>
+                            <small class="user-level">${this.currentUser?.role || 'Sin rol'}</small>
+                        </div>
                     </div>
+                    <button id="logout-button" 
+                            class="logout-btn ${this.isCollapsed ? 'collapsed' : ''}" 
+                            title="Cerrar Sesión">
+                        <span class="logout-icon">🚪</span>
+                        <span class="logout-text ${this.isCollapsed ? 'hidden' : ''}">Cerrar Sesión</span>
+                    </button>
                 </div>
             </nav>
         `;
@@ -351,6 +359,12 @@ export class Navigation {
             });
         });
 
+        // Logout button
+        const logoutBtn = document.getElementById('logout-button');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', this.handleLogout.bind(this));
+        }
+
         console.log('🧭 Event listeners attached');
     }
 
@@ -365,7 +379,9 @@ export class Navigation {
         const navTexts = document.querySelectorAll('.nav-text');
         const brandText = document.querySelector('.brand-text');
         const userText = document.querySelector('.user-text');
+        const logoutText = document.querySelector('.logout-text');
         const userInfo = document.querySelector('.user-info');
+        const logoutBtn = document.querySelector('.logout-btn');
         const sidebarBrand = document.querySelector('.sidebar-brand');
         const mainContent = document.getElementById('main-content');
 
@@ -383,7 +399,9 @@ export class Navigation {
 
         if (brandText) brandText.classList.toggle('hidden', this.isCollapsed);
         if (userText) userText.classList.toggle('hidden', this.isCollapsed);
+        if (logoutText) logoutText.classList.toggle('hidden', this.isCollapsed);
         if (userInfo) userInfo.classList.toggle('collapsed', this.isCollapsed);
+        if (logoutBtn) logoutBtn.classList.toggle('collapsed', this.isCollapsed);
         if (sidebarBrand) sidebarBrand.classList.toggle('collapsed', this.isCollapsed);
 
         // Update main content and all containers
@@ -404,6 +422,13 @@ export class Navigation {
         });
 
         console.log(`🧭 Sidebar ${this.isCollapsed ? 'collapsed' : 'expanded'}`);
+    }
+
+    /**
+     * Handle logout functionality
+     */
+    async handleLogout() {
+        await handleSignOut();
     }
 
     /**
