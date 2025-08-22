@@ -2,47 +2,34 @@ import React, { useEffect, useState } from 'react'
 import { useSelector } from 'react-redux'
 import { Link } from 'react-router-dom'
 import { RootState } from '../../state/store'
-import { SalesService } from '../../services/SalesService'
+import { useCachedDashboard, useCacheStats, useCachePreloader } from '../../hooks/useCachedSales'
 import QuickSalesEntry from '../../components/sales/QuickSalesEntry'
 
 /**
- * Dashboard Component - Main overview page
- * Will display key metrics and quick access to functionalities
- * Placeholder for full dashboard implementation
+ * Dashboard Component - Main overview page with caching
+ * Uses intelligent caching to minimize Firestore requests
  */
 const Dashboard: React.FC = () => {
   const { userProfile } = useSelector((state: RootState) => state.auth)
-  const [todaysSales, setTodaysSales] = useState<number | null>(null)
-  const [weekSales, setWeekSales] = useState<number | null>(null)
-  const [monthSales, setMonthSales] = useState<number | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
-
-  const loadSalesData = async () => {
-    try {
-      setLoading(true)
-      
-      // Fetch today's, this week's, and this month's sales data in parallel
-      const [todaysTotal, weekTotal, monthTotal] = await Promise.all([
-        SalesService.getTodaysSalesTotal(),
-        SalesService.getThisWeekTotal(),
-        SalesService.getThisMonthTotal()
-      ])
-      
-      setTodaysSales(todaysTotal)
-      setWeekSales(weekTotal)
-      setMonthSales(monthTotal)
-      setLastUpdated(new Date())
-    } catch (error) {
-      console.error('Error loading sales data:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    loadSalesData()
-  }, [])
+  
+  // Use cached dashboard data with auto-refresh every 10 minutes
+  const {
+    todaysSales,
+    weekSales,
+    monthSales,
+    loading,
+    lastUpdated,
+    error,
+    refresh
+  } = useCachedDashboard(10)
+  
+  // Cache statistics for monitoring
+  const { stats } = useCacheStats()
+  
+  // Preload cache on component mount
+  const { preloaded, preloading } = useCachePreloader()
+  
+  const [showCacheStats, setShowCacheStats] = useState(false)
   
   return (
     <div className="space-y-6">
@@ -60,29 +47,86 @@ const Dashboard: React.FC = () => {
               {lastUpdated && (
                 <p className="text-sm text-gray-500 mt-1">
                   Last updated: {lastUpdated.toLocaleTimeString()}
+                  {preloading && <span className="ml-2 text-blue-500">(Cache loading...)</span>}
+                  {preloaded && !preloading && <span className="ml-2 text-green-500">✓ Cached</span>}
+                </p>
+              )}
+              {error && (
+                <p className="text-sm text-red-500 mt-1">
+                  Error: {error}
                 </p>
               )}
             </div>
-            <button
-              onClick={loadSalesData}
-              disabled={loading}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? (
-                <span className="flex items-center">
-                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Updating...
-                </span>
-              ) : (
-                'Refresh Data'
-              )}
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={refresh}
+                disabled={loading}
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? (
+                  <span className="flex items-center">
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Updating...
+                  </span>
+                ) : (
+                  'Refresh Data'
+                )}
+              </button>
+              
+              {/* Cache stats toggle */}
+              <button
+                onClick={() => setShowCacheStats(!showCacheStats)}
+                className="px-3 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 text-sm"
+                title="Cache Statistics"
+              >
+                📊 Cache
+              </button>
+            </div>
           </div>
         </div>
       </div>
+
+      {/* Cache Statistics Panel */}
+      {showCacheStats && (
+        <div className="bg-white shadow rounded-lg">
+          <div className="px-4 py-5 sm:p-6">
+            <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
+              Cache Performance
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="bg-blue-50 p-4 rounded-lg">
+                <div className="text-sm font-medium text-blue-600">Efficiency</div>
+                <div className="text-2xl font-bold text-blue-900">{stats.efficiency}%</div>
+                <div className="text-xs text-blue-600">Cache hit rate</div>
+              </div>
+              <div className="bg-green-50 p-4 rounded-lg">
+                <div className="text-sm font-medium text-green-600">Requests Saved</div>
+                <div className="text-2xl font-bold text-green-900">{stats.requestsSaved}</div>
+                <div className="text-xs text-green-600">Firestore queries avoided</div>
+              </div>
+              <div className="bg-purple-50 p-4 rounded-lg">
+                <div className="text-sm font-medium text-purple-600">Sales Cache</div>
+                <div className="text-2xl font-bold text-purple-900">{stats.sales.size}</div>
+                <div className="text-xs text-purple-600">{stats.sales.efficiency}% hit rate</div>
+              </div>
+              <div className="bg-orange-50 p-4 rounded-lg">
+                <div className="text-sm font-medium text-orange-600">Dashboard Cache</div>
+                <div className="text-2xl font-bold text-orange-900">{stats.dashboard.size}</div>
+                <div className="text-xs text-orange-600">{stats.dashboard.efficiency}% hit rate</div>
+              </div>
+            </div>
+            <div className="mt-4 text-sm text-gray-600">
+              <p>
+                <strong>Cache Benefits:</strong> Reduced Firestore requests by {stats.requestsSaved} queries. 
+                This helps stay within Firebase free tier limits while maintaining fast performance.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

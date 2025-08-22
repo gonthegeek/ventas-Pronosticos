@@ -6,6 +6,7 @@ import { onAuthStateChanged } from 'firebase/auth'
 import { auth } from './services/firebase'
 import { AuthService } from './services/AuthService'
 import { initSecurity } from './utils/security'
+import { useCachePreloader } from './hooks/useCachedSales'
 import Layout from './components/Layout/Layout'
 import Dashboard from './modules/dashboard/Dashboard'
 import HourlySales from './modules/sales/HourlySales'
@@ -16,6 +17,9 @@ import LoadingSpinner from './components/ui/LoadingSpinner'
 function App() {
   const dispatch = useAppDispatch()
   const { isLoading } = useAppSelector((state) => state.auth)
+  
+  // Preload cache on app startup for better performance
+  const { preloaded, preloading } = useCachePreloader()
 
   useEffect(() => {
     // Initialize security measures first
