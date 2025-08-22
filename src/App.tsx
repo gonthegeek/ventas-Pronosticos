@@ -11,7 +11,7 @@ import Layout from './components/Layout/Layout'
 import Dashboard from './modules/dashboard/Dashboard'
 import HourlySales from './modules/sales/HourlySales'
 import SalesComparisonPage from './modules/sales/SalesComparisonPage'
-import AdminPanel from './components/admin/AdminSetup'
+import EnhancedAdminPanel from './components/admin/EnhancedAdminPanel'
 import LoadingSpinner from './components/ui/LoadingSpinner'
 
 function App() {
@@ -57,7 +57,7 @@ function App() {
         <Route path="/" element={<Dashboard />} />
         <Route path="/sales/hourly" element={<HourlySales />} />
         <Route path="/sales/comparison" element={<SalesComparisonPage />} />
-        <Route path="/admin" element={<AdminPanel />} />
+        <Route path="/admin" element={<EnhancedAdminPanel />} />
         {/* Additional routes will be added as we migrate more modules */}
       </Routes>
     </Layout>
