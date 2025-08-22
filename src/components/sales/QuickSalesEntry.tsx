@@ -85,7 +85,6 @@ const QuickSalesEntry: React.FC<QuickSalesEntryProps> = ({ onSaleAdded }) => {
           const hourlySales = totalSales - previousTotal
           setPreview(hourlySales >= 0 ? hourlySales : 0)
         } catch (error) {
-          console.error('Error calculating preview:', error)
           setPreview(null)
         }
       } else {

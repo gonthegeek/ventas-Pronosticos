@@ -32,14 +32,12 @@ export const validateSecurityHeaders = (): boolean => {
     // Check if we're running in a secure context
     if (typeof window !== 'undefined') {
       if (!window.isSecureContext) {
-        console.warn('App is not running in a secure context (HTTPS)');
         return false;
       }
 
       // Verify CSP is working
       if (!document.querySelector('meta[http-equiv="Content-Security-Policy"]') && 
           !document.querySelector('meta[http-equiv="X-Content-Security-Policy"]')) {
-        console.warn('CSP meta tag not found - relying on HTTP headers');
       }
 
       // Check for security headers
@@ -51,14 +49,12 @@ export const validateSecurityHeaders = (): boolean => {
 
       Object.entries(securityMeta).forEach(([header, element]) => {
         if (!element) {
-          console.warn(`${header} meta tag not found - relying on HTTP headers`);
         }
       });
     }
 
     return true;
   } catch (error) {
-    console.error('Security validation failed:', error);
     return false;
   }
 };
@@ -77,8 +73,6 @@ export const validateDomain = (): boolean => {
   );
 
   if (!isTrusted) {
-    console.error('Untrusted domain detected:', currentDomain);
-    console.error('Trusted domains:', TRUSTED_DOMAINS);
     
     // In production, you might want to redirect to the official domain
     if (process.env.NODE_ENV === 'production') {
@@ -103,9 +97,6 @@ export const initSecurity = (): void => {
 
     // Disable console in production to prevent information leakage
     if (process.env.NODE_ENV === 'production') {
-      console.log = () => {};
-      console.warn = () => {};
-      console.error = () => {};
     }
 
     // Add integrity check for critical resources
@@ -128,9 +119,7 @@ export const initSecurity = (): void => {
       }
     }
 
-    console.log('Security measures initialized successfully');
   } catch (error) {
-    console.error('Failed to initialize security measures:', error);
   }
 };
 

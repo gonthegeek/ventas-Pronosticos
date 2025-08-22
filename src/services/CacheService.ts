@@ -270,7 +270,6 @@ export class CacheService {
     this.cleanupInterval = setInterval(() => {
       const cleaned = this.cleanup()
       if (cleaned > 0) {
-        console.log(`Cache cleanup: removed ${cleaned} expired entries`)
       }
     }, 5 * 60 * 1000)
   }
@@ -281,7 +280,6 @@ export class CacheService {
       localStorage.setItem(storageKey, JSON.stringify(item))
     } catch (error) {
       // Storage quota exceeded or not available
-      console.warn('Failed to persist cache item:', error)
     }
   }
 
@@ -290,7 +288,6 @@ export class CacheService {
       const storageKey = `casa_cache_${key}`
       localStorage.removeItem(storageKey)
     } catch (error) {
-      console.warn('Failed to remove cache item from storage:', error)
     }
   }
 
@@ -317,7 +314,6 @@ export class CacheService {
       
       this.updateStats()
     } catch (error) {
-      console.warn('Failed to load cache from storage:', error)
     }
   }
 
@@ -330,7 +326,6 @@ export class CacheService {
         localStorage.removeItem(key)
       }
     } catch (error) {
-      console.warn('Failed to clear cache storage:', error)
     }
   }
 }

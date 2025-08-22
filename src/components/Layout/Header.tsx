@@ -20,7 +20,6 @@ const Header: React.FC<HeaderProps> = ({ onToggleSidebar, sidebarOpen }) => {
     try {
       await dispatch(signOut()).unwrap()
     } catch (error) {
-      console.error('Sign out error:', error)
     }
   }
 

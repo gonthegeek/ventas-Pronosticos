@@ -38,7 +38,6 @@ export const useCachedDashboard = (autoRefreshMinutes: number = 10) => {
       })
       setLastUpdated(new Date())
     } catch (err) {
-      console.error('Error loading dashboard data:', err)
       setError(err instanceof Error ? err.message : 'Failed to load data')
     } finally {
       setLoading(false)
@@ -93,7 +92,6 @@ export const useCachedHourlySales = (date: string) => {
       setData(hourlySales)
       setLastUpdated(new Date())
     } catch (err) {
-      console.error('Error loading hourly sales:', err)
       setError(err instanceof Error ? err.message : 'Failed to load hourly sales')
     } finally {
       setLoading(false)
@@ -171,9 +169,7 @@ export const useCachePreloader = () => {
       await CachedSalesService.warmupCache()
       
       setPreloaded(true)
-      console.log('✅ Cache preloaded successfully')
     } catch (error) {
-      console.error('❌ Cache preload failed:', error)
     } finally {
       setPreloading(false)
     }

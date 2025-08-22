@@ -33,7 +33,6 @@ function App() {
           dispatch(setUser(user))
           dispatch(setUserProfile(userProfile))
         } catch (error) {
-          console.error('Error getting user profile:', error)
           dispatch(setUser(null))
           dispatch(setUserProfile(null))
         }

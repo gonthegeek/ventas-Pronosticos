@@ -16,9 +16,7 @@ const CacheMonitor: React.FC = () => {
       CacheManager.invalidateSalesData()
       CacheManager.invalidateDashboard()
       updateStats()
-      console.log('✅ All caches invalidated')
     } catch (error) {
-      console.error('❌ Failed to invalidate caches:', error)
     } finally {
       setActionLoading(null)
     }
@@ -28,9 +26,7 @@ const CacheMonitor: React.FC = () => {
     setActionLoading('cleanup')
     try {
       cleanup()
-      console.log('✅ Cache cleanup completed')
     } catch (error) {
-      console.error('❌ Cache cleanup failed:', error)
     } finally {
       setActionLoading(null)
     }
@@ -41,9 +37,7 @@ const CacheMonitor: React.FC = () => {
     try {
       CacheManager.invalidateSalesData()
       updateStats()
-      console.log('✅ Sales cache invalidated')
     } catch (error) {
-      console.error('❌ Failed to invalidate sales cache:', error)
     } finally {
       setActionLoading(null)
     }
@@ -54,9 +48,7 @@ const CacheMonitor: React.FC = () => {
     try {
       CacheManager.invalidateDashboard()
       updateStats()
-      console.log('✅ Dashboard cache invalidated')
     } catch (error) {
-      console.error('❌ Failed to invalidate dashboard cache:', error)
     } finally {
       setActionLoading(null)
     }

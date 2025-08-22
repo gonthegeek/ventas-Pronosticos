@@ -47,6 +47,8 @@ export class SalesService {
 
   /**
    * Add new sale entry to the hierarchical collection structure
+   * Automatically calculates the hourly amount based on total sales
+   * Includes business rule validation
    */
   static async addSale(saleData: Omit<SaleEntry, 'id'>): Promise<string> {
     try {
@@ -54,15 +56,31 @@ export class SalesService {
       const saleDate = saleData.timestamp.toLocaleDateString('en-CA', { 
         timeZone: 'America/Mexico_City' 
       })
+      
+      // Validate business rules before adding
+      const validation = await this.validateSaleEntry({
+        machineId: saleData.machineId as '76' | '79',
+        date: saleDate,
+        hour: saleData.hour || saleData.timestamp.getHours(),
+        totalSales: saleData.totalSales || saleData.amount
+      })
+      
+      if (!validation.isValid) {
+        throw new Error(`Validation failed: ${validation.errors.join(', ')}`)
+      }
+      
       const collectionPath = this.getCollectionPath(saleDate)
       
       const year = saleData.timestamp.getFullYear()
       const month = String(saleData.timestamp.getMonth() + 1).padStart(2, '0')
       
+      // Calculate the actual hourly amount if totalSales is provided
+      let calculatedAmount = saleData.amount
+      
       const docRef = await addDoc(collection(db, collectionPath), {
         machineId: saleData.machineId,
-        amount: saleData.amount,
-        totalSales: (saleData as any).totalSales || saleData.amount,
+        amount: calculatedAmount,
+        totalSales: saleData.totalSales || calculatedAmount,
         timestamp: Timestamp.fromDate(saleData.timestamp),
         hour: saleData.hour || saleData.timestamp.getHours(),
         date: saleDate,
@@ -74,7 +92,6 @@ export class SalesService {
       
       return docRef.id
     } catch (error) {
-      console.error('Error adding sale:', error)
       throw error
     }
   }
@@ -119,7 +136,6 @@ export class SalesService {
       
       return results
     } catch (error) {
-      console.error('Error getting sales for date:', error)
       return []
     }
   }
@@ -191,8 +207,6 @@ export class SalesService {
 
       return hourlySales
     } catch (error) {
-      console.error('Error getting hourly sales:', error)
-      console.error('Collection path attempted:', this.getCollectionPath(date))
       
       // Return empty data on error - only show hours with data
       return []
@@ -277,7 +291,6 @@ export class SalesService {
         lastUpdated: Timestamp.now(),
       })
     } catch (error) {
-      console.error('Error updating hourly aggregation:', error)
       // Don't throw here to avoid failing the main sale addition
     }
   }
@@ -287,35 +300,268 @@ export class SalesService {
    */
   static async deleteSale(saleId: string, saleData: SaleEntry): Promise<void> {
     try {
-      const dateStr = saleData.timestamp.toISOString().split('T')[0]
-      const collectionPath = this.getCollectionPath(dateStr)
-      await deleteDoc(doc(db, collectionPath, saleId))
+      // Use the correct Mexico timezone date for the sale
+      const saleDateStr = this.getSaleDateString(saleData.timestamp)
+      
+      let collectionPath = this.getCollectionPath(saleDateStr)
+      
+      let docRef = doc(db, collectionPath, saleId)
+      
+      // Check if document exists at the expected path
+      const docSnapshot = await getDoc(docRef)
+      
+      if (!docSnapshot.exists()) {
+        
+        // Try alternative dates in case of timezone edge cases
+        const alternativeDates = [
+          // Try UTC date
+          saleData.timestamp.toISOString().split('T')[0],
+          // Try current date
+          new Date().toISOString().split('T')[0],
+          // Try Mexico timezone current date
+          new Date().toLocaleDateString('en-CA', { timeZone: 'America/Mexico_City' })
+        ]
+        
+        let found = false
+        for (const altDate of alternativeDates) {
+          if (altDate === saleDateStr) continue // Skip if same as already tried
+          
+          const altCollectionPath = this.getCollectionPath(altDate)
+          
+          const altDocRef = doc(db, altCollectionPath, saleId)
+          const altSnapshot = await getDoc(altDocRef)
+          
+          if (altSnapshot.exists()) {
+            collectionPath = altCollectionPath
+            docRef = altDocRef
+            found = true
+            break
+          }
+        }
+        
+        if (!found) {
+          // Last resort: search in nearby dates
+          const baseDate = new Date(saleDateStr)
+          
+          for (let dayOffset = -3; dayOffset <= 3 && !found; dayOffset++) {
+            const searchDate = new Date(baseDate)
+            searchDate.setDate(searchDate.getDate() + dayOffset)
+            const searchDateStr = searchDate.toISOString().split('T')[0]
+            
+            const searchCollectionPath = this.getCollectionPath(searchDateStr)
+            
+            const searchDocRef = doc(db, searchCollectionPath, saleId)
+            const searchSnapshot = await getDoc(searchDocRef)
+            
+            if (searchSnapshot.exists()) {
+              docRef = searchDocRef
+              found = true
+              break
+            }
+          }
+        }
+        
+        if (!found) {
+          throw new Error(`Document with ID ${saleId} not found. It may have been deleted or moved.`)
+        }
+      } else {
+      }
+      
+      await deleteDoc(docRef)
     } catch (error) {
-      console.error('Error deleting sale:', error)
+      throw error
+    }
+  }
+
+  /**
+   * Get the correct date string for a sale (in Mexico timezone)
+   */
+  private static getSaleDateString(timestamp: Date): string {
+    // Convert timestamp to Mexico timezone and get the date part
+    const mexicoTimeString = timestamp.toLocaleDateString('en-CA', { 
+      timeZone: 'America/Mexico_City'
+    })
+    return mexicoTimeString
+  }
+
+  /**
+   * Calculate the actual hourly amount based on total sales
+   * amount = currentTotalSales - previousHourTotalSales
+   */
+  static async calculateHourlyAmount(
+    hour: number, 
+    machineId: '76' | '79', 
+    newTotalSales: number, 
+    date: string
+  ): Promise<number> {
+    try {
+      if (hour === 0) {
+        // First hour of the day, amount equals total sales
+        return newTotalSales
+      }
+
+      // Get all sales for the date and machine
+      const allSales = await this.getSalesForDate(date)
+      const machineSales = allSales.filter(sale => sale.machineId === machineId)
+      
+      // Find the highest totalSales from previous hours
+      let previousHourTotalSales = 0
+      
+      for (let prevHour = hour - 1; prevHour >= 0; prevHour--) {
+        const prevHourSales = machineSales.filter(sale => sale.hour === prevHour)
+        if (prevHourSales.length > 0) {
+          // Get the highest total sales from that hour (most recent)
+          const maxTotalSales = Math.max(...prevHourSales.map(sale => sale.totalSales || sale.amount))
+          if (maxTotalSales > previousHourTotalSales) {
+            previousHourTotalSales = maxTotalSales
+          }
+        }
+      }
+      
+      // Calculate the actual hourly amount
+      const hourlyAmount = newTotalSales - previousHourTotalSales
+      
+      
+      return Math.max(0, hourlyAmount) // Ensure non-negative
+    } catch (error) {
+      // Fallback: return the total sales as amount
+      return newTotalSales
+    }
+  }
+
+  /**
+   * Add amount to hourly total (creates a new sale entry)
+   * This is useful when user wants to add more sales to an existing hour
+   */
+  static async addToHourlyTotal(
+    hour: number, 
+    machineId: '76' | '79', 
+    amount: number, 
+    operatorId: string,
+    notes?: string,
+    date?: string
+  ): Promise<string> {
+    try {
+      const now = new Date()
+      const targetDate = date || now.toLocaleDateString('en-CA', { 
+        timeZone: 'America/Mexico_City' 
+      })
+      
+      const saleData: Omit<SaleEntry, 'id'> = {
+        machineId,
+        amount,
+        totalSales: amount,
+        timestamp: now,
+        hour,
+        operatorId,
+        notes: notes ? `Adición a hora ${hour}: ${notes}` : `Adición a hora ${hour}`
+      }
+      
+      return await this.addSale(saleData)
+    } catch (error) {
       throw error
     }
   }
 
   /**
    * Update sale entry in hierarchical collection
+   * Automatically calculates the hourly amount based on total sales
    */
   static async updateSale(saleId: string, oldData: SaleEntry, newData: Partial<SaleEntry>): Promise<void> {
     try {
-      const dateStr = oldData.timestamp.toISOString().split('T')[0]
-      const collectionPath = this.getCollectionPath(dateStr)
+      // Use the correct Mexico timezone date for the sale
+      const saleDateStr = this.getSaleDateString(oldData.timestamp)
+      
+      let collectionPath = this.getCollectionPath(saleDateStr)
+      
+      let docRef = doc(db, collectionPath, saleId)
+      
+      // Check if document exists at the expected path
+      const docSnapshot = await getDoc(docRef)
+      
+      if (!docSnapshot.exists()) {
+        
+        // Try alternative dates in case of timezone edge cases
+        const alternativeDates = [
+          // Try UTC date
+          oldData.timestamp.toISOString().split('T')[0],
+          // Try current date
+          new Date().toISOString().split('T')[0],
+          // Try Mexico timezone current date
+          new Date().toLocaleDateString('en-CA', { timeZone: 'America/Mexico_City' })
+        ]
+        
+        let found = false
+        for (const altDate of alternativeDates) {
+          if (altDate === saleDateStr) continue // Skip if same as already tried
+          
+          const altCollectionPath = this.getCollectionPath(altDate)
+          
+          const altDocRef = doc(db, altCollectionPath, saleId)
+          const altSnapshot = await getDoc(altDocRef)
+          
+          if (altSnapshot.exists()) {
+            collectionPath = altCollectionPath
+            docRef = altDocRef
+            found = true
+            break
+          }
+        }
+        
+        if (!found) {
+          // Last resort: search in nearby dates
+          const baseDate = new Date(saleDateStr)
+          
+          for (let dayOffset = -3; dayOffset <= 3 && !found; dayOffset++) {
+            const searchDate = new Date(baseDate)
+            searchDate.setDate(searchDate.getDate() + dayOffset)
+            const searchDateStr = searchDate.toISOString().split('T')[0]
+            
+            const searchCollectionPath = this.getCollectionPath(searchDateStr)
+            
+            const searchDocRef = doc(db, searchCollectionPath, saleId)
+            const searchSnapshot = await getDoc(searchDocRef)
+            
+            if (searchSnapshot.exists()) {
+              collectionPath = searchCollectionPath
+              docRef = searchDocRef
+              found = true
+            }
+          }
+        }
+        
+        if (!found) {
+          throw new Error(`Document with ID ${saleId} not found. It may have been deleted or moved.`)
+        }
+      } else {
+      }
       
       const updateData: any = {
         updatedAt: Timestamp.now(),
       }
       
-      if (newData.amount !== undefined) updateData.amount = newData.amount
-      if (newData.totalSales !== undefined) updateData.totalSales = newData.totalSales
-      if (newData.machineId !== undefined) updateData.machineId = newData.machineId
-      if (newData.notes !== undefined) updateData.notes = newData.notes
+      // If totalSales is being updated, calculate the new amount
+      if (newData.totalSales !== undefined) {
+        const calculatedAmount = await this.calculateHourlyAmount(
+          newData.hour || oldData.hour,
+          (newData.machineId || oldData.machineId) as '76' | '79',
+          newData.totalSales,
+          saleDateStr
+        )
+        
+        updateData.amount = calculatedAmount
+        updateData.totalSales = newData.totalSales
+        
+      } else if (newData.amount !== undefined) {
+        updateData.amount = newData.amount
+      }
       
-      await updateDoc(doc(db, collectionPath, saleId), updateData)
+      if (newData.machineId !== undefined) updateData.machineId = newData.machineId
+      if (newData.hour !== undefined) updateData.hour = newData.hour
+      if (newData.notes !== undefined) updateData.notes = newData.notes // Always update notes, even if empty
+      
+      await updateDoc(docRef, updateData)
     } catch (error) {
-      console.error('Error updating sale:', error)
       throw error
     }
   }
@@ -328,7 +574,6 @@ export class SalesService {
       const hourlySales = await this.getHourlySalesForDate(date)
       return hourlySales.reduce((total, hourData) => total + hourData.total, 0)
     } catch (error) {
-      console.error('Error getting daily sales total:', error)
       return 0
     }
   }
@@ -363,7 +608,6 @@ export class SalesService {
 
       return monthlyTotal
     } catch (error) {
-      console.error('Error getting monthly sales total:', error)
       return 0
     }
   }
@@ -378,7 +622,6 @@ export class SalesService {
       })
       return await this.getDailySalesTotal(mexicoNow)
     } catch (error) {
-      console.error('Error getting today\'s sales total:', error)
       return 0
     }
   }
@@ -410,7 +653,6 @@ export class SalesService {
       
       return weeklyTotal
     } catch (error) {
-      console.error('Error getting this week\'s sales total:', error)
       return 0
     }
   }
@@ -423,8 +665,226 @@ export class SalesService {
       const mexicoNow = new Date(new Date().toLocaleString("en-US", {timeZone: "America/Mexico_City"}))
       return await this.getMonthlyTotal(mexicoNow.getFullYear(), mexicoNow.getMonth() + 1)
     } catch (error) {
-      console.error('Error getting this month\'s sales total:', error)
       return 0
+    }
+  }
+
+  /**
+   * Debug helper: Check if a document exists at a specific path
+   */
+  static async debugDocumentPath(saleId: string, date: string): Promise<{ exists: boolean, path: string }> {
+    try {
+      const collectionPath = this.getCollectionPath(date)
+      const docRef = doc(db, collectionPath, saleId)
+      const docSnapshot = await getDoc(docRef)
+      
+      
+      if (docSnapshot.exists()) {
+      }
+      
+      return {
+        exists: docSnapshot.exists(),
+        path: collectionPath
+      }
+    } catch (error) {
+      return { exists: false, path: '' }
+    }
+  }
+
+  /**
+   * Debug helper: Check all possible paths for a document
+   */
+  static async debugFindDocument(saleId: string): Promise<string | null> {
+    
+    // Check last 7 days
+    for (let daysBack = 0; daysBack <= 7; daysBack++) {
+      const date = new Date()
+      date.setDate(date.getDate() - daysBack)
+      const dateStr = date.toISOString().split('T')[0]
+      
+      const collectionPath = this.getCollectionPath(dateStr)
+      const docRef = doc(db, collectionPath, saleId)
+      
+      try {
+        const docSnapshot = await getDoc(docRef)
+        if (docSnapshot.exists()) {
+          return collectionPath
+        }
+      } catch (error) {
+      }
+    }
+    
+    return null
+  }
+
+  /**
+   * Business Logic Validation Methods
+   */
+
+  /**
+   * Get the last recorded sale for a specific machine on a given date
+   * Used for progressive total validation
+   */
+  static async getLastSaleForMachine(
+    machineId: '76' | '79', 
+    date: string, 
+    beforeHour?: number
+  ): Promise<SaleEntry | null> {
+    try {
+      const sales = await this.getSalesForDate(date)
+      
+      // Filter by machine and optionally by hour
+      const machineSales = sales.filter(sale => {
+        if (sale.machineId !== machineId) return false
+        if (beforeHour !== undefined && sale.hour >= beforeHour) return false
+        return true
+      })
+      
+      // Sort by hour descending and get the most recent
+      const sortedSales = machineSales.sort((a, b) => b.hour - a.hour)
+      return sortedSales.length > 0 ? sortedSales[0] : null
+    } catch (error) {
+      return null
+    }
+  }
+
+  /**
+   * Validate that the new sale follows progressive total rules
+   * Total sales must be equal or greater than the previous hour
+   */
+  static async validateProgressiveSales(
+    machineId: '76' | '79',
+    date: string,
+    hour: number,
+    totalSales: number
+  ): Promise<{ isValid: boolean; error?: string; previousTotal?: number }> {
+    try {
+      // Get the last sale for this machine before the current hour
+      const lastSale = await this.getLastSaleForMachine(machineId, date, hour)
+      
+      if (!lastSale) {
+        // First sale of the day - any positive value is acceptable
+        if (totalSales < 0) {
+          return {
+            isValid: false,
+            error: 'El total de ventas no puede ser negativo'
+          }
+        }
+        return { isValid: true }
+      }
+      
+      const previousTotal = lastSale.totalSales || 0
+      
+      if (totalSales < previousTotal) {
+        return {
+          isValid: false,
+          error: `El total debe ser igual o mayor a $${previousTotal.toLocaleString()} (hora ${lastSale.hour})`,
+          previousTotal
+        }
+      }
+      
+      return { isValid: true, previousTotal }
+    } catch (error) {
+      return {
+        isValid: false,
+        error: 'Error al validar ventas progresivas'
+      }
+    }
+  }
+
+  /**
+   * Validate that the date and hour are not in the future
+   * Uses Mexico timezone for validation
+   */
+  static validateDateTime(date: string, hour: number): { isValid: boolean; error?: string } {
+    try {
+      // Get current date and time in Mexico timezone
+      const nowInMexico = new Date().toLocaleString('en-US', { 
+        timeZone: 'America/Mexico_City' 
+      })
+      const currentDateTime = new Date(nowInMexico)
+      const currentDate = currentDateTime.toISOString().split('T')[0]
+      const currentHour = currentDateTime.getHours()
+      
+      // Compare dates
+      if (date > currentDate) {
+        return {
+          isValid: false,
+          error: 'No se pueden agregar ventas en fechas futuras'
+        }
+      }
+      
+      // If same date, check hour
+      if (date === currentDate && hour > currentHour) {
+        return {
+          isValid: false,
+          error: `No se pueden agregar ventas para horas futuras (hora actual: ${currentHour})`
+        }
+      }
+      
+      return { isValid: true }
+    } catch (error) {
+      return {
+        isValid: false,
+        error: 'Error al validar fecha y hora'
+      }
+    }
+  }
+
+  /**
+   * Validate if this is the first sale of the day for a machine
+   * Used to allow starting at 0
+   */
+  static async isFirstSaleOfDay(
+    machineId: '76' | '79',
+    date: string
+  ): Promise<boolean> {
+    try {
+      const sales = await this.getSalesForDate(date)
+      const machineSales = sales.filter(sale => sale.machineId === machineId)
+      return machineSales.length === 0
+    } catch (error) {
+      return true // Assume first sale if error
+    }
+  }
+
+  /**
+   * Comprehensive validation for new sale entries
+   * Combines all business rules
+   */
+  static async validateSaleEntry(saleData: {
+    machineId: '76' | '79'
+    date: string
+    hour: number
+    totalSales: number
+  }): Promise<{ isValid: boolean; errors: string[] }> {
+    const errors: string[] = []
+    
+    // 1. Validate date/time (no future entries)
+    const dateTimeValidation = this.validateDateTime(saleData.date, saleData.hour)
+    if (!dateTimeValidation.isValid && dateTimeValidation.error) {
+      errors.push(dateTimeValidation.error)
+    }
+    
+    // 2. Validate progressive totals
+    const progressiveValidation = await this.validateProgressiveSales(
+      saleData.machineId,
+      saleData.date,
+      saleData.hour,
+      saleData.totalSales
+    )
+    if (!progressiveValidation.isValid && progressiveValidation.error) {
+      errors.push(progressiveValidation.error)
+    }
+    
+    // 3. Basic amount validation
+    if (saleData.totalSales < 0) {
+      errors.push('El total de ventas no puede ser negativo')
+    }
+    
+    return {
+      isValid: errors.length === 0,
+      errors
     }
   }
 }

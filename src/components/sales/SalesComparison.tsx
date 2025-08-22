@@ -237,7 +237,6 @@ const SalesComparison: React.FC<SalesComparisonProps> = ({ className = '' }) => 
 
       setComparisonData(comparisons);
     } catch (error) {
-      console.error('Error loading comparison data:', error);
       setError('Error al cargar los datos de comparación. Por favor intenta de nuevo.');
     } finally {
       setLoading(false);

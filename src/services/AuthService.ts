@@ -40,7 +40,6 @@ export class AuthService {
               resolve({ user, userProfile: defaultProfile })
             }
           } catch (error) {
-            console.error('Error getting user profile:', error)
             resolve(null)
           }
         } else {
@@ -96,7 +95,6 @@ export class AuthService {
       }
       return null
     } catch (error) {
-      console.error('Error getting user profile:', error)
       return null
     }
   }
@@ -127,7 +125,6 @@ export class AuthService {
         updatedAt: new Date(),
       })
     } catch (error) {
-      console.error('Error creating user profile:', error)
     }
 
     return userProfile
@@ -144,7 +141,6 @@ export class AuthService {
         updatedAt: new Date(),
       }, { merge: true })
     } catch (error) {
-      console.error('Error updating user role:', error)
       throw error
     }
   }

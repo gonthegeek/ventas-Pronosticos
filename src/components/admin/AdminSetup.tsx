@@ -41,33 +41,24 @@ const AdminSetup: React.FC = () => {
   }
 
   useEffect(() => {
-    console.log('AdminSetup - Current user:', user)
-    console.log('AdminSetup - Current userProfile:', userProfile)
-    console.log('AdminSetup - Has permission:', hasPermission)
     loadUsers()
   }, [user, userProfile, hasPermission])
 
   const loadUsers = async () => {
     try {
       setLoading(true)
-      console.log('AdminSetup - Loading users from authorizedUsers collection...')
       const usersSnapshot = await getDocs(collection(db, 'authorizedUsers'))
-      console.log('AdminSetup - Users snapshot:', usersSnapshot)
-      console.log('AdminSetup - Number of docs:', usersSnapshot.docs.length)
       
       const usersList = usersSnapshot.docs.map(doc => {
         const data = doc.data()
-        console.log('AdminSetup - User doc:', doc.id, data)
         return {
           id: doc.id,
           ...data
         }
       }) as User[]
       
-      console.log('AdminSetup - Final users list:', usersList)
       setUsers(usersList)
     } catch (error) {
-      console.error('Error loading users:', error)
     } finally {
       setLoading(false)
     }
@@ -113,7 +104,6 @@ const AdminSetup: React.FC = () => {
       
       alert('Usuario creado exitosamente')
     } catch (error) {
-      console.error('Error creating user:', error)
       alert('Error al crear usuario')
     } finally {
       setLoading(false)
@@ -125,7 +115,6 @@ const AdminSetup: React.FC = () => {
       await setDoc(doc(db, 'authorizedUsers', userId), { isActive }, { merge: true })
       await loadUsers()
     } catch (error) {
-      console.error('Error updating user status:', error)
       alert('Error al actualizar usuario')
     }
   }

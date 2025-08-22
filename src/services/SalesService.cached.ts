@@ -75,7 +75,6 @@ export class CachedSalesService {
       
       return docRef.id
     } catch (error) {
-      console.error('Error adding sale:', error)
       throw error
     }
   }
@@ -89,12 +88,10 @@ export class CachedSalesService {
     // Try cache first
     const cachedData = salesCache.get<SaleEntry[]>(cacheKey)
     if (cachedData) {
-      console.log(`📋 Cache hit for sales data: ${date}`)
       return cachedData
     }
 
     try {
-      console.log(`🔥 Firestore query for sales data: ${date}`)
       const collectionPath = this.getCollectionPath(date)
       const querySnapshot = await getDocs(collection(db, collectionPath))
       
@@ -127,7 +124,6 @@ export class CachedSalesService {
       
       return results
     } catch (error) {
-      console.error('Error getting sales for date:', error)
       return []
     }
   }
@@ -141,12 +137,10 @@ export class CachedSalesService {
     // Try cache first
     const cachedData = salesCache.get<HourlySalesData[]>(cacheKey)
     if (cachedData) {
-      console.log(`📊 Cache hit for hourly sales: ${date}`)
       return cachedData
     }
 
     try {
-      console.log(`🔥 Firestore query for hourly sales: ${date}`)
       const collectionPath = this.getCollectionPath(date)
       const { start: startDate, end: endDate } = getMexicoDateRange(date)
 
@@ -200,7 +194,6 @@ export class CachedSalesService {
       
       return hourlySales
     } catch (error) {
-      console.error('Error getting hourly sales:', error)
       return []
     }
   }
@@ -214,12 +207,10 @@ export class CachedSalesService {
     // Try cache first
     const cachedTotal = salesCache.get<number>(cacheKey)
     if (cachedTotal !== null) {
-      console.log(`💰 Cache hit for daily total: ${date}`)
       return cachedTotal
     }
 
     try {
-      console.log(`🔥 Calculating daily total from Firestore: ${date}`)
       const hourlySales = await this.getHourlySalesForDate(date)
       const total = hourlySales.reduce((sum, hourData) => sum + hourData.total, 0)
       
@@ -228,7 +219,6 @@ export class CachedSalesService {
       
       return total
     } catch (error) {
-      console.error('Error getting daily sales total:', error)
       return 0
     }
   }
@@ -242,7 +232,6 @@ export class CachedSalesService {
     // Try dashboard cache first (shorter TTL for current data)
     const cachedTotal = dashboardCache.get<number>(cacheKey)
     if (cachedTotal !== null) {
-      console.log(`🎯 Cache hit for today's sales`)
       return cachedTotal
     }
 
@@ -251,7 +240,6 @@ export class CachedSalesService {
         timeZone: 'America/Mexico_City' 
       })
       
-      console.log(`🔥 Fetching today's sales from Firestore`)
       const total = await this.getDailySalesTotal(mexicoNow)
       
       // Cache with shorter TTL since it's current data
@@ -259,7 +247,6 @@ export class CachedSalesService {
       
       return total
     } catch (error) {
-      console.error('Error getting today\'s sales total:', error)
       return 0
     }
   }
@@ -273,12 +260,10 @@ export class CachedSalesService {
     // Try dashboard cache first
     const cachedTotal = dashboardCache.get<number>(cacheKey)
     if (cachedTotal !== null) {
-      console.log(`📅 Cache hit for this week's sales`)
       return cachedTotal
     }
 
     try {
-      console.log(`🔥 Calculating this week's sales from Firestore`)
       const mexicoNow = new Date(new Date().toLocaleString("en-US", {timeZone: "America/Mexico_City"}))
       
       const dayOfWeek = mexicoNow.getDay()
@@ -308,7 +293,6 @@ export class CachedSalesService {
       
       return weeklyTotal
     } catch (error) {
-      console.error('Error getting this week\'s sales total:', error)
       return 0
     }
   }
@@ -326,12 +310,10 @@ export class CachedSalesService {
     // Try cache first
     const cachedTotal = salesCache.get<number>(cacheKey)
     if (cachedTotal !== null) {
-      console.log(`📅 Cache hit for monthly total: ${targetYear}-${targetMonth}`)
       return cachedTotal
     }
 
     try {
-      console.log(`🔥 Calculating monthly total from Firestore: ${targetYear}-${targetMonth}`)
       const daysInMonth = new Date(targetYear, targetMonth, 0).getDate()
       
       // Use Promise.all for parallel daily requests
@@ -354,7 +336,6 @@ export class CachedSalesService {
       
       return monthlyTotal
     } catch (error) {
-      console.error('Error getting monthly sales total:', error)
       return 0
     }
   }
@@ -368,7 +349,6 @@ export class CachedSalesService {
     // Try dashboard cache first
     const cachedTotal = dashboardCache.get<number>(cacheKey)
     if (cachedTotal !== null) {
-      console.log(`📊 Cache hit for this month's sales`)
       return cachedTotal
     }
 
@@ -381,7 +361,6 @@ export class CachedSalesService {
       
       return total
     } catch (error) {
-      console.error('Error getting this month\'s sales total:', error)
       return 0
     }
   }
@@ -409,7 +388,6 @@ export class CachedSalesService {
       this.invalidateCachesForDate(dateStr)
       
     } catch (error) {
-      console.error('Error updating sale:', error)
       throw error
     }
   }
@@ -427,7 +405,6 @@ export class CachedSalesService {
       this.invalidateCachesForDate(dateStr)
       
     } catch (error) {
-      console.error('Error deleting sale:', error)
       throw error
     }
   }
@@ -499,7 +476,6 @@ export class CachedSalesService {
       }
     }
     
-    console.log(`📦 Batch load: ${results.size} from cache, ${uncachedDates.length} from Firestore`)
     
     // Fetch uncached dates in parallel
     if (uncachedDates.length > 0) {
@@ -519,7 +495,6 @@ export class CachedSalesService {
    * Preload cache for common dashboard queries
    */
   static async preloadDashboardCache(): Promise<void> {
-    console.log('🚀 Preloading dashboard cache...')
     
     try {
       // Preload current period data
@@ -530,9 +505,7 @@ export class CachedSalesService {
       ]
       
       await Promise.all(promises)
-      console.log('✅ Dashboard cache preloaded')
     } catch (error) {
-      console.error('❌ Failed to preload dashboard cache:', error)
     }
   }
 
@@ -540,7 +513,6 @@ export class CachedSalesService {
    * Cache warmup for frequently accessed dates
    */
   static async warmupCache(): Promise<void> {
-    console.log('🔥 Warming up cache...')
     
     try {
       const now = new Date()
@@ -555,9 +527,7 @@ export class CachedSalesService {
       
       // Load in batch
       await this.batchLoadDates(dates)
-      console.log('✅ Cache warmed up for last 7 days')
     } catch (error) {
-      console.error('❌ Cache warmup failed:', error)
     }
   }
 
@@ -580,7 +550,6 @@ export class CachedSalesService {
     // Invalidate dashboard caches (they aggregate data)
     dashboardCache.clear()
     
-    console.log(`🗑️ Invalidated caches for date: ${date}`)
   }
 
   /**
@@ -610,7 +579,6 @@ export class CachedSalesService {
    * Manual cache cleanup
    */
   static cleanupCache(): void {
-    console.log('🧹 Cleaning up caches...')
     CacheManager.cleanup()
   }
 }

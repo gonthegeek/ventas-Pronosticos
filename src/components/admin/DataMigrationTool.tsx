@@ -58,7 +58,6 @@ const BackupRestoreTool: React.FC = () => {
     const timestamp = new Date().toLocaleTimeString()
     const logMessage = `[${timestamp}] ${message}`
     setLogs(prev => [...prev, logMessage])
-    console.log(logMessage)
   }
 
   const getCollectionPath = (date: Date): string => {

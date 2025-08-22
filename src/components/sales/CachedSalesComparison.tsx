@@ -118,11 +118,9 @@ const CachedSalesComparison: React.FC = () => {
       if (!period) return
 
       try {
-        console.log(`📊 Loading comparison data for: ${period.label}`)
         const data = await loadBatch(period.dates)
         setComparisonData(data)
       } catch (error) {
-        console.error('Failed to load comparison data:', error)
       }
     }
 

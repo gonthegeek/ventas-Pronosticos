@@ -2,8 +2,8 @@
 
 # Casa Pronósticos - Sales & Lottery Management System
 
-**Current Status**: Phase 1 Complete (33% - React Migration + Cache System + SRS #1)
-**Architecture**: React 18 + TypeScript + Firebase + Intelligent Cache System
+**Current Status**: Phase 1 Complete + Component Refactoring (40% - React Migration + Cache System + SRS #1 + UI Library)
+**Architecture**: React 18 + TypeScript + Firebase + Intelligent Cache System + Component Design System
 
 ## 🎯 Project Overview
 
@@ -90,16 +90,27 @@ src/
 │   ├── admin/              # ✅ Admin panel with cache management
 │   ├── auth/               # ✅ Authentication components  
 │   ├── Layout/             # ✅ Navigation and layout
-│   ├── sales/              # ✅ Sales components
-│   └── ui/                 # ✅ Reusable UI components
+│   ├── sales/              # ✅ Reusable sales components (NEW)
+│   │   ├── SalesFilters.tsx    # Date/machine filtering
+│   │   ├── SalesTable.tsx      # Data table with actions
+│   │   ├── SalesForm.tsx       # Add/edit modal form
+│   │   ├── SalesStats.tsx      # Statistics dashboard
+│   │   ├── ExportTools.tsx     # CSV/JSON/Print exports
+│   │   └── index.ts            # Clean exports
+│   └── ui/                 # ✅ Reusable UI component library (NEW)
+│       ├── Card.tsx            # Container with loading states
+│       ├── Button.tsx          # Standardized buttons
+│       ├── Modal.tsx           # Dialog overlays
+│       ├── LoadingSpinner.tsx  # Loading indicators
+│       └── index.ts            # Clean exports
 ├── modules/
 │   ├── dashboard/          # ✅ Dashboard with KPIs
-│   └── sales/              # ✅ SRS #1 HourlySales complete
+│   └── sales/              # ✅ SRS #1 HourlySales (ready for refactoring)
 ├── services/
 │   ├── firebase.ts         # ✅ Firebase configuration
 │   ├── AuthService.ts      # ✅ Authentication service
 │   ├── SalesService.ts     # ✅ Sales data operations
-│   ├── SalesService.cached.ts # ✅ Cached wrapper
+│   ├── SalesService.cached.ts # ✅ Cached wrapper (needs refactoring)
 │   └── CacheService.ts     # ✅ Intelligent cache engine
 ├── state/
 │   ├── store.ts            # ✅ Redux store
