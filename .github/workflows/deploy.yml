@@ -1,11 +1,14 @@
 # Nombre del flujo de trabajo
-name: Deploy to Firebase Hosting
+name: Deploy React App to Firebase Hosting
 
 # Define cuándo se ejecutará la acción
 on:
   push:
     branches:
       - main  # Se ejecuta cada vez que haces push a la rama 'main'
+  pull_request:
+    branches:
+      - main  # También en pull requests para preview
 
 jobs:
   build_and_deploy:
@@ -14,24 +17,32 @@ jobs:
     steps:
       # 1. Clona tu repositorio en el servidor virtual
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      # 2. Inject Firebase configuration
-      - name: Inject Firebase Config
-        run: |
-          cat > public/firebase-config.js << EOF
-          window.FIREBASE_CONFIG = {
-            apiKey: "${{ secrets.FIREBASE_API_KEY }}",
-            authDomain: "${{ secrets.FIREBASE_AUTH_DOMAIN }}",
-            projectId: "${{ secrets.FIREBASE_PROJECT_ID }}",
-            storageBucket: "${{ secrets.FIREBASE_STORAGE_BUCKET }}",
-            messagingSenderId: "${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}",
-            appId: "${{ secrets.FIREBASE_APP_ID }}",
-            measurementId: "${{ secrets.FIREBASE_MEASUREMENT_ID }}"
-          };
-          EOF
+      # 2. Configura Node.js (necesario para React/Vite)
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
 
-      # 3. Configura la acción para desplegar en Firebase
+      # 3. Instala las dependencias del proyecto
+      - name: Install dependencies
+        run: npm ci
+
+      # 4. Construye la aplicación para producción con variables de entorno
+      - name: Build React app
+        run: npm run build
+        env:
+          VITE_FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
+          VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.FIREBASE_AUTH_DOMAIN }}
+          VITE_FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          VITE_FIREBASE_STORAGE_BUCKET: ${{ secrets.FIREBASE_STORAGE_BUCKET }}
+          VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}
+          VITE_FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID }}
+          VITE_FIREBASE_MEASUREMENT_ID: ${{ secrets.FIREBASE_MEASUREMENT_ID }}
+
+      # 5. Despliega a Firebase Hosting
       - name: Deploy to Firebase Hosting
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:

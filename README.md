@@ -1,325 +1,351 @@
-# Sistema de Gestión de Ventas para Loteria
+# Casa Pronósticos - React Migration
 
-> **🛡️ Aplicación Empresarial Legítima** - Sistema interno de gestión de ventas para Loteria con arquitectura modular y seguridad empresarial implementada.
+> **🔄 Hybrid Migration**: Legacy SPA → Modern React + TailwindCSS Architecture
 
-## 1. Descripción del Proyecto
+## 📋 Migration Overview
 
-Sistema web completo para registrar, analizar y visualizar las ventas de Loteria. Permite llevar un control detallado de las ventas por hora y por día, con análisis de tendencias, gestión de usuarios con roles, y dashboard de KPIs. La aplicación está construida con arquitectura modular ES6, utiliza TailwindCSS para el diseño y Chart.js para visualizaciones. Como backend, se integra con **Firebase** (Firestore y Authentication) proporcionando una base de datos en tiempo real, centralizada y segura para todos los usuarios.
+This project represents the modernization of the existing Sales & Lottery Management System from a monolithic SPA structure to a modular React + TailwindCSS architecture while preserving all working functionality.
 
-### 🏗️ Arquitectura Modular
+### 🚀 Deployment
 
-La aplicación implementa una arquitectura modular escalable:
-- **Sistema de roles** con control granular de permisos (operador, supervisor, admin)
-- **Módulos independientes** para cada funcionalidad del SRS
-- **Router protegido** con middleware de autorización
-- **Navegación dinámica** basada en permisos de usuario
-- **Panel administrativo** seguro para gestión de usuarios
+### Automatic Deployment with GitHub Actions
 
-### 🔒 Medidas de Seguridad
+This project includes automatic deployment to Firebase Hosting via GitHub Actions when pushing to the `main` branch.
 
-Esta aplicación implementa múltiples capas de seguridad empresarial:
-- **Sistema de roles jerárquico** (operador < supervisor < admin)
-- **Reglas de Firestore** estrictas con validación de roles
-- **Middleware de autorización** en todas las rutas
-- **Sanitización de logs** sin exposición de datos sensibles
-- **Panel administrativo** protegido con validación de roles
-- **Headers de seguridad HTTP** (CSP, X-Frame-Options, XSS Protection)
-- **Validación y sanitización** de todas las entradas del usuario
+#### Setup GitHub Secrets
 
-Ver [SECURITY.md](./SECURITY.md) para detalles completos.
-
-## 2. Características Principales
-
-### 🎯 **Funcionalidades Implementadas (Fase 1)**
-
-* **Sistema de Autenticación y Roles:**
-  * Autenticación Firebase con email/password
-  * Sistema de roles jerárquico: operador → supervisor → admin
-  * Control granular de permisos por funcionalidad
-  * Panel administrativo para gestión de usuarios
-
-* **Registro de Ventas por Hora:**
-  * Formulario para registrar ventas con timestamp preciso
-  * Cálculo automático de diferencias por período
-  * Validación de datos y consistencia temporal
-  * Edición y eliminación de registros con recálculo automático
-
-* **Navegación Inteligente:**
-  * Menú dinámico basado en permisos de usuario
-  * Protección de rutas con middleware de autorización
-  * Indicadores visuales de acceso permitido/denegado
-
-### 🚀 **Funcionalidades Avanzadas**
-
-* **Base de Datos Centralizada:** Todos los usuarios acceden y escriben en la misma base de datos, permitiendo trabajo colaborativo en tiempo real.
-* **Optimización y Escalabilidad:** Carga de datos bajo demanda con paginación y filtros eficientes.
-* **Visualización de Datos:**
-    * **Gráficas de Tendencia:** Visualiza las ventas por hora (modo diario) o por día (modo semanal/mensual).
-    * **Modo Comparativo:** Selecciona múltiples días y compáralos en una sola gráfica.
-    * **Tabla de Registros:** Consulta los datos más recientes en formato tabular.
-* **Filtros Avanzados:**
-    * Períodos predefinidos: **Hoy, Esta Semana, Este Mes**
-    * Filtrado por **máquina específica**
-    * Rangos de fechas personalizados
-* **Carga Masiva de Datos:** Sube registros históricos desde archivos `.csv`.
-* **Manejo de Errores:** Notificaciones visuales para operaciones exitosas, errores y estados de carga.
-
-## 3. Estructura del Proyecto
-
-El proyecto implementa una arquitectura modular ES6 escalable:
-
-```
-/
-├── .github/
-│   └── workflows/
-│       └── deploy.yml
-├── public/
-│   ├── js/
-│   │   ├── core/
-│   │   │   ├── api.js                    # API centralizada
-│   │   │   └── router.js                 # Router con protección de rutas
-│   │   ├── modules/
-│   │   │   ├── base-module.js           # Clase base para módulos
-│   │   │   ├── dashboard/
-│   │   │   │   └── dashboard.js         # Dashboard con KPIs
-│   │   │   └── sales/
-│   │   │       ├── hourly-sales.js     # Módulo de ventas por hora
-│   │   │       └── hourly-sales-events.js  # Eventos del módulo
-│   │   ├── ui/
-│   │   │   └── navigation.js            # Navegación dinámica por roles
-│   │   ├── utils/
-│   │   │   ├── permissions.js           # Sistema de roles y permisos
-│   │   │   ├── user-setup.js           # Configuración de usuarios
-│   │   │   ├── admin-panel.js          # Panel administrativo
-│   │   │   └── security-config.js      # Configuración de seguridad
-│   │   ├── firebase-*-wrapper.js       # Wrappers de Firebase
-│   │   ├── main.js                     # Punto de entrada principal
-│   │   ├── auth.js                     # Autenticación y estado
-│   │   ├── state.js                    # Gestión de estado global
-│   │   ├── ui.js                       # Utilidades de UI
-│   │   ├── chart-config.js            # Configuración de gráficas
-│   │   └── utils.js                    # Utilidades generales
-│   ├── index.html
-│   ├── style.css
-│   └── firebase-config.js
-├── firestore.rules                     # Reglas de seguridad de Firestore
-├── firebase.json
-├── package.json
-├── SECURITY.md
-└── README.md
-```
-
-## 4. Configuración para Desarrollo Local
-
-Para ejecutar la aplicación en tu máquina local:
-
-### Prerrequisitos
-
-* [Node.js](https://nodejs.org/) instalado
-* Visual Studio Code
-* La extensión **Live Server** para VS Code
-* Cuenta de Firebase con proyecto configurado
-
-### Configuración Inicial
-
-1.  **Clona el repositorio desde GitHub:**
-    ```bash
-    git clone [tu-repositorio]
-    cd ventas-Pronosticos
-    ```
-
-2.  **Configura Firebase:**
-    ```bash
-    # Copia el archivo de configuración
-    cp public/firebase-config.js.example public/firebase-config.js
-    # Edita firebase-config.js con tus credenciales reales de Firebase
-    ```
-
-3.  **Configura el primer usuario admin:**
-    * Abre la aplicación en VS Code con Live Server
-    * Regístrate con tu email en la aplicación
-    * Abre la consola del navegador y ejecuta: `setupInitialAdmin()`
-    * Confirma la creación del usuario admin
-
-4.  **Instala dependencias (opcional para desarrollo):**
-    ```bash
-    npm install
-    ```
-
-### Scripts Disponibles
+In your GitHub repository, go to Settings → Secrets and Variables → Actions, and add these secrets:
 
 ```bash
-npm start          # Inicia servidor de desarrollo
-npm test           # Ejecuta pruebas (si están configuradas)
-npm run deploy     # Despliega a Firebase Hosting
+# Firebase Configuration
+FIREBASE_API_KEY=your_api_key
+FIREBASE_AUTH_DOMAIN=your_project_id.firebaseapp.com
+FIREBASE_PROJECT_ID=your_project_id
+FIREBASE_STORAGE_BUCKET=your_project_id.appspot.com
+FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+FIREBASE_APP_ID=your_app_id
+FIREBASE_MEASUREMENT_ID=your_measurement_id
+
+# Firebase Service Account (JSON key)
+FIREBASE_SERVICE_ACCOUNT_ADMINISTRACIONPRONOSTICOS=your_service_account_json
 ```
 
-## 5. Sistema de Roles y Permisos
+#### Getting Firebase Service Account Key
 
-La aplicación implementa un sistema de roles jerárquico con control granular:
+1. Go to [Firebase Console](https://console.firebase.google.com)
+2. Select your project
+3. Go to Project Settings → Service Accounts
+4. Click "Generate new private key"
+5. Copy the entire JSON content and paste it as the `FIREBASE_SERVICE_ACCOUNT_ADMINISTRACIONPRONOSTICOS` secret
 
-### 🔑 **Roles Disponibles**
+#### Manual Deployment
 
-| Rol | Nivel | Permisos |
-|-----|-------|----------|
-| **Operador** | 1 | Registro de ventas, visualización de datos básicos |
-| **Supervisor** | 2 | Todos los permisos de operador + gestión de comisiones y premios |
-| **Admin** | 3 | Acceso completo + gestión de usuarios y configuración |
+```bash
+# Build for production
+npm run build
 
-### 🛡️ **Control de Acceso**
-
-- **Navegación dinámica:** Los menús se adaptan automáticamente a los permisos del usuario
-- **Protección de rutas:** Middleware de autorización en todas las rutas sensibles
-- **Validación en Firestore:** Reglas de seguridad estrictas a nivel de base de datos
-- **Panel administrativo:** Solo accesible para usuarios con rol admin
-
-### 👤 **Gestión de Usuarios (Solo Admins)**
-
-Los administradores pueden:
-- Agregar nuevos usuarios al sistema
-- Asignar y modificar roles
-- Activar/desactivar usuarios
-- Ver logs de actividad (próximamente)
-
-**Funciones administrativas disponibles en consola:**
-```javascript
-// Solo disponible para usuarios admin
-adminAddUser(userId, email, role, name)
-adminGetUserRole(userId)
-adminListUsers()
+# Deploy using Firebase CLI
+npm install -g firebase-tools
+firebase login
+firebase deploy --only hosting
 ```
 
-## 6. Configuración de Firebase
+### Local Development
 
-La aplicación utiliza Firebase como backend con configuración empresarial:
+1. Copy environment file:
+```bash
+cp .env.example .env
+```
 
-### Servicios Utilizados
+2. Fill in your Firebase configuration in `.env`
 
-- **Authentication:** Email/Password con validación de usuarios autorizados
-- **Firestore:** Base de datos NoSQL con reglas de seguridad estrictas
-- **Hosting:** Despliegue automático desde GitHub Actions
+3. Start development server:
+```bash
+npm run dev
+```
 
-### Configuración del Proyecto Firebase
+## 🎯 Migration Goals
 
-1.  **Crea un Proyecto en Firebase:** Ve a la [Consola de Firebase](https://console.firebase.google.com/)
-2.  **Registra una App Web:** Obtén tu objeto de configuración
-3.  **Configura Authentication:**
-    * Activa el proveedor **Email/Password**
-    * (Opcional) Configura dominios autorizados para producción
-4.  **Configura Firestore:**
-    * Crea una base de datos en **modo de producción**
-    * Aplica las reglas de seguridad del archivo `firestore.rules`
-5.  **Actualiza Configuración:**
-    * Edita `public/firebase-config.js` con tus credenciales
+- ✅ **Preserve Working Features**: Keep existing Firebase auth, role-based access, and hourly sales functionality
+- ✅ **Modernize Architecture**: Implement modular structure with proper separation of concerns
+- ✅ **Improve Maintainability**: Use TypeScript, Redux Toolkit, and modern React patterns
+- ✅ **Align with SRS**: Ensure all 9 SRS functionalities are properly structured and traceable
 
-### Reglas de Seguridad Implementadas
+## 🏗️ New Architecture
 
-Las reglas de Firestore implementan:
-- **Autenticación obligatoria** para todos los accesos
-- **Validación de roles** para operaciones de escritura
-- **Estructura de datos** validada para prevenir corrupción
-- **Acceso granular** basado en jerarquía de roles
+### Directory Structure
 
-```javascript
-// Ejemplo de regla implementada
-match /authorizedUsers/{userId} {
-  allow read: if isAuthenticated();
-  allow write: if hasRole('admin');
-  allow create: if hasRole('admin');
-  allow delete: if hasRole('admin');
+```
+src/
+├── core/                 # Core application logic
+├── services/            # Business logic and external integrations
+│   ├── firebase.ts      # Firebase configuration
+│   ├── AuthService.ts   # Authentication service (migrated)
+│   └── SalesService.ts  # Sales operations (migrated)
+├── modules/             # Feature modules (SRS functionalities)
+│   ├── dashboard/       # Dashboard overview
+│   └── sales/          # SRS #1: Hourly Sales (migrated)
+├── components/          # Reusable UI components
+│   ├── Layout/         # Layout components
+│   └── ui/            # Generic UI components
+├── state/              # Redux Toolkit state management
+│   ├── store.ts       # Main store configuration
+│   ├── hooks.ts       # Typed Redux hooks
+│   └── slices/        # Redux slices for each domain
+└── types/             # TypeScript type definitions
+```
+
+### 🔄 Migration Status
+
+| Component | Status | Source | Notes |
+|-----------|--------|--------|-------|
+| ✅ Firebase Auth | Migrated | `legacy/js/auth.js` | Full role-based access preserved |
+| ✅ Hourly Sales UI | Migrated | `legacy/modules/sales/` | SRS #1 implementation |
+| ✅ Navigation | Migrated | `legacy/js/ui/navigation.js` | Permission-based menu |
+| ✅ State Management | New | Redux Toolkit | Replaces legacy state handling |
+| 🚧 Sales Forms | In Progress | `legacy/modules/sales/` | Form functionality being added |
+| ⏳ Reports Module | Planned | `legacy/` | SRS #2-9 to be migrated |
+
+## Quick Start
+
+1. **Install Dependencies**
+   ```bash
+   npm install
+   ```
+
+2. **Configure Firebase**
+   ```bash
+   cp .env.example .env
+   # Edit .env with your Firebase project credentials
+   ```
+
+3. **Start Development Server**
+   ```bash
+   npm run dev
+   ```
+   
+4. **Open Application**
+   - Navigate to: http://localhost:3000/
+   - Login with Firebase credentials
+
+## Current Status ✅
+
+- ✅ **Project Setup**: React + Vite + TypeScript + TailwindCSS
+- ✅ **Architecture**: Modular structure with services/, modules/, components/, state/
+- ✅ **State Management**: Redux Toolkit with auth, sales, UI slices
+- ✅ **Firebase Integration**: AuthService and SalesService migrated
+- ✅ **Layout System**: Responsive sidebar/header with role-based navigation
+- ✅ **SRS Module #1**: HourlySales component with data visualization
+- ✅ **Development Server**: Running at http://localhost:3000/ ✨
+
+### ⚠️ Next Steps Required
+
+1. **Firebase Environment Setup**: Copy `.env.example` to `.env` and configure with your Firebase project credentials
+2. **Authentication Testing**: Test login flow with existing Firebase users
+3. **Form Implementation**: Complete HourlySales data entry functionality
+4. **Remaining SRS Modules**: Migrate modules #2-9 from legacy system
+
+## 🔧 Key Technologies
+
+### Frontend Stack
+- **React 18** - Modern React with hooks and concurrent features
+- **TypeScript** - Type safety and better developer experience  
+- **Vite** - Fast build tool and development server
+- **TailwindCSS** - Utility-first CSS framework
+- **Redux Toolkit** - State management with modern patterns
+- **React Hook Form** - Performant form handling
+- **Recharts** - Chart library for data visualization
+
+### Backend (Firebase)
+- **Firebase Authentication** - User management with role-based access
+- **Firestore** - NoSQL database with real-time sync
+- **Firebase Functions** - Serverless backend logic
+- **Firebase Hosting** - Static site hosting
+
+## 📚 Migration Guide
+
+### Migrating Legacy Components
+
+1. **Identify the legacy component** in `ventas-Pronosticos/public/js/`
+2. **Extract business logic** into appropriate service
+3. **Create React component** in corresponding module
+4. **Connect to Redux state** using typed hooks
+5. **Preserve existing permissions** and role checks
+6. **Test with existing Firebase data**
+
+### Example: Migrating a Module
+
+```typescript
+// 1. Create service (src/services/ExampleService.ts)
+export class ExampleService {
+  static async getData() {
+    // Migrated Firestore logic
+  }
+}
+
+// 2. Create Redux slice (src/state/slices/exampleSlice.ts)
+const exampleSlice = createSlice({
+  name: 'example',
+  initialState,
+  reducers: {
+    // State management
+  }
+})
+
+// 3. Create React component (src/modules/example/Example.tsx)
+const Example: React.FC = () => {
+  const dispatch = useAppDispatch()
+  const data = useAppSelector(state => state.example)
+  
+  // Component logic
 }
 ```
 
-## 7. Despliegue y CI/CD
+## 🔐 Authentication & Permissions
 
-### Despliegue Automático (Recomendado)
+The new system maintains full compatibility with the existing role system:
 
-El proyecto incluye configuración completa de CI/CD con GitHub Actions:
+- **operador** (level 1): Basic sales operations
+- **supervisor** (level 2): Sales + reports access  
+- **admin** (level 3): Full system access
 
-**Configuración requerida en GitHub:**
-1. Ve a Settings → Secrets and variables → Actions
-2. Configura los siguientes secretos:
-   ```
-   FIREBASE_API_KEY
-   FIREBASE_AUTH_DOMAIN
-   FIREBASE_PROJECT_ID
-   FIREBASE_STORAGE_BUCKET
-   FIREBASE_MESSAGING_SENDER_ID
-   FIREBASE_APP_ID
-   FIREBASE_MEASUREMENT_ID
-   FIREBASE_SERVICE_ACCOUNT_[PROJECT_ID]
-   ```
+```typescript
+// Check permissions (same as legacy)
+if (AuthService.hasPermission(userProfile, 'sales:create')) {
+  // User can create sales
+}
 
-**Flujo automático:**
-- ✅ **Push a main** → Deploy automático a producción
-- ✅ **Pull Requests** → Deploy a preview (opcional)
-- ✅ **Tests automáticos** antes del deploy
-- ✅ **Validación de seguridad** integrada
-
-### Despliegue Manual
-
-Para desarrollo y testing:
-
-```bash
-# Instalar Firebase CLI
-npm install -g firebase-tools
-
-# Login y configurar proyecto
-firebase login
-firebase use --add
-
-# Deploy manual
-npm run deploy
-# o
-firebase deploy
+// Check role level (same as legacy)  
+if (AuthService.getRoleLevel(userProfile) >= 2) {
+  // Supervisor or admin access
+}
 ```
 
-### Ambientes
+## 📊 SRS Functionality Mapping
 
-- **Desarrollo:** Live Server local con hot reload
-- **Staging:** Firebase Preview Channels (branches)
-- **Producción:** Firebase Hosting (rama main)
+| SRS # | Functionality | Legacy Location | New Location | Status |
+|-------|---------------|----------------|--------------|---------|
+| 1 | Hourly Sales | `modules/sales/hourly-sales.js` | `modules/sales/HourlySales.tsx` | ✅ Migrated |
+| 2 | Daily Reports | `modules/reports/` | `modules/reports/` | ⏳ Planned |
+| 3 | Weekly Analysis | `modules/analytics/` | `modules/analytics/` | ⏳ Planned |
+| 4 | Monthly Summary | `modules/reports/` | `modules/reports/` | ⏳ Planned |
+| 5 | User Management | `utils/admin-panel.js` | `modules/admin/` | ⏳ Planned |
+| 6 | Lottery Tracking | `modules/lottery/` | `modules/lottery/` | ⏳ Planned |
+| 7 | Financial Reports | `modules/finance/` | `modules/finance/` | ⏳ Planned |
+| 8 | Audit Logs | `utils/audit.js` | `modules/audit/` | ⏳ Planned |
+| 9 | Export Functions | `utils/export.js` | `modules/export/` | ⏳ Planned |
 
-## 8. Roadmap de Desarrollo
+## 🚦 Development Workflow
 
-### ✅ **Fase 1 - Completada** 
-- [x] Sistema de autenticación y roles
-- [x] Navegación dinámica por permisos  
-- [x] Módulo de ventas por hora
-- [x] Refactorización de arquitectura
-
-### 🚧 **Fase 2 - En Desarrollo**
-- [ ] Dashboard con KPIs avanzados
-- [ ] Módulo de comisiones mensuales
-- [ ] Módulo de cambios de rollos
-
-### 📋 **Fase 3 - Planificada**
-- [ ] Análisis de ventas diarias/semanales
-- [ ] Gestión de boletos vendidos  
-- [ ] Cálculo de promedios de boletos
-
-### 🎯 **Fase 4 - Futura**
-- [ ] Gestión de premios pagados
-- [ ] Registro de primeros lugares
-- [ ] Analytics avanzado y reportes
-
-## 9. Contribución y Soporte
-
-### Contacto de Seguridad
-Para reportes de seguridad: **security@gonzaloronzon.com**
-
-### Estructura de Commits
-El proyecto utiliza [Conventional Commits](https://www.conventionalcommits.org/):
-
+### 1. Create Feature Branch
 ```bash
-feat: nueva funcionalidad
-fix: corrección de bug  
-docs: actualización de documentación
-style: cambios de formato
-refactor: refactorización de código
-test: adición de pruebas
-chore: tareas de mantenimiento
+git checkout -b feature/migrate-srs-2-reports
 ```
 
-### Licencia
-Este proyecto es de uso interno empresarial. Ver archivo de licencia para detalles.
+### 2. Follow Migration Pattern
+- Create service layer for business logic
+- Implement Redux slice for state management  
+- Build React component with proper TypeScript
+- Add proper permission checks
+- Test with existing data
+
+### 3. Update Progress
+Update this README and the migration checklist as components are completed.
+
+### 4. Code Review & Merge
+Ensure code follows established patterns and maintains compatibility.
+
+## 🧪 Testing Strategy
+
+### Unit Tests
+- Service layer functions
+- Redux reducers and actions
+- Utility functions
+
+### Integration Tests  
+- Firebase connectivity
+- Authentication flows
+- Permission checks
+
+### Manual Testing
+- Verify compatibility with existing data
+- Test role-based access
+- Validate real-time sync
+
+## 📈 Performance Considerations
+
+### Code Splitting
+- Lazy load module components
+- Dynamic imports for heavy libraries
+
+### State Management
+- Normalized data structures
+- Selective re-renders with proper memoization
+
+### Bundle Optimization
+- Tree shaking unused code
+- Optimize asset loading
+
+## � User Guide
+
+### Adding Sales Entries
+
+#### Current Day Sales
+1. Use the **Quick Sales Entry** on the dashboard
+2. Select machine (76 or 79), verify hour, and enter total accumulated amount
+3. The system automatically calculates the hourly difference
+
+#### Historical Sales (Previous Days)
+1. **Option 1: Dashboard Quick Entry**
+   - Change the date field to the desired historical date
+   - Follow the same process as current day sales
+   
+2. **Option 2: Hourly Sales Module**
+   - Navigate to "Ventas por Hora" from the sidebar
+   - Use the date picker at the top right to select any historical date
+   - Click "Agregar Venta" to add entries for that specific date
+
+#### Important Notes
+- **Time Period Concept**: When you register at 14:00, you're recording sales from 13:00 to 14:00
+- **Cumulative System**: Always enter the total accumulated amount on the machine, not just the hourly amount
+- **Automatic Calculation**: The system calculates hourly sales by subtracting the previous hour's total
+- **Validation**: The system prevents entering totals lower than the previous hour
+- **Timezone**: All dates and times are automatically handled in Mexico City timezone (UTC-6)
+
+## �🔧 Troubleshooting
+
+### Common Migration Issues
+
+1. **Firebase Connection**
+   - Verify environment variables
+   - Check Firebase project settings
+   - Ensure Firestore rules allow access
+
+2. **Permission Errors**  
+   - Check user role assignment
+   - Verify permission strings match legacy system
+   - Test with different user roles
+
+3. **Data Compatibility**
+   - Ensure date formats match legacy system
+   - Verify collection/document structure
+   - Check field naming consistency
+
+## 📝 Contributing
+
+1. Follow the established architecture patterns
+2. Maintain TypeScript strict mode compliance
+3. Add proper JSDoc comments referencing SRS numbers
+4. Test with existing Firebase data
+5. Update migration documentation
+
+## 🔗 Related Documentation
+
+- [Legacy System README](../ventas-Pronosticos/README.md)
+- [SRS Requirements](../ventas-Pronosticos/srs.json)
+- [Refactor Plan](../ventas-Pronosticos/refactor-plan.json)
+- [Firebase Setup Guide](../ventas-Pronosticos/setup.sh)
+
+---
+
+**Migration Progress**: 🟢 Architecture Setup Complete | 🟡 Core Modules In Progress | 🔴 Advanced Features Pending

@@ -1,0 +1,25 @@
+{
+  "name": "Casa Pronósticos - Sistema de Administración",
+  "short_name": "Casa Pronósticos Admin",
+  "description": "Sistema interno de administración para Casa Pronósticos - Gestión de ventas y sorteos",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#3B82F6",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "es",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    }
+  ],
+  "categories": ["business", "productivity", "finance"],
+  "purpose": {
+    "type": "business-application",
+    "category": "internal-administration",
+    "description": "Sistema legítimo de administración empresarial para Casa Pronósticos"
+  }
+}

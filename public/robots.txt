@@ -1,18 +1,51 @@
-# Robots.txt for Vending Machine Sales Tracking System
-# This is a legitimate business application - not intended for public indexing
+# Casa Pronósticos - Internal Administration System
+# This is a private business application - DO NOT INDEX
 
 User-agent: *
 Disallow: /
+Noindex: /
 
-# Security and Business Information
-# This application is a legitimate enterprise sales management tool
-# Purpose: Vending machine sales tracking and inventory management
-# Business Owner: Gonzalo Ronzon
+# Explicitly block all major search engines
+User-agent: Googlebot
+Disallow: /
+Noindex: /
+
+User-agent: Bingbot
+Disallow: /
+Noindex: /
+
+User-agent: Slurp
+Disallow: /
+Noindex: /
+
+User-agent: DuckDuckBot
+Disallow: /
+Noindex: /
+
+User-agent: Baiduspider
+Disallow: /
+Noindex: /
+
+User-agent: facebookexternalhit
+Disallow: /
+
+User-agent: Twitterbot
+Disallow: /
+
+# Explicitly disallow common bot paths
+Disallow: /admin/
+Disallow: /sales/
+Disallow: /api/
+Disallow: /auth/
+Disallow: /dashboard/
+
+# Security
+Disallow: /*.json
+Disallow: /*.env
+Disallow: /config/
+
+# NO SITEMAP - Private application
+# Crawl-delay: 86400
+
+# Contact for legitimate security research only
 # Contact: security@gonzaloronzon.com
-
-# Sitemap: Not applicable (private business application)
-# Business verification: This is a legitimate internal business tool
-
-# Google and other search engines: Please do not index
-# This is an internal business application requiring authentication
-# Contact security@gonzaloronzon.com for verification of legitimacy

@@ -1,143 +1,143 @@
 rules_version = '2';
-
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Enhanced security rules for sales and lottery tracking system
-    // Based on SRS.json and refactor-plan.json data model
-    // Using real appId: {appId}
-    
-    // Helper functions for role-based access control
+    // Helper function to check if user is authenticated
     function isAuthenticated() {
-      return request.auth != null && request.auth.uid != null;
+      return request.auth != null;
     }
     
-    function getUserData() {
-      return get(/databases/$(database)/documents/authorizedUsers/$(request.auth.uid));
+    // Helper function to check if user is admin
+    function isAdmin() {
+      return isAuthenticated() && 
+             exists(/databases/$(database)/documents/authorizedUsers/$(request.auth.uid)) &&
+             (
+               // New structure: role.name == 'admin'
+               get(/databases/$(database)/documents/authorizedUsers/$(request.auth.uid)).data.role.name == 'admin' ||
+               // Old structure: role == 'admin' 
+               get(/databases/$(database)/documents/authorizedUsers/$(request.auth.uid)).data.role == 'admin' ||
+               // Level-based: role.level == 3
+               get(/databases/$(database)/documents/authorizedUsers/$(request.auth.uid)).data.role.level == 3
+             );
     }
     
-    function hasRole(role) {
-      return isAuthenticated() && getUserData().data.role == role;
+    // Helper function to check if user is supervisor or admin
+    function isSupervisorOrAdmin() {
+      return isAuthenticated() && 
+             exists(/databases/$(database)/documents/authorizedUsers/$(request.auth.uid)) &&
+             (
+               // New structure
+               get(/databases/$(database)/documents/authorizedUsers/$(request.auth.uid)).data.role.name in ['admin', 'supervisor'] ||
+               // Old structure
+               get(/databases/$(database)/documents/authorizedUsers/$(request.auth.uid)).data.role in ['admin', 'supervisor'] ||
+               // Level-based (supervisor=2, admin=3)
+               get(/databases/$(database)/documents/authorizedUsers/$(request.auth.uid)).data.role.level >= 2
+             );
     }
     
-    function hasMinimumRole(requiredRole) {
-      let userRole = getUserData().data.role;
-      return isAuthenticated() && (
-        (requiredRole == 'operador' && userRole in ['operador', 'supervisor', 'admin']) ||
-        (requiredRole == 'supervisor' && userRole in ['supervisor', 'admin']) ||
-        (requiredRole == 'admin' && userRole == 'admin')
-      );
-    }
-    
+    // Helper function to check if user is authorized
     function isAuthorizedUser() {
-      return isAuthenticated() && exists(/databases/$(database)/documents/authorizedUsers/$(request.auth.uid));
+      return isAuthenticated() && 
+             exists(/databases/$(database)/documents/authorizedUsers/$(request.auth.uid)) &&
+             (
+               get(/databases/$(database)/documents/authorizedUsers/$(request.auth.uid)).data.isActive == true ||
+               get(/databases/$(database)/documents/authorizedUsers/$(request.auth.uid)).data.active == true
+             );
     }
     
-    // SRS Functionality #1: Hourly Sales (ventas por hora)
-    // Legacy sales collection - maintaining existing data
-    match /artifacts/{appId}/public/data/sales/{saleId} {
-      allow read: if isAuthorizedUser();
-      allow write: if hasMinimumRole('operador');
-      
-      allow create: if hasMinimumRole('operador')
-        && request.resource.data.timestamp is timestamp
-        && request.resource.data.machineId is string
-        && request.resource.data.saleAmount is number
-        && request.resource.data.saleAmount >= 0;
-    }
-    
-    // New SRS-compliant hourly_sales collection (for future migration)
-    match /artifacts/{appId}/public/data/hourly_sales/{saleId} {
-      allow read: if isAuthorizedUser();
-      allow write: if hasMinimumRole('operador');
-      
-      allow create: if hasMinimumRole('operador')
-        && request.resource.data.timestamp is timestamp
-        && request.resource.data.machineId is string
-        && request.resource.data.saleAmount is number
-        && request.resource.data.saleAmount >= 0;
-    }
-    
-    // Future SRS functionalities with role-based access
-    
-    // SRS Functionality #2: Monthly Commissions (supervisor+)
-    match /artifacts/{appId}/public/data/monthly_commissions/{commissionId} {
-      allow read: if hasMinimumRole('supervisor');
-      allow write: if hasMinimumRole('supervisor');
-    }
-    
-    // SRS Functionality #3: Roll Changes (operador+)
-    match /artifacts/{appId}/public/data/roll_changes/{rollId} {
-      allow read: if isAuthorizedUser();
-      allow write: if hasMinimumRole('operador');
-    }
-    
-    // SRS Functionality #4: Daily/Weekly Sales (operador+)
-    match /artifacts/{appId}/public/data/daily_weekly_sales/{saleId} {
-      allow read: if isAuthorizedUser();
-      allow write: if hasMinimumRole('operador');
-    }
-    
-    // SRS Functionality #5: Tickets Sold (operador+)
-    match /artifacts/{appId}/public/data/tickets_sold/{ticketId} {
-      allow read: if isAuthorizedUser();
-      allow write: if hasMinimumRole('operador');
-    }
-    
-    // SRS Functionality #6: Ticket Averages (operador+)
-    match /artifacts/{appId}/public/data/ticket_averages/{avgId} {
-      allow read: if isAuthorizedUser();
-      allow write: if hasMinimumRole('operador');
-    }
-    
-    // SRS Functionality #7: Scratch Prizes (supervisor+)
-    match /artifacts/{appId}/public/data/scratch_prizes/{prizeId} {
-      allow read: if hasMinimumRole('supervisor');
-      allow write: if hasMinimumRole('supervisor');
-    }
-    
-    // SRS Functionality #8: Paid Prizes (supervisor+)
-    match /artifacts/{appId}/public/data/paid_prizes/{paidId} {
-      allow read: if hasMinimumRole('supervisor');
-      allow write: if hasMinimumRole('supervisor');
-    }
-    
-    // SRS Functionality #9: First Places (supervisor+)
-    match /artifacts/{appId}/public/data/first_places/{firstId} {
-      allow read: if hasMinimumRole('supervisor');
-      allow write: if hasMinimumRole('supervisor');
-    }
-    
-    // User management for roles system (Phase 1 - Task 1.3)
-    // New simplified authorizedUsers collection (even number of segments)
-    match /authorizedUsers/{userId} {
-      allow read: if isAuthenticated();
-      allow write: if hasRole('admin');
-      allow create: if hasRole('admin');
-      allow delete: if hasRole('admin');
-    }
-    
-    // Keep the old authorizedUsers path for backward compatibility (if needed)
-    match /artifacts/{appId}/public/data/config/authorizedUsers/{userId} {
-      allow read: if isAuthenticated();
-      allow write: if hasRole('admin');
-      allow create: if hasRole('admin');
-      allow delete: if hasRole('admin');
-    }
-    
-    // Future users collection (for enhanced user management)
-    match /artifacts/{appId}/public/data/users/{userId} {
-      allow read: if isAuthenticated() && (request.auth.uid == userId || hasMinimumRole('supervisor'));
-      allow write: if isAuthenticated() && (request.auth.uid == userId || hasRole('admin'));
-    }
-    
-    // User profile data (legacy - kept for compatibility)
+    // Users collection (new structure)
     match /users/{userId} {
-      allow read, write: if isAuthenticated() && request.auth.uid == userId;
+      // Admins can read, create, update, delete any user
+      allow read, write: if isAdmin();
+      
+      // Users can only read their own profile
+      allow read: if isAuthenticated() && request.auth.uid == userId;
     }
     
-    // Deny all other access by default
-    match /{document=**} {
-      allow read, write: if false;
+    // Authorized Users collection - only admins can manage
+    match /authorizedUsers/{userId} {
+      // Admins can read, create, update, delete any user
+      allow read, write: if isAdmin();
+      
+      // Users can only read their own profile
+      allow read: if isAuthenticated() && request.auth.uid == userId;
+      
+      // Allow initial user creation (for first admin setup) 
+      allow create: if isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // Sales data - hierarchical structure: data/sales/{year}/{month}/{day}/{salesRecord}
+    match /data/sales/{document=**} {
+      allow read: if isAuthorizedUser();
+      allow write: if isAuthorizedUser();
+    }
+    
+    // Backward compatibility - old sales structure
+    match /sales/{document=**} {
+      allow read: if isAuthorizedUser();
+      allow write: if isAuthorizedUser();
+    }
+    
+    // Artifacts collection (legacy backup data)
+    match /artifacts/{document=**} {
+      allow read: if isAdmin();
+      allow write: if isAdmin();
+    }
+    
+    // Legacy data paths for migration
+    match /legacy/{document=**} {
+      allow read: if isAdmin();
+      allow write: if isAdmin();
+    }
+    
+    // Backup data paths
+    match /backup/{document=**} {
+      allow read: if isAdmin();
+      allow write: if isAdmin();
+    }
+    
+    // Hourly sales data
+    match /hourlySales/{document=**} {
+      allow read, write: if isAuthorizedUser();
+    }
+    
+    // Daily sales data 
+    match /dailySales/{document=**} {
+      allow read, write: if isAuthorizedUser();
+    }
+    
+    // Lottery/Tickets data
+    match /tickets/{document=**} {
+      allow read: if isAuthorizedUser();
+      allow write: if isAuthorizedUser();
+    }
+    
+    // Reports data - supervisors and admins can access
+    match /reports/{document=**} {
+      allow read: if isSupervisorOrAdmin();
+      allow write: if isSupervisorOrAdmin();
+    }
+    
+    // Commission data - supervisors and admins
+    match /commissions/{document=**} {
+      allow read: if isSupervisorOrAdmin();
+      allow write: if isSupervisorOrAdmin();
+    }
+    
+    // Inventory data
+    match /inventory/{document=**} {
+      allow read: if isAuthorizedUser();
+      allow write: if isSupervisorOrAdmin();
+    }
+    
+    // Admin-only collections
+    match /admin/{document=**} {
+      allow read, write: if isAdmin();
+    }
+    
+    // System configuration
+    match /config/{document=**} {
+      allow read: if isAuthorizedUser();
+      allow write: if isAdmin();
     }
   }
 }

@@ -1,0 +1,63 @@
+import { useEffect } from 'react'
+import { Routes, Route } from 'react-router-dom'
+import { useAppDispatch, useAppSelector } from './state/hooks'
+import { initializeAuth, setUser, setUserProfile } from './state/slices/authSlice'
+import { onAuthStateChanged } from 'firebase/auth'
+import { auth } from './services/firebase'
+import { AuthService } from './services/AuthService'
+import { initSecurity } from './utils/security'
+import Layout from './components/Layout/Layout'
+import Dashboard from './modules/dashboard/Dashboard'
+import HourlySales from './modules/sales/HourlySales'
+import SalesComparisonPage from './modules/sales/SalesComparisonPage'
+import AdminPanel from './components/admin/AdminSetup'
+import LoadingSpinner from './components/ui/LoadingSpinner'
+
+function App() {
+  const dispatch = useAppDispatch()
+  const { isLoading } = useAppSelector((state) => state.auth)
+
+  useEffect(() => {
+    // Initialize security measures first
+    initSecurity()
+
+    // Initialize auth and set up continuous auth state listener
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        try {
+          const userProfile = await AuthService.getUserProfile(user.uid)
+          dispatch(setUser(user))
+          dispatch(setUserProfile(userProfile))
+        } catch (error) {
+          console.error('Error getting user profile:', error)
+          dispatch(setUser(null))
+          dispatch(setUserProfile(null))
+        }
+      } else {
+        dispatch(setUser(null))
+        dispatch(setUserProfile(null))
+      }
+    })
+
+    // Cleanup subscription on unmount
+    return () => unsubscribe()
+  }, [dispatch])
+
+  if (isLoading) {
+    return <LoadingSpinner />
+  }
+
+  return (
+    <Layout>
+      <Routes>
+        <Route path="/" element={<Dashboard />} />
+        <Route path="/sales/hourly" element={<HourlySales />} />
+        <Route path="/sales/comparison" element={<SalesComparisonPage />} />
+        <Route path="/admin" element={<AdminPanel />} />
+        {/* Additional routes will be added as we migrate more modules */}
+      </Routes>
+    </Layout>
+  )
+}
+
+export default App
