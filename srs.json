@@ -1,0 +1,512 @@
+{
+  "project": "Casa Pronósticos - Sistema de análisis de ventas y sorteos",
+  "version": "2.0",
+  "status": "migration-in-progress",
+  "architecture": "React + TypeScript + Firebase",
+  "created": "2025-08-21",
+  "updated": "2025-08-21",
+  "objectives": [
+    "Migrar sistema legacy SPA a arquitectura React modular",
+    "Centralizar información de ventas y sorteos de máquinas 76 y 79",
+    "Implementar sistema de cache inteligente para optimizar Firebase free tier",
+    "Permitir análisis comparativos históricos por hora, día, semana y mes",
+    "Registrar información complementaria: comisiones, rollos, boletos, raspados y premiados",
+    "Visualizar KPIs mediante dashboards gráficos y tablas con Recharts",
+    "Mantener sistema amigable con roles y permisos granulares"
+  ],
+  "current_implementation": {
+    "technology_stack": {
+      "frontend": "React 18 + TypeScript + Vite",
+      "styling": "TailwindCSS",
+      "state_management": "Redux Toolkit",
+      "forms": "React Hook Form",
+      "charts": "Recharts",
+      "backend": "Firebase v10 (Auth + Firestore)",
+      "routing": "React Router DOM v6",
+      "cache": "Intelligent multi-layer caching system"
+    },
+    "architecture": {
+      "type": "Modular React SPA",
+      "structure": {
+        "core/": "Core services and configuration",
+        "services/": "Firebase and cache services",
+        "modules/": "Feature modules (dashboard, sales, etc.)",
+        "components/": "Reusable UI components",
+        "state/": "Redux store and slices",
+        "utils/": "Utilities and helpers"
+      }
+    }
+  },
+  "functionalities": [
+    {
+      "id": 1,
+      "name": "Ventas por hora",
+      "srs_status": "implemented",
+      "migration_status": "completed",
+      "module": "src/modules/sales/HourlySales.tsx",
+      "fields": [
+        "date (YYYY-MM-DD)",
+        "hour (0-23)",
+        "machineId ('76' | '79')",
+        "amount (number)",
+        "totalSales (number, optional)",
+        "operatorId (string)",
+        "notes (string, optional)",
+        "timestamp (Date)",
+        "createdAt (Firebase Timestamp)",
+        "updatedAt (Firebase Timestamp)"
+      ],
+      "granularity": "hora",
+      "collection_path": "data/sales/{year}/{month}/{day}",
+      "cache_strategy": "30-240min TTL, automatic invalidation",
+      "notes": "Completamente implementado con CRUD, comparaciones, cache inteligente y export CSV"
+    },
+    {
+      "id": 2,
+      "name": "Comisiones mensuales",
+      "srs_status": "pending",
+      "migration_status": "not_started",
+      "module": "src/modules/finances/commissions.tsx (to be created)",
+      "fields": [
+        "date (YYYY-MM)",
+        "machineId ('76' | '79')",
+        "totalSystem (number)",
+        "totalPaper (number)",
+        "difference (number, calculated)",
+        "operatorId (string)",
+        "timestamp (Date)",
+        "createdAt (Firebase Timestamp)"
+      ],
+      "granularity": "mes",
+      "collection_path": "data/commissions/{year}/{month}",
+      "cache_strategy": "4hr TTL, monthly data",
+      "notes": "Comparación entre registros de sistema vs papel"
+    },
+    {
+      "id": 3,
+      "name": "Cambio de rollo",
+      "srs_status": "pending",
+      "migration_status": "not_started",
+      "module": "src/modules/operations/rollChanges.tsx (to be created)",
+      "fields": [
+        "date (YYYY-MM-DD)",
+        "machineId ('76' | '79')",
+        "operatorId (string)",
+        "notes (string, optional)",
+        "timestamp (Date)",
+        "createdAt (Firebase Timestamp)"
+      ],
+      "granularity": "evento",
+      "collection_path": "data/rollChanges/{year}/{month}",
+      "cache_strategy": "2hr TTL, event-based",
+      "notes": "Registra cada cambio de rollo de papel en cada máquina"
+    },
+    {
+      "id": 4,
+      "name": "Ventas diarias y semanales",
+      "srs_status": "implemented",
+      "migration_status": "completed_smart_implementation",
+      "module": "src/modules/sales/SalesComparisonPage.tsx + src/components/sales/SalesComparison.tsx",
+      "implementation_approach": "smart_aggregation",
+      "data_source": "Calculated from existing SRS #1 hourly sales data",
+      "fields": [
+        "date (calculated from hourly data)",
+        "dayOfWeek (calculated)",
+        "machineId (aggregated from hourly sales)",
+        "dailySale (sum of hourly amounts)",
+        "weeklySale (sum of daily totals)",
+        "peakHour (calculated)",
+        "machineBreakdown (76/79 totals)"
+      ],
+      "granularity": "día/semana/mes/custom ranges",
+      "collection_path": "NONE - calculated on-demand from data/sales/{year}/{month}/{day}",
+      "cache_strategy": "Leverages existing sales cache + calculation caching",
+      "features": [
+        "Daily totals calculation from hourly data",
+        "Weekly pattern analysis (last N days of specific weekday)",
+        "Monthly aggregations (this month, last month, year-to-date)",
+        "Custom date range comparisons",
+        "Quick selections (last 7/14 days, this/last month, year-to-date)",
+        "Machine-specific breakdowns",
+        "Peak hour identification",
+        "Best/worst/average day statistics",
+        "No duplicate data storage required"
+      ],
+      "notes": "Smart implementation - leverages existing SRS #1 data with on-demand calculations. No separate collection needed, reducing Firebase storage and maintaining data consistency."
+    },
+    {
+      "id": 5,
+      "name": "Boletos vendidos",
+      "srs_status": "pending",
+      "migration_status": "not_started",
+      "module": "src/modules/finances/tickets.tsx (to be created)",
+      "fields": [
+        "week (YYYY-Www)",
+        "date (YYYY-MM-DD)",
+        "machineId ('76' | '79')",
+        "ticketsDay (number)",
+        "ticketsTotal (number, calculated)",
+        "operatorId (string)",
+        "timestamp (Date)"
+      ],
+      "granularity": "día/semana",
+      "collection_path": "data/tickets/{year}/{month}",
+      "cache_strategy": "2hr TTL, daily aggregation",
+      "notes": "Análisis histórico de boletos vendidos por máquina"
+    },
+    {
+      "id": 6,
+      "name": "Promedio por boleto",
+      "srs_status": "pending",
+      "migration_status": "not_started",
+      "module": "src/modules/finances/ticketAverages.tsx (to be created)",
+      "fields": [
+        "week (YYYY-Www)",
+        "date (YYYY-MM-DD)",
+        "machineId ('76' | '79')",
+        "ticketsSold (number)",
+        "totalSale (number)",
+        "averagePerTicket (number, calculated)",
+        "operatorId (string)",
+        "timestamp (Date)"
+      ],
+      "granularity": "día/semana",
+      "collection_path": "data/ticketAverages/{year}/{month}",
+      "cache_strategy": "2hr TTL, calculated metrics",
+      "notes": "Relaciona cuánto se gastó/vendió por cada boleto"
+    },
+    {
+      "id": 7,
+      "name": "Raspados premiados",
+      "srs_status": "pending",
+      "migration_status": "not_started",
+      "module": "src/modules/lottery/scratches.tsx (to be created)",
+      "fields": [
+        "date (YYYY-MM-DD)",
+        "week (YYYY-Www)",
+        "lottery (string)",
+        "winningTicket (string)",
+        "prizeAmount (number)",
+        "operatorId (string)",
+        "timestamp (Date)"
+      ],
+      "granularity": "evento/semana",
+      "collection_path": "data/scratches/{year}/{month}",
+      "cache_strategy": "1hr TTL, event-based",
+      "notes": "Registro de raspados premiados por sorteo"
+    },
+    {
+      "id": 8,
+      "name": "Boletos premiados pagados",
+      "srs_status": "pending",
+      "migration_status": "not_started",
+      "module": "src/modules/finances/paidPrizes.tsx (to be created)",
+      "fields": [
+        "date (YYYY-MM-DD)",
+        "week (YYYY-Www)",
+        "amountPaid (number)",
+        "ticketCount (number)",
+        "operatorId (string)",
+        "timestamp (Date)"
+      ],
+      "granularity": "semana",
+      "collection_path": "data/paidPrizes/{year}/{month}",
+      "cache_strategy": "2hr TTL, weekly aggregation",
+      "notes": "Registra boletos que tuvieron premio y fueron pagados"
+    },
+    {
+      "id": 9,
+      "name": "Primeros lugares de sorteos",
+      "srs_status": "pending",
+      "migration_status": "not_started",
+      "module": "src/modules/lottery/firstPlaces.tsx (to be created)",
+      "fields": [
+        "date (YYYY-MM-DD)",
+        "lottery (string)",
+        "accumulatedJackpot (number)",
+        "winnerCount (number)",
+        "operatorId (string)",
+        "timestamp (Date)"
+      ],
+      "granularity": "evento",
+      "collection_path": "data/firstPlaces/{year}/{month}",
+      "cache_strategy": "4hr TTL, event-based",
+      "notes": "Registro de primeros lugares, bolsa acumulada y ganadores"
+    }
+  ],
+  "firebase_schema": {
+    "database": "Cloud Firestore",
+    "structure": "hierarchical",
+    "collections": {
+      "authorizedUsers": {
+        "path": "/authorizedUsers/{userId}",
+        "description": "User authentication and roles",
+        "fields": {
+          "uid": "string",
+          "email": "string",
+          "displayName": "string (optional)",
+          "role": {
+            "level": "number (1-3)",
+            "name": "RoleName ('operador' | 'supervisor' | 'admin')"
+          },
+          "permissions": "PermissionName[]",
+          "menuAccess": "string[]",
+          "isActive": "boolean",
+          "createdAt": "Timestamp",
+          "lastLogin": "Timestamp (optional)"
+        }
+      },
+      "data/sales/{year}/{month}/{day}": {
+        "path": "/data/sales/{year}/{month}/{day}/{saleId}",
+        "description": "Hierarchical sales data for SRS #1",
+        "fields": {
+          "machineId": "string ('76' | '79')",
+          "amount": "number",
+          "totalSales": "number (optional)",
+          "hour": "number (0-23)",
+          "date": "string (YYYY-MM-DD)",
+          "yearMonth": "string (YYYY-MM)",
+          "operatorId": "string",
+          "notes": "string (optional)",
+          "timestamp": "Timestamp",
+          "createdAt": "Timestamp",
+          "updatedAt": "Timestamp (optional)"
+        }
+      },
+      "hourlySales": {
+        "path": "/hourlySales/{documentId}",
+        "description": "Legacy compatibility collection",
+        "status": "deprecated - use hierarchical structure"
+      },
+      "data/commissions/{year}/{month}": {
+        "path": "/data/commissions/{year}/{month}/{commissionId}",
+        "description": "Monthly commissions for SRS #2",
+        "status": "planned"
+      },
+      "data/rollChanges/{year}/{month}": {
+        "path": "/data/rollChanges/{year}/{month}/{changeId}",
+        "description": "Roll change events for SRS #3",
+        "status": "planned"
+      },
+      "data/dailyWeeklySales/{year}/{month}": {
+        "path": "/data/dailyWeeklySales/{year}/{month}/{saleId}",
+        "description": "Daily and weekly sales for SRS #4",
+        "status": "planned"
+      },
+      "data/tickets/{year}/{month}": {
+        "path": "/data/tickets/{year}/{month}/{ticketId}",
+        "description": "Tickets sold for SRS #5",
+        "status": "planned"
+      },
+      "data/ticketAverages/{year}/{month}": {
+        "path": "/data/ticketAverages/{year}/{month}/{averageId}",
+        "description": "Ticket averages for SRS #6",
+        "status": "planned"
+      },
+      "data/scratches/{year}/{month}": {
+        "path": "/data/scratches/{year}/{month}/{scratchId}",
+        "description": "Scratch prizes for SRS #7",
+        "status": "planned"
+      },
+      "data/paidPrizes/{year}/{month}": {
+        "path": "/data/paidPrizes/{year}/{month}/{prizeId}",
+        "description": "Paid prizes for SRS #8",
+        "status": "planned"
+      },
+      "data/firstPlaces/{year}/{month}": {
+        "path": "/data/firstPlaces/{year}/{month}/{placeId}",
+        "description": "First places for SRS #9",
+        "status": "planned"
+      }
+    }
+  },
+  "roles_and_permissions": {
+    "role_hierarchy": {
+      "operador": {
+        "level": 1,
+        "permissions": [
+          "dashboard:read",
+          "ventas:all",
+          "boletos:create",
+          "boletos:read",
+          "rollos:create",
+          "rollos:read"
+        ],
+        "menu_access": ["dashboard", "ventas", "operacion"]
+      },
+      "supervisor": {
+        "level": 2,
+        "permissions": [
+          "operador permissions +",
+          "comisiones:all",
+          "premiados:all",
+          "sorteos:all"
+        ],
+        "menu_access": ["dashboard", "ventas", "finanzas", "sorteos", "operacion"]
+      },
+      "admin": {
+        "level": 3,
+        "permissions": [
+          "supervisor permissions +",
+          "admin:all",
+          "users:all"
+        ],
+        "menu_access": ["all"]
+      }
+    },
+    "implementation": {
+      "file": "src/utils/permissions.ts",
+      "status": "implemented",
+      "features": [
+        "Role-based access control",
+        "Granular permissions",
+        "Menu access control",
+        "Permission utility functions",
+        "React hooks integration"
+      ]
+    }
+  },
+  "cache_system": {
+    "implementation": "Multi-layer intelligent caching",
+    "purpose": "Firebase free tier optimization",
+    "components": {
+      "CacheService": {
+        "file": "src/services/CacheService.ts",
+        "features": [
+          "LRU eviction strategy",
+          "localStorage persistence",
+          "Performance statistics",
+          "Automatic cleanup",
+          "Configurable TTL"
+        ]
+      },
+      "CachedSalesService": {
+        "file": "src/services/SalesService.cached.ts",
+        "features": [
+          "Intelligent cache integration",
+          "Automatic invalidation",
+          "Batch operations",
+          "Smart preloading"
+        ]
+      },
+      "React Hooks": {
+        "file": "src/hooks/useCachedSales.ts",
+        "features": [
+          "useCachedDashboard",
+          "useCachedHourlySales",
+          "useCacheStats",
+          "useCachePreloader"
+        ]
+      }
+    },
+    "performance_targets": {
+      "cache_hit_rate": "85-95%",
+      "firestore_reduction": "75-90%",
+      "load_time_improvement": "2-5x faster"
+    }
+  },
+  "admin_panel": {
+    "implementation": {
+      "file": "src/components/admin/AdminSetup.tsx",
+      "enhanced_version": "src/components/admin/EnhancedAdminPanel.tsx",
+      "status": "implemented"
+    },
+    "features": [
+      {
+        "name": "User Management",
+        "status": "implemented",
+        "description": "CRUD operations for users and roles"
+      },
+      {
+        "name": "Cache Management",
+        "status": "implemented",
+        "description": "Cache monitoring, statistics, and manual controls",
+        "component": "src/components/admin/CacheMonitor.tsx"
+      },
+      {
+        "name": "Data Migration",
+        "status": "implemented",
+        "description": "Import/export functionality with date filtering",
+        "component": "src/components/admin/DataMigrationTool.tsx"
+      },
+      {
+        "name": "Configuration Management",
+        "status": "planned",
+        "description": "System settings and catalog management"
+      }
+    ]
+  },
+  "usability": {
+    "principles": [
+      "React Hook Form para formularios optimizados",
+      "TailwindCSS para diseño responsive consistente",
+      "Feedback visual inmediato con toasts y loading states",
+      "Autocompletado y valores predefinidos",
+      "Export/import CSV integrado",
+      "Navegación intuitiva con sidebar colapsable",
+      "Cache transparente para mejor performance"
+    ],
+    "accessibility": [
+      "Semantic HTML structure",
+      "Keyboard navigation support",
+      "Screen reader friendly",
+      "Color contrast compliance"
+    ]
+  },
+  "kpis": [
+    "Ventas por hora, día, semana y mes con visualización Recharts",
+    "Comparativas de comisiones (sistema vs papel)",
+    "Tiempo promedio entre cambios de rollo",
+    "Tendencias de boletos vendidos y promedio por boleto",
+    "Distribución de raspados premiados por sorteo",
+    "Montos pagados en boletos premiados",
+    "Histórico de primeros lugares y acumulados",
+    "Métricas de performance del cache (hit rate, carga)",
+    "Firebase usage analytics (requests, cost optimization)"
+  ],
+  "migration_status": {
+    "completed": [
+      "React + TypeScript architecture",
+      "Firebase v10 integration",
+      "Authentication and authorization",
+      "SRS #1: Hourly Sales (complete CRUD)",
+      "Dashboard with KPIs",
+      "Intelligent cache system",
+      "Admin panel with cache management",
+      "Data migration tools",
+      "Responsive UI with TailwindCSS"
+    ],
+    "in_progress": [
+      "SRS documentation updates",
+      "Testing and optimization"
+    ],
+    "pending": [
+      "SRS #2-9: Remaining functionalities",
+      "Advanced reporting features",
+      "Mobile app considerations",
+      "Performance monitoring dashboard"
+    ]
+  },
+  "success_metrics": {
+    "technical": [
+      "Firebase free tier compliance: <50,000 reads/day",
+      "Cache hit rate: >85%",
+      "Page load time: <3 seconds",
+      "TypeScript coverage: 100%",
+      "Bundle size: <1MB gzipped"
+    ],
+    "functional": [
+      "All 9 SRS functionalities implemented",
+      "Role-based access working correctly",
+      "Data migration completed successfully",
+      "Export/import operational",
+      "Real-time updates functional"
+    ],
+    "usability": [
+      "Registration time per functionality: <2 minutes",
+      "User training time: <30 minutes",
+      "Mobile responsive: All devices",
+      "Accessibility compliance: WCAG 2.1 AA"
+    ]
+  }
+}
