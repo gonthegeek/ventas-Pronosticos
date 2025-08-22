@@ -42,7 +42,7 @@ export class CacheService {
   }
   
   private options: Required<CacheOptions>
-  private cleanupInterval: number | null = null
+  private cleanupInterval: ReturnType<typeof setInterval> | null = null
 
   constructor(options: CacheOptions = {}) {
     this.options = {
