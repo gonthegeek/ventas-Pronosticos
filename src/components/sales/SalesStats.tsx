@@ -33,7 +33,9 @@ export const SalesStats: React.FC<SalesStatsProps> = ({
     }
 
     const totalAmount = sales.reduce((sum, sale) => sum + sale.amount, 0)
-    const hoursWithSales = sales.length
+    // Count unique hours only (not total entries) to avoid duplicate hour counting
+    const uniqueHours = new Set(sales.map(sale => sale.hour))
+    const hoursWithSales = uniqueHours.size
     const averagePerHour = hoursWithSales > 0 ? totalAmount / hoursWithSales : 0
     
     // For "all" machines, we need to calculate total differently
