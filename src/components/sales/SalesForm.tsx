@@ -139,11 +139,23 @@ export const SalesForm: React.FC<SalesFormProps> = ({
       return
     }
 
+    const hour = parseInt(formData.hour)
+    const totalSales = parseFloat(formData.totalSales)
+    const machineId = formData.machineId as '76' | '79'
+
+    // Compute delta amount from cumulative totalSales using the shared service
+    const { delta } = await SalesService.computeHourlyDelta({
+      date: selectedDate,
+      hour,
+      machineId,
+      totalSales
+    })
+
     const saleData: Partial<SaleEntry> = {
-      hour: parseInt(formData.hour),
-      machineId: formData.machineId as '76' | '79',
-      amount: parseFloat(formData.totalSales), // Use totalSales as the amount
-      totalSales: parseFloat(formData.totalSales),
+      hour,
+      machineId,
+      amount: delta,
+      totalSales,
       notes: formData.notes || '' // Always pass notes, even if empty
     }
 

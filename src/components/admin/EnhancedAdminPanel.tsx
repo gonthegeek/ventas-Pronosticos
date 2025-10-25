@@ -4,15 +4,16 @@ import { useHasPermission } from '../../hooks/usePermissions'
 import { PERMISSIONS } from '../../utils/permissions'
 import AdminSetup from './AdminSetup'
 import CacheMonitor from './CacheMonitor'
+import DataValidationTool from './DataValidationTool'
 
 /**
- * Enhanced Admin Panel with Cache Management
- * Wrapper around the original AdminSetup with added cache functionality
+ * Enhanced Admin Panel with Cache Management and Data Validation
+ * Wrapper around the original AdminSetup with added cache functionality and validation tools
  */
 const EnhancedAdminPanel: React.FC = () => {
   const { userProfile } = useAppSelector((state) => state.auth)
   const hasPermission = useHasPermission(PERMISSIONS.ADMIN_ALL)
-  const [activeTab, setActiveTab] = useState<'admin' | 'cache'>('admin')
+  const [activeTab, setActiveTab] = useState<'admin' | 'cache' | 'validation'>('admin')
 
   if (!hasPermission) {
     return (
@@ -50,11 +51,12 @@ const EnhancedAdminPanel: React.FC = () => {
           <div className="sm:hidden">
             <select
               value={activeTab}
-              onChange={(e) => setActiveTab(e.target.value as 'admin' | 'cache')}
+              onChange={(e) => setActiveTab(e.target.value as 'admin' | 'cache' | 'validation')}
               className="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
             >
               <option value="admin">Administración General</option>
               <option value="cache">Monitor de Cache</option>
+              <option value="validation">Validación de Datos</option>
             </select>
           </div>
           <div className="hidden sm:block">
@@ -80,6 +82,16 @@ const EnhancedAdminPanel: React.FC = () => {
                 >
                   📊 Monitor de Cache
                 </button>
+                <button
+                  onClick={() => setActiveTab('validation')}
+                  className={`${
+                    activeTab === 'validation'
+                      ? 'border-indigo-500 text-indigo-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  } whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm`}
+                >
+                  🔍 Validación de Datos
+                </button>
               </nav>
             </div>
           </div>
@@ -91,9 +103,13 @@ const EnhancedAdminPanel: React.FC = () => {
             <div className="p-6">
               <AdminSetup />
             </div>
-          ) : (
+          ) : activeTab === 'cache' ? (
             <div className="p-6">
               <CacheMonitor />
+            </div>
+          ) : (
+            <div className="p-6">
+              <DataValidationTool />
             </div>
           )}
         </div>

@@ -43,6 +43,36 @@ export class SalesService {
     return path
   }
 
+  /**
+   * Compute hourly delta (amount) from a cumulative totalSales input.
+   * Looks up the most recent prior reading for the machine before the given hour.
+   */
+  static async computeHourlyDelta(params: {
+    date: string
+    hour: number
+    machineId: '76' | '79'
+    totalSales: number
+  }): Promise<{ delta: number; previousTotal: number }> {
+    const { date, hour, machineId, totalSales } = params
+    // Get all sales for date and find last prior reading for the machine
+    const allSales = await this.getSalesForDate(date)
+    const machineSales = allSales
+      .filter(sale => sale.machineId === machineId && sale.hour < hour)
+      .sort((a, b) => b.hour - a.hour || b.timestamp.getTime() - a.timestamp.getTime())
+
+    let previousTotal = 0
+    if (machineSales.length > 0) {
+      const lastSale = machineSales[0]
+      previousTotal = (typeof lastSale.totalSales === 'number' && lastSale.totalSales >= 0)
+        ? lastSale.totalSales
+        : (typeof lastSale.amount === 'number' ? lastSale.amount : 0)
+    }
+
+    const rawDelta = totalSales - previousTotal
+    const delta = rawDelta >= 0 ? rawDelta : 0
+    return { delta, previousTotal }
+  }
+
   private static readonly HOURLY_COLLECTION = 'hourlySales'
 
   /**

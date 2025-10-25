@@ -211,8 +211,52 @@ export class CachedSalesService {
     }
 
     try {
-      const hourlySales = await this.getHourlySalesForDate(date)
-      const total = hourlySales.reduce((sum, hourData) => sum + hourData.total, 0)
+      // Robust daily total calculation:
+      // - Prefer diffs from cumulative totalSales per machine (handles migrated data)
+      // - Fallback to summing hourly amounts when totalSales is missing
+      const entries = await this.getSalesForDate(date)
+
+      // Group by machine and sort by hour then timestamp
+      const byMachine = new Map<string, typeof entries>()
+      for (const e of entries) {
+        const arr = byMachine.get(e.machineId) || []
+        arr.push(e)
+        byMachine.set(e.machineId, arr)
+      }
+
+      let total = 0
+      for (const [, list] of byMachine) {
+        list.sort((a, b) => {
+          if (a.hour !== b.hour) return a.hour - b.hour
+          return a.timestamp.getTime() - b.timestamp.getTime()
+        })
+
+        let prevTotalSales: number | undefined = undefined
+        let machineTotal = 0
+
+        for (const e of list) {
+          const hasCum = typeof e.totalSales === 'number'
+          if (hasCum) {
+            if (prevTotalSales === undefined) {
+              // Infer first delta: prefer explicit hourly amount if present; otherwise use first cumulative
+              const inferredDelta = typeof e.amount === 'number' && e.amount >= 0
+                ? Math.min(e.amount, e.totalSales as number)
+                : (e.totalSales as number)
+              machineTotal += Math.max(0, inferredDelta)
+              prevTotalSales = e.totalSales as number
+            } else {
+              const delta = (e.totalSales as number) - prevTotalSales
+              if (delta > 0) machineTotal += delta
+              prevTotalSales = e.totalSales as number
+            }
+          } else {
+            // No cumulative field; treat amount as hourly delta
+            const delta = typeof e.amount === 'number' ? e.amount : 0
+            if (delta > 0) machineTotal += delta
+          }
+        }
+        total += machineTotal
+      }
       
       // Cache the total
       salesCache.set(cacheKey, total, CACHE_CONFIG.SALES_DAILY.ttl)

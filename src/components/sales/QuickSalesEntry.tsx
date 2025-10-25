@@ -66,24 +66,13 @@ const QuickSalesEntry: React.FC<QuickSalesEntryProps> = ({ onSaleAdded }) => {
             setPreview(null)
             return
           }
-
-          // Get all raw sales entries for the day to calculate properly
-          const allSales = await SalesService.getSalesForDate(formData.date)
-          
-          // Find the most recent total for this machine before current hour
-          const machineSales = allSales
-            .filter(sale => sale.machineId === formData.machineId && sale.hour < formData.hour)
-            .sort((a, b) => b.hour - a.hour) // Sort by hour descending
-          
-          let previousTotal = 0
-          if (machineSales.length > 0) {
-            // Get the totalSales from the most recent entry
-            const lastSale = machineSales[0] as any
-            previousTotal = lastSale.totalSales || lastSale.amount || 0
-          }
-          
-          const hourlySales = totalSales - previousTotal
-          setPreview(hourlySales >= 0 ? hourlySales : 0)
+          const { delta } = await SalesService.computeHourlyDelta({
+            date: formData.date,
+            hour: formData.hour,
+            machineId: formData.machineId as '76' | '79',
+            totalSales
+          })
+          setPreview(delta)
         } catch (error) {
           setPreview(null)
         }
@@ -125,28 +114,19 @@ const QuickSalesEntry: React.FC<QuickSalesEntryProps> = ({ onSaleAdded }) => {
       }
 
       const today = formData.date
-      // Get all raw sales entries to calculate properly
-      const allSales = await SalesService.getSalesForDate(today)
-      
-      // Find the most recent total for this machine before current hour
-      const machineSales = allSales
-        .filter(sale => sale.machineId === formData.machineId && sale.hour < formData.hour)
-        .sort((a, b) => b.hour - a.hour) // Sort by hour descending
-      
-      let previousTotal = 0
-      if (machineSales.length > 0) {
-        // Get the totalSales from the most recent entry
-        const lastSale = machineSales[0] as any
-        previousTotal = lastSale.totalSales || lastSale.amount || 0
-      }
-      
-      const hourlySales = totalSales - previousTotal
+      const { delta: hourlySales } = await SalesService.computeHourlyDelta({
+        date: today,
+        hour: formData.hour,
+        machineId: formData.machineId as '76' | '79',
+        totalSales
+      })
 
-      if (hourlySales < 0) {
+      if (hourlySales < 0) { // Should never happen due to clamp, but keep safeguard
         throw new Error('El total acumulado no puede ser menor al de la hora anterior')
       }
 
       // Check if entry already exists for this hour and machine
+      const allSales = await SalesService.getSalesForDate(today)
       const existingHourSales = allSales.filter(sale => 
         sale.machineId === formData.machineId && sale.hour === formData.hour
       )
