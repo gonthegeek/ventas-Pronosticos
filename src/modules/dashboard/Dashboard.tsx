@@ -370,7 +370,7 @@ const Dashboard: React.FC = () => {
             </Link>
 
             <Link 
-              to="/comisiones" 
+              to="/finances/commissions" 
               className="block text-left p-4 rounded-lg border-2 border-dashed border-gray-300 hover:border-indigo-500 hover:bg-indigo-50 transition-colors"
             >
               <div className="flex items-center">

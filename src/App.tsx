@@ -57,7 +57,7 @@ function App() {
         <Route path="/" element={<Dashboard />} />
         <Route path="/sales/hourly" element={<HourlySales />} />
         <Route path="/sales/comparison" element={<SalesComparisonPage />} />
-  <Route path="/comisiones" element={<Commissions />} />
+        <Route path="/finances/commissions" element={<Commissions />} />
         <Route path="/admin" element={<EnhancedAdminPanel />} />
         {/* Additional routes will be added as we migrate more modules */}
       </Routes>
