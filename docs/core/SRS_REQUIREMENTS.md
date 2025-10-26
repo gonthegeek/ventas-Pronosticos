@@ -436,14 +436,14 @@ Each SRS contributes specific KPIs to the main dashboard:
 
 ### **Phase 2: Core Business Functions (Next)**
 1. **SRS #2 (Comisiones mensuales)** - High priority financial tracking
-2. **SRS #3 (Cambio de rollo)** - Operational necessity
+2. **SRS #8 (Boletos premiados pagados)** - Prize tracking
 3. **SRS #5 (Boletos vendidos)** - Foundation for SRS #6
 
 ### **Phase 3: Advanced Features**
 4. **SRS #6 (Promedio por boleto)** - Depends on SRS #5
 5. **SRS #7 (Raspados premiados)** - Lottery management
-6. **SRS #8 (Boletos premiados)** - Prize tracking
-7. **SRS #9 (Primeros lugares)** - Jackpot management
+6. **SRS #9 (Primeros lugares)** - Jackpot management
+7. **SRS #3 (Cambio de rollo)** - Operational necessity
 
 ### **Implementation Dependencies**
 - SRS #6 requires SRS #5 (ticket data for averages)
