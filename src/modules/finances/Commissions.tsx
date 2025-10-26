@@ -355,7 +355,7 @@ const Commissions: React.FC = () => {
               <>
                 {/* Insights Cards */}
                 {Object.keys(compareData).length > 0 && (
-                  <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="mb-6 grid grid-cols-1 md:grid-cols-4 gap-4">
                     {(() => {
                       const months = Object.values(compareData)
                       const totals = months.map(entries => entries.reduce((s, e) => s + (e.systemTotal || 0), 0))
@@ -365,10 +365,16 @@ const Commissions: React.FC = () => {
                       const best = Math.max(...validTotals)
                       const worst = Math.min(...validTotals)
                       const avg = totals.reduce((a, b) => a + b, 0) / (totals.length || 1)
+                      const annualTotal = totals.reduce((a, b) => a + b, 0)
                       const bestMonth = Object.keys(compareData)[totals.indexOf(best)]
                       const worstMonth = Object.keys(compareData)[totals.indexOf(worst)]
                       
                       return [
+                        <div key="annual" className="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
+                          <div className="text-sm font-semibold text-indigo-700 mb-1">💰 Total Anual</div>
+                          <div className="text-lg font-bold text-indigo-900">{numberFmt(annualTotal)}</div>
+                          <div className="text-xs text-indigo-600 mt-1">{compareYear}</div>
+                        </div>,
                         <div key="best" className="bg-green-50 border border-green-200 rounded-lg p-4">
                           <div className="text-sm font-semibold text-green-700 mb-1">🏆 Mejor Mes</div>
                           <div className="text-lg font-bold text-green-900">{numberFmt(best)}</div>
@@ -427,6 +433,28 @@ const Commissions: React.FC = () => {
                           </tr>
                         )
                       })}
+                      {/* Annual Total Row */}
+                      {(() => {
+                        const allEntries = Object.values(compareData).flat()
+                        const totalSystem = allEntries.reduce((s, e) => s + (e.systemTotal || 0), 0)
+                        const totalPaper = allEntries.reduce((s, e) => s + (e.paperTotal || 0), 0)
+                        const totalDiff = totalSystem - totalPaper
+                        const totalRecords = allEntries.length
+                        
+                        return (
+                          <tr className="bg-indigo-50 border-t-2 border-indigo-200 font-bold">
+                            <td className="px-4 py-3 text-indigo-900">TOTAL ANUAL {compareYear}</td>
+                            <td className="px-4 py-3 text-right text-indigo-900">{numberFmt(totalSystem)}</td>
+                            <td className="px-4 py-3 text-right text-indigo-900">{numberFmt(totalPaper)}</td>
+                            <td className={`px-4 py-3 text-right ${totalDiff === 0 ? 'text-green-600' : totalDiff > 0 ? 'text-blue-600' : 'text-red-600'}`}>
+                              {numberFmt(totalDiff)}
+                            </td>
+                            <td className="px-4 py-3 text-center">
+                              <span className="inline-block bg-indigo-200 rounded-full px-2 py-1 text-xs text-indigo-900">{totalRecords}</span>
+                            </td>
+                          </tr>
+                        )
+                      })()}
                     </tbody>
                   </table>
                 </div>
