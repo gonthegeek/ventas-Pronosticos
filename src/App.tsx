@@ -13,6 +13,7 @@ import HourlySales from './modules/sales/HourlySales'
 import SalesComparisonPage from './modules/sales/SalesComparisonPage'
 import EnhancedAdminPanel from './components/admin/EnhancedAdminPanel'
 import LoadingSpinner from './components/ui/LoadingSpinner'
+import Commissions from './modules/finances/Commissions'
 
 function App() {
   const dispatch = useAppDispatch()
@@ -56,6 +57,7 @@ function App() {
         <Route path="/" element={<Dashboard />} />
         <Route path="/sales/hourly" element={<HourlySales />} />
         <Route path="/sales/comparison" element={<SalesComparisonPage />} />
+  <Route path="/comisiones" element={<Commissions />} />
         <Route path="/admin" element={<EnhancedAdminPanel />} />
         {/* Additional routes will be added as we migrate more modules */}
       </Routes>

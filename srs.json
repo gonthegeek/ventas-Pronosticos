@@ -4,7 +4,7 @@
   "status": "migration-in-progress",
   "architecture": "React + TypeScript + Firebase",
   "created": "2025-08-21",
-  "updated": "2025-08-21",
+  "updated": "2025-10-25",
   "objectives": [
     "Migrar sistema legacy SPA a arquitectura React modular",
     "Centralizar información de ventas y sorteos de máquinas 76 y 79",
@@ -64,23 +64,24 @@
     {
       "id": 2,
       "name": "Comisiones mensuales",
-      "srs_status": "pending",
-      "migration_status": "not_started",
-      "module": "src/modules/finances/commissions.tsx (to be created)",
+      "srs_status": "implemented",
+      "migration_status": "completed",
+      "module": "src/modules/finances/Commissions.tsx",
       "fields": [
-        "date (YYYY-MM)",
+        "year (number)",
+        "month (1-12)",
         "machineId ('76' | '79')",
-        "totalSystem (number)",
-        "totalPaper (number)",
+        "systemTotal (number)",
+        "paperTotal (number)",
         "difference (number, calculated)",
-        "operatorId (string)",
-        "timestamp (Date)",
-        "createdAt (Firebase Timestamp)"
+        "notes (string, optional)",
+        "createdAt (Firebase Timestamp)",
+        "updatedAt (Firebase Timestamp, optional)"
       ],
       "granularity": "mes",
-      "collection_path": "data/commissions/{year}/{month}",
-      "cache_strategy": "4hr TTL, monthly data",
-      "notes": "Comparación entre registros de sistema vs papel"
+  "collection_path": "data/commissions/{year}/{month}/entries",
+      "cache_strategy": "4hr TTL (current month ~2h), monthly data",
+      "notes": "Comparación entre registros del sistema vs papel; cache mensual con invalidación por mes"
     },
     {
       "id": 3,
@@ -279,9 +280,9 @@
         "status": "deprecated - use hierarchical structure"
       },
       "data/commissions/{year}/{month}": {
-        "path": "/data/commissions/{year}/{month}/{commissionId}",
+        "path": "/data/commissions/{year}/{month}/entries/{commissionId}",
         "description": "Monthly commissions for SRS #2",
-        "status": "planned"
+        "status": "implemented"
       },
       "data/rollChanges/{year}/{month}": {
         "path": "/data/rollChanges/{year}/{month}/{changeId}",
@@ -389,6 +390,14 @@
           "Smart preloading"
         ]
       },
+      "CachedCommissionsService": {
+        "file": "src/services/CommissionsService.cached.ts",
+        "features": [
+          "Monthly list caching",
+          "Per-month invalidation",
+          "Adaptive TTL for current vs historical month"
+        ]
+      },
       "React Hooks": {
         "file": "src/hooks/useCachedSales.ts",
         "features": [
@@ -455,7 +464,7 @@
   },
   "kpis": [
     "Ventas por hora, día, semana y mes con visualización Recharts",
-    "Comparativas de comisiones (sistema vs papel)",
+    "Comparativas de comisiones (LN vs tira)",
     "Tiempo promedio entre cambios de rollo",
     "Tendencias de boletos vendidos y promedio por boleto",
     "Distribución de raspados premiados por sorteo",
@@ -474,14 +483,15 @@
       "Intelligent cache system",
       "Admin panel with cache management",
       "Data migration tools",
-      "Responsive UI with TailwindCSS"
+      "Responsive UI with TailwindCSS",
+      "SRS #2: Comisiones mensuales (CRUD + cache)"
     ],
     "in_progress": [
       "SRS documentation updates",
       "Testing and optimization"
     ],
     "pending": [
-      "SRS #2-9: Remaining functionalities",
+      "SRS #3-9: Remaining functionalities",
       "Advanced reporting features",
       "Mobile app considerations",
       "Performance monitoring dashboard"

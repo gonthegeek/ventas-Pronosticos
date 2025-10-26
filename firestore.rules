@@ -118,7 +118,14 @@ service cloud.firestore {
     }
     
     // Commission data - supervisors and admins
+    // Top-level (legacy or tooling)
     match /commissions/{document=**} {
+      allow read: if isSupervisorOrAdmin();
+      allow write: if isSupervisorOrAdmin();
+    }
+
+    // Hierarchical structure (current): data/commissions/{year}/{month}/entries/{id}
+    match /data/commissions/{document=**} {
       allow read: if isSupervisorOrAdmin();
       allow write: if isSupervisorOrAdmin();
     }

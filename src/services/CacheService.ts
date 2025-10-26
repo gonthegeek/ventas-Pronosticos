@@ -347,6 +347,9 @@ export const CACHE_CONFIG = {
   
   // Comparison data (can be cached longer since it's historical)
   COMPARISON_DATA: { ttl: 240, pattern: 'comparison:*' },  // 4 hours
+
+  // Commissions (monthly data)
+  COMMISSIONS_MONTHLY: { ttl: 240, pattern: 'commissions:monthly:*' }, // 4 hours
 }
 
 // Cache key generators
@@ -378,6 +381,9 @@ export const CACHE_KEYS = {
   // Comparison keys
   comparisonData: (startDate: string, endDate: string, type: string) => 
     `comparison:${type}:${startDate}:${endDate}`,
+
+  // Commissions keys
+  commissionsMonthlyList: (year: number, month: number) => `commissions:monthly:list:${year}-${String(month).padStart(2, '0')}`,
 }
 
 // Global cache instances
@@ -399,6 +405,13 @@ export const dashboardCache = new CacheService({
   enablePersistence: false // Don't persist dashboard cache (too dynamic)
 })
 
+// Finances cache (commissions and related monthly data)
+export const financesCache = new CacheService({
+  maxSize: 50,
+  defaultTTL: 240, // 4 hours default for monthly data
+  enablePersistence: true
+})
+
 // Cache manager for coordinated invalidation
 export class CacheManager {
   static invalidateSalesData(date?: string): void {
@@ -410,6 +423,14 @@ export class CacheManager {
       // Invalidate all sales data
       salesCache.invalidatePattern('sales:.*')
       dashboardCache.clear()
+    }
+  }
+  
+  static invalidateCommissionsData(year?: number, month?: number): void {
+    if (year && month) {
+      financesCache.invalidatePattern(`commissions:monthly:.*:${year}-${String(month).padStart(2, '0')}`)
+    } else {
+      financesCache.invalidatePattern('commissions:.*')
     }
   }
   
@@ -427,40 +448,45 @@ export class CacheManager {
   
   static getGlobalStats(): {
     sales: CacheStats
+    finances: CacheStats
     user: CacheStats
     dashboard: CacheStats
     total: CacheStats
   } {
     const salesStats = salesCache.getStats()
+    const financesStats = financesCache.getStats()
     const userStats = userCache.getStats()
     const dashboardStats = dashboardCache.getStats()
     
     return {
       sales: salesStats,
+      finances: financesStats,
       user: userStats,
       dashboard: dashboardStats,
       total: {
-        hits: salesStats.hits + userStats.hits + dashboardStats.hits,
-        misses: salesStats.misses + userStats.misses + dashboardStats.misses,
-        size: salesStats.size + userStats.size + dashboardStats.size,
+        hits: salesStats.hits + financesStats.hits + userStats.hits + dashboardStats.hits,
+        misses: salesStats.misses + financesStats.misses + userStats.misses + dashboardStats.misses,
+        size: salesStats.size + financesStats.size + userStats.size + dashboardStats.size,
         efficiency: Math.round(
-          ((salesStats.hits + userStats.hits + dashboardStats.hits) / 
-           (salesStats.totalRequests + userStats.totalRequests + dashboardStats.totalRequests)) * 100
+          ((salesStats.hits + financesStats.hits + userStats.hits + dashboardStats.hits) / 
+           (salesStats.totalRequests + financesStats.totalRequests + userStats.totalRequests + dashboardStats.totalRequests)) * 100
         ) || 0,
-        totalRequests: salesStats.totalRequests + userStats.totalRequests + dashboardStats.totalRequests,
-        savedRequests: salesStats.savedRequests + userStats.savedRequests + dashboardStats.savedRequests
+        totalRequests: salesStats.totalRequests + financesStats.totalRequests + userStats.totalRequests + dashboardStats.totalRequests,
+        savedRequests: salesStats.savedRequests + financesStats.savedRequests + userStats.savedRequests + dashboardStats.savedRequests
       }
     }
   }
   
   static cleanup(): void {
     salesCache.cleanup()
+    financesCache.cleanup()
     userCache.cleanup()
     dashboardCache.cleanup()
   }
   
   static destroy(): void {
     salesCache.destroy()
+    financesCache.destroy()
     userCache.destroy()
     dashboardCache.destroy()
   }

@@ -286,15 +286,15 @@ firebase deploy --only hosting
 
 ### 🔄 **Phase 2: Core Business Functions (NEXT - 2.5 weeks)**
 - [ ] SRS #2: Monthly commission tracking
-- [ ] SRS #3: Paper roll change event logging
+- [ ] SRS #8: Paid prize tracking with reconciliation
 - [ ] SRS #5: Ticket sales tracking with calculations
 - [ ] Reusable components (FormBuilder, DataTable, ChartWrapper)
 
 ### 🔄 **Phase 3: Advanced Features (2 weeks)**
 - [ ] SRS #6: Automatic average calculations
 - [ ] SRS #7: Scratch lottery prize tracking
-- [ ] SRS #8: Paid prize tracking with reconciliation
 - [ ] SRS #9: First place winner and jackpot management
+- [ ] SRS #3: Paper roll change event logging
 
 ### 🔄 **Phase 4: Production Ready (2 weeks)**
 - [ ] Unit tests, integration tests, E2E testing
