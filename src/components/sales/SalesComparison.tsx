@@ -423,13 +423,13 @@ const SalesComparison: React.FC<SalesComparisonProps> = ({ className = '' }) => 
                     onChange={(e) => setCustomWeekday(parseInt(e.target.value))}
                     className="px-3 py-2 border border-gray-300 rounded-md text-sm"
                   >
-                    <option value={0}>Domingo</option>
-                    <option value={1}>Lunes</option>
-                    <option value={2}>Martes</option>
-                    <option value={3}>Miércoles</option>
-                    <option value={4}>Jueves</option>
-                    <option value={5}>Viernes</option>
-                    <option value={6}>Sábado</option>
+                    <option value={1}>Domingo</option>
+                    <option value={2}>Lunes</option>
+                    <option value={3}>Martes</option>
+                    <option value={4}>Miércoles</option>
+                    <option value={5}>Jueves</option>
+                    <option value={6}>Viernes</option>
+                    <option value={7}>Sábado</option>
                   </select>
                 </div>
                 <div>
@@ -439,6 +439,7 @@ const SalesComparison: React.FC<SalesComparisonProps> = ({ className = '' }) => 
                     onChange={(e) => setCustomWeekdayCount(parseInt(e.target.value))}
                     className="px-3 py-2 border border-gray-300 rounded-md text-sm"
                   >
+                    <option value={2}>Últimos 2</option>
                     <option value={3}>Últimos 3</option>
                     <option value={4}>Últimos 4</option>
                     <option value={5}>Últimos 5</option>
