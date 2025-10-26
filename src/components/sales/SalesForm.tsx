@@ -156,8 +156,11 @@ export const SalesForm: React.FC<SalesFormProps> = ({
       machineId,
       amount: delta,
       totalSales,
-      notes: formData.notes || '' // Always pass notes, even if empty
+      notes: formData.notes || '', // Always pass notes, even if empty
     }
+
+    // Attach the selected date as a non-typed property so the service can use it
+    ;(saleData as any).date = selectedDate
 
     try {
       await onSubmit(saleData)

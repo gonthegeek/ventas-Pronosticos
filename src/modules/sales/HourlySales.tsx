@@ -120,11 +120,13 @@ const HourlySales: React.FC = () => {
         // Create new sale
         const now = new Date()
         const machineToUse = selectedMachine === 'all' ? '76' : selectedMachine
-        const fullSaleData: Omit<SaleEntry, 'id'> = {
+        const fullSaleData: any = {
           machineId: machineToUse,
           amount: saleData.amount!,
           totalSales: saleData.totalSales,
           timestamp: now,
+          // Include the intended date (from the form) if provided so addSale validates/stores in correct day
+          date: (saleData as any).date || selectedDate,
           hour: saleData.hour!,
           operatorId: userProfile?.uid || 'unknown',
           notes: saleData.notes

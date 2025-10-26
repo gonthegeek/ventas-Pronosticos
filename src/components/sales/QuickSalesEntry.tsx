@@ -138,8 +138,11 @@ const QuickSalesEntry: React.FC<QuickSalesEntryProps> = ({ onSaleAdded }) => {
       const saleData = {
         machineId: formData.machineId,
         amount: hourlySales,
+        // Keep a timestamp of insertion but include the intended date so the service
+        // validates and stores the document under the correct day collection.
         timestamp: new Date(),
         hour: formData.hour,
+        date: formData.date,
         operatorId: userProfile?.uid || 'unknown',
         notes: `Total acumulado: $${totalSales.toFixed(2)}`,
         totalSales: totalSales // Add this for the service

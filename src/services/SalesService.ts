@@ -15,6 +15,7 @@ import {
 import { db } from './firebase'
 import { SaleEntry, HourlySalesData } from '../state/slices/salesSlice'
 import { getMexicoDateRange } from '../utils/timezone'
+import { CacheManager } from './CacheService'
 
 /**
  * SalesService - Production Ready
@@ -82,10 +83,13 @@ export class SalesService {
    */
   static async addSale(saleData: Omit<SaleEntry, 'id'>): Promise<string> {
     try {
-      // Get the date in Mexico timezone for correct collection path
-      const saleDate = saleData.timestamp.toLocaleDateString('en-CA', { 
-        timeZone: 'America/Mexico_City' 
-      })
+      // Determine the sale date in Mexico timezone for correct collection path.
+      // Prefer an explicit date provided by the caller (saleData.date) when present
+      const saleDate = (saleData as any).date
+        ? (saleData as any).date
+        : saleData.timestamp.toLocaleDateString('en-CA', { 
+            timeZone: 'America/Mexico_City' 
+          })
       
       // Validate business rules before adding
       const validation = await this.validateSaleEntry({
@@ -119,6 +123,9 @@ export class SalesService {
         notes: saleData.notes || '',
         createdAt: Timestamp.now(),
       })
+      
+      // Invalidate cache for the affected date and dashboard
+      CacheManager.invalidateSalesData(saleDate)
       
       return docRef.id
     } catch (error) {
@@ -398,6 +405,9 @@ export class SalesService {
       }
       
       await deleteDoc(docRef)
+      
+      // Invalidate cache for the affected date and dashboard
+      CacheManager.invalidateSalesData(saleDateStr)
     } catch (error) {
       throw error
     }
@@ -591,6 +601,9 @@ export class SalesService {
       if (newData.notes !== undefined) updateData.notes = newData.notes // Always update notes, even if empty
       
       await updateDoc(docRef, updateData)
+      
+      // Invalidate cache for the affected date and dashboard
+      CacheManager.invalidateSalesData(saleDateStr)
     } catch (error) {
       throw error
     }
@@ -780,7 +793,7 @@ export class SalesService {
 
   /**
    * Validate that the new sale follows progressive total rules
-   * Total sales must be equal or greater than the previous hour
+   * Total sales must be equal or greater than the previous hour ON THE SAME DAY
    */
   static async validateProgressiveSales(
     machineId: '76' | '79',
@@ -789,7 +802,7 @@ export class SalesService {
     totalSales: number
   ): Promise<{ isValid: boolean; error?: string; previousTotal?: number }> {
     try {
-      // Get the last sale for this machine before the current hour
+      // Get the last sale for this machine before the current hour ON THE SAME DATE
       const lastSale = await this.getLastSaleForMachine(machineId, date, hour)
       
       if (!lastSale) {
@@ -805,10 +818,26 @@ export class SalesService {
       
       const previousTotal = lastSale.totalSales || 0
       
+      // ONLY validate if we're comparing within the same date
+      // Do not compare across different dates since totalSales may be cumulative
       if (totalSales < previousTotal) {
+        // Extract the date from the last sale to verify we're on the same day
+        const lastSaleDate = lastSale.timestamp.toLocaleDateString('en-CA', { 
+          timeZone: 'America/Mexico_City' 
+        })
+        
+        console.log('Validation failed:', {
+          targetDate: date,
+          targetHour: hour,
+          targetTotalSales: totalSales,
+          lastSaleDate,
+          lastSaleHour: lastSale.hour,
+          previousTotal
+        })
+        
         return {
           isValid: false,
-          error: `El total debe ser igual o mayor a $${previousTotal.toLocaleString()} (hora ${lastSale.hour})`,
+          error: `El total debe ser igual o mayor a $${previousTotal.toLocaleString()} (registrado el ${lastSaleDate} a las ${lastSale.hour}:00)`,
           previousTotal
         }
       }
