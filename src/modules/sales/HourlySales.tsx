@@ -119,7 +119,8 @@ const HourlySales: React.FC = () => {
       } else {
         // Create new sale
         const now = new Date()
-        const machineToUse = selectedMachine === 'all' ? '76' : selectedMachine
+        // Prefer machineId from form data (user selection), fallback to selectedMachine filter
+        const machineToUse = saleData.machineId || (selectedMachine === 'all' ? '76' : selectedMachine)
         const fullSaleData: any = {
           machineId: machineToUse,
           amount: saleData.amount!,
