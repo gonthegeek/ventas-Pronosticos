@@ -402,8 +402,12 @@ const Commissions: React.FC = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {Object.entries(compareData).map(([ym, entries]) => {
-                        const monthName = new Date(ym + '-01').toLocaleString('es-MX', { month: 'long' })
+                      {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((m) => {
+                        const ym = `${compareYear}-${String(m).padStart(2, '0')}`
+                        const entries = compareData[ym] || []
+                        // Create date with explicit month (0-indexed for Date)
+                        const date = new Date(compareYear, m - 1, 1)
+                        const monthName = date.toLocaleString('es-MX', { month: 'long' })
                         const system = entries.reduce((s, e) => s + (e.systemTotal || 0), 0)
                         const paper = entries.reduce((s, e) => s + (e.paperTotal || 0), 0)
                         const diff = system - paper
