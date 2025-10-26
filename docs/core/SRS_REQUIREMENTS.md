@@ -6,13 +6,13 @@
 
 Casa Pronósticos implements 9 core System Requirements Specifications (SRS) for comprehensive sales and lottery management. Each SRS represents a specific business functionality with defined data structures, user interfaces, and system behaviors.
 
-**Current Status**: 2 of 9 SRS implemented (44% complete)  
+**Current Status**: 3 of 9 SRS implemented (33% complete)  
 **Architecture**: React + TypeScript + Firebase + Intelligent Cache  
 **Implementation Approach**: Modular, cache-optimized, hierarchical data structure
 
 ## 🎯 SRS Implementation Status
 
-### ✅ **IMPLEMENTED (2 of 9)**
+### ✅ **IMPLEMENTED (3 of 9)**
 
 #### **SRS #1: Ventas por hora** ✅
 - **Status**: Complete Implementation
@@ -79,26 +79,43 @@ interface DailyWeeklySalesData {
 }
 ```
 
-### 🔄 **PENDING (7 of 9)**
+#### **SRS #2: Comisiones mensuales** ✅
+- **Status**: Complete Implementation
+- **Module**: `src/modules/finances/Commissions.tsx`
+- **Service**: `src/services/CommissionsService.ts` + `src/services/CommissionsService.cached.ts`
+- **Hook**: `src/hooks/useCachedCommissions.ts`
+- **Route**: `/finances/commissions`
+- **Collection**: `data/commissions/{year}/{month}/entries/{entryId}`
+- **Cache Strategy**: 4hr TTL via financesCache (current month 2h, historical 6h)
+- **Dashboard Integration**: Monthly and annual commission cards with quick action link
 
-#### **SRS #2: Comisiones mensuales**
-- **Status**: Not Started
-- **Target Module**: `src/modules/finances/Commissions.tsx`
-- **Collection**: `data/commissions/{year}/{month}/{commissionId}`
-- **Cache Strategy**: 4hr TTL, monthly data aggregation
-- **Purpose**: Monthly comparison between system records vs paper records
+**Features**:
+- ✅ Complete CRUD operations for monthly commissions
+- ✅ Month picker with quick navigation (current/previous/next month)
+- ✅ Summary cards showing LN, Tira, and Diferencia totals
+- ✅ Year-over-year comparison table (all 12 months)
+- ✅ Insights cards (best month, worst month, annual average)
+- ✅ Auto-refresh comparison on data changes
+- ✅ CSV export functionality
+- ✅ Dashboard integration with monthly and annual totals
+- ✅ Intelligent caching with adaptive TTL
 
 **Fields**:
 ```typescript
 interface CommissionsData {
   id?: string
-  date: string            // YYYY-MM
+  year: number
+  month: number          // 1-12
   machineId: '76' | '79'
-  totalSystem: number     // System-recorded total
-  totalPaper: number      // Paper-recorded total
-  difference: number      // Calculated: totalSystem - totalPaper
-  operatorId: string
+  systemTotal: number    // System-recorded total (LN)
+  paperTotal: number     // Paper-recorded total (Tira)
+  difference: number     // Calculated: systemTotal - paperTotal
   notes?: string
+  createdAt: Date
+  updatedAt?: Date
+}
+```
+
   timestamp: Date
   createdAt: Date
 }
@@ -111,6 +128,10 @@ interface CommissionsData {
 - Historical trend analysis
 - Export functionality
 - Role-based access (Supervisor+)
+
+#### **SRS #4: Ventas diarias y semanales** ⭐ ✅
+
+### 🔄 **PENDING (6 of 9)**
 
 #### **SRS #3: Cambio de rollo**
 - **Status**: Not Started

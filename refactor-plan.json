@@ -351,14 +351,27 @@
         {
           "id": "2.1",
           "name": "SRS #2 - Comisiones mensuales",
-          "description": "Módulo completo con formularios, visualización y cache",
-          "status": "pending",
-          "files_to_create": [
+          "description": "Módulo completo con formularios, visualización, comparación anual y cache",
+          "status": "completed",
+          "actual_hours": 18,
+          "files_created": [
             "src/modules/finances/Commissions.tsx",
             "src/services/CommissionsService.ts",
-            "src/state/slices/commissionsSlice.ts"
+            "src/services/CommissionsService.cached.ts",
+            "src/hooks/useCachedCommissions.ts"
           ],
-          "estimated_hours": 16
+          "features_implemented": [
+            "CRUD operations with month picker and quick navigation",
+            "Summary cards (LN, Tira, Diferencia)",
+            "Year-over-year comparison table with insights",
+            "Auto-refresh on data changes",
+            "CSV export",
+            "Dashboard integration (monthly and annual totals)",
+            "Intelligent caching via financesCache (2h/6h adaptive TTL)"
+          ],
+          "route": "/finances/commissions",
+          "estimated_hours": 16,
+          "completion_date": "2025-10-25"
         },
         {
           "id": "2.2",
@@ -964,10 +977,28 @@
       {
         "srs_id": 2,
         "name": "Comisiones mensuales",
-        "status": "pending",
+        "status": "completed",
         "implementation": "src/modules/finances/Commissions.tsx",
-        "features": ["Monthly aggregation", "System vs Paper comparison", "Difference calculations"],
-        "phase": 2
+        "route": "/finances/commissions",
+        "services": [
+          "src/services/CommissionsService.ts",
+          "src/services/CommissionsService.cached.ts"
+        ],
+        "hooks": ["src/hooks/useCachedCommissions.ts"],
+        "features": [
+          "Monthly CRUD operations ✅",
+          "System vs Paper comparison ✅",
+          "Difference calculations ✅",
+          "Month picker with quick navigation ✅",
+          "Year-over-year comparison table ✅",
+          "Insights (best/worst/average month) ✅",
+          "Auto-refresh on data changes ✅",
+          "CSV export ✅",
+          "Dashboard integration ✅",
+          "Intelligent caching (financesCache 2h/6h) ✅"
+        ],
+        "phase": 2,
+        "completion_date": "2025-10-25"
       },
       {
         "srs_id": 3,

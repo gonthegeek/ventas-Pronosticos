@@ -67,6 +67,13 @@
       "srs_status": "implemented",
       "migration_status": "completed",
       "module": "src/modules/finances/Commissions.tsx",
+      "route": "/finances/commissions",
+      "services": [
+        "src/services/CommissionsService.ts",
+        "src/services/CommissionsService.cached.ts"
+      ],
+      "hooks": ["src/hooks/useCachedCommissions.ts"],
+      "dashboard_integration": "Monthly and annual commission cards with quick action link",
       "fields": [
         "year (number)",
         "month (1-12)",
@@ -79,9 +86,19 @@
         "updatedAt (Firebase Timestamp, optional)"
       ],
       "granularity": "mes",
-  "collection_path": "data/commissions/{year}/{month}/entries",
-      "cache_strategy": "4hr TTL (current month ~2h), monthly data",
-      "notes": "Comparación entre registros del sistema vs papel; cache mensual con invalidación por mes"
+      "collection_path": "data/commissions/{year}/{month}/entries",
+      "cache_strategy": "4hr TTL (current month ~2h), monthly data via financesCache",
+      "features": [
+        "CRUD operations for monthly commissions",
+        "Month picker with quick navigation (current/previous/next month)",
+        "Summary cards showing LN, Tira, and Diferencia totals",
+        "Year-over-year comparison table (all 12 months)",
+        "Insights cards (best month, worst month, annual average)",
+        "Auto-refresh comparison on data changes",
+        "CSV export functionality",
+        "Dashboard integration with monthly and annual totals"
+      ],
+      "notes": "Completamente implementado con CRUD, comparación anual, cache inteligente, y integración en dashboard. Ruta estandarizada siguiendo patrón /finances/* similar a /sales/*"
     },
     {
       "id": 3,

@@ -143,26 +143,38 @@
 
 ### **Planned Deliverables**
 
-#### **🔄 SRS #2: Comisiones mensuales** (16 hours)
-- Monthly commission tracking
-- System vs paper comparison
-- Automatic difference calculation
-- Historical trend analysis
+#### **✅ SRS #2: Comisiones mensuales** (18 hours actual)
+**Status**: ✅ **COMPLETED** (October 25, 2025)
 
-**Files to Create**:
+**Completed Features**:
+- ✅ Monthly commission CRUD operations
+- ✅ System vs paper comparison (LN vs Tira)
+- ✅ Automatic difference calculation with color coding
+- ✅ Month picker with quick navigation (current/previous/next)
+- ✅ Year-over-year comparison table (all 12 months)
+- ✅ Insights cards (best/worst/average month)
+- ✅ Auto-refresh comparison on data changes
+- ✅ CSV export functionality
+- ✅ Dashboard integration (monthly and annual totals)
+- ✅ Intelligent caching via financesCache (adaptive 2h/6h TTL)
+
+**Files Created**:
 ```
-src/modules/finances/Commissions.tsx
-src/services/CommissionsService.ts
-src/services/CommissionsService.cached.ts
-src/state/slices/commissionsSlice.ts
+✅ src/modules/finances/Commissions.tsx
+✅ src/services/CommissionsService.ts
+✅ src/services/CommissionsService.cached.ts
+✅ src/hooks/useCachedCommissions.ts
+✅ Route: /finances/commissions
+✅ Dashboard integration with quick action
 ```
 
-**Features**:
-- Monthly data entry form
-- System vs paper reconciliation
-- Difference highlighting
-- Export functionality
-- Cache integration (4hr TTL)
+**Implementation Notes**:
+- Used hierarchical Firestore path: `data/commissions/{year}/{month}/entries`
+- Implemented adaptive caching: current month 2h TTL, historical months 6h TTL
+- Month ordering resolved with explicit [1...12] array iteration
+- Form UX improved with clearable numeric inputs
+- Dashboard shows monthly and annual commission totals
+- Route standardized to match `/sales/*` pattern
 
 #### **🔄 SRS #3: Cambio de rollo** (12 hours)
 - Paper roll change event logging
