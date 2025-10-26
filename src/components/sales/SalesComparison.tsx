@@ -103,7 +103,11 @@ const SalesComparison: React.FC<SalesComparisonProps> = ({ className = '' }) => 
     
     // Collect the last N occurrences
     for (let i = 0; i < count; i++) {
-      dates.push(currentDate.toISOString().split('T')[0]);
+      // Use local date formatting to avoid timezone conversion issues
+      const year = currentDate.getFullYear();
+      const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+      const day = String(currentDate.getDate()).padStart(2, '0');
+      dates.push(`${year}-${month}-${day}`);
       currentDate.setDate(currentDate.getDate() - 7);
     }
     
@@ -423,13 +427,13 @@ const SalesComparison: React.FC<SalesComparisonProps> = ({ className = '' }) => 
                     onChange={(e) => setCustomWeekday(parseInt(e.target.value))}
                     className="px-3 py-2 border border-gray-300 rounded-md text-sm"
                   >
-                    <option value={1}>Domingo</option>
-                    <option value={2}>Lunes</option>
-                    <option value={3}>Martes</option>
-                    <option value={4}>Miércoles</option>
-                    <option value={5}>Jueves</option>
-                    <option value={6}>Viernes</option>
-                    <option value={7}>Sábado</option>
+                    <option value={0}>Domingo</option>
+                    <option value={1}>Lunes</option>
+                    <option value={2}>Martes</option>
+                    <option value={3}>Miércoles</option>
+                    <option value={4}>Jueves</option>
+                    <option value={5}>Viernes</option>
+                    <option value={6}>Sábado</option>
                   </select>
                 </div>
                 <div>
