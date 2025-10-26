@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react'
+import React, { useMemo, useState, useEffect } from 'react'
 import { useHasPermission } from '../../hooks/usePermissions'
 import { PERMISSIONS } from '../../utils/permissions'
 import { Button } from '../../components/ui/Button'
@@ -6,6 +6,7 @@ import Card from '../../components/ui/Card'
 import Modal from '../../components/ui/Modal'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
 import { useCachedMonthlyCommissions } from '../../hooks/useCachedCommissions'
+import CommissionsService from '../../services/CommissionsService'
 import { CommissionEntry } from '../../services/CommissionsService'
 
 const nowMexico = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Mexico_City' }))
@@ -19,6 +20,36 @@ const Commissions: React.FC = () => {
 
   const [yearMonth, setYearMonth] = useState<string>(defaultYearMonth)
   const { data, loading, error, refresh, create, update, remove } = useCachedMonthlyCommissions(yearMonth)
+
+  // --- Comparison Table State ---
+  const thisYear = nowMexico.getFullYear()
+  const [compareYear, setCompareYear] = useState<number>(thisYear)
+  const [compareData, setCompareData] = useState<{ [month: string]: CommissionEntry[] }>({})
+  const [compareLoading, setCompareLoading] = useState(false)
+  const [compareError, setCompareError] = useState<string | null>(null)
+  const [compareRefreshTrigger, setCompareRefreshTrigger] = useState(0)
+
+  const loadComparisonData = async () => {
+    setCompareLoading(true)
+    setCompareError(null)
+    const results: { [month: string]: CommissionEntry[] } = {}
+    try {
+      for (let m = 1; m <= 12; m++) {
+        const entries = await CommissionsService.list(compareYear, m)
+        const ym = `${compareYear}-${String(m).padStart(2, '0')}`
+        results[ym] = entries
+      }
+      setCompareData(results)
+    } catch (e: any) {
+      setCompareError(e?.message || 'Error loading comparison data')
+    } finally {
+      setCompareLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    loadComparisonData()
+  }, [compareYear, compareRefreshTrigger])
 
   const [isModalOpen, setModalOpen] = useState(false)
   const [editing, setEditing] = useState<CommissionEntry | null>(null)
@@ -68,7 +99,11 @@ const Commissions: React.FC = () => {
       }
       setModalOpen(false)
       setEditing(null)
-  setForm({ machineId: '76', systemTotal: '', paperTotal: '', notes: '' })
+      setForm({ machineId: '76', systemTotal: '', paperTotal: '', notes: '' })
+      // Refresh comparison table if the changed month is in the current comparison year
+      if (parsedYM.year === compareYear) {
+        setCompareRefreshTrigger(prev => prev + 1)
+      }
     } catch (e: any) {
       alert(e?.message || 'Error al guardar la comisión')
     } finally {
@@ -122,59 +157,61 @@ const Commissions: React.FC = () => {
   const handlePrevMonth = () => setYearMonth(getPrevYearMonth(yearMonth))
 
   return (
-    <div className="p-6 space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold">SRS #2 · Comisiones Mensuales</h2>
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" onClick={exportCSV} disabled={!data.length}>📊 Exportar CSV</Button>
-          {canWrite && (
-            <Button size="sm" onClick={() => { setEditing(null); setForm({ machineId: '76', systemTotal: '', paperTotal: '', notes: '' }); setModalOpen(true) }}>➕ Agregar</Button>
-          )}
-        </div>
+    <div className="p-6 space-y-6">
+      {/* Header */}
+      <div>
+        <h2 className="text-2xl font-bold text-gray-800">Comisiones Mensuales</h2>
+        <p className="text-sm text-gray-600 mt-1">Gestión y análisis de comisiones por máquina</p>
       </div>
 
-      {/* Filters - aligned with SalesFilters styling */}
-      <div className="bg-white p-4 rounded-lg shadow border">
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <label className="text-sm font-medium text-gray-700 whitespace-nowrap">Mes:</label>
-            <input
-              type="month"
-              value={yearMonth}
-              required
-              onChange={(e) => {
-                // Only allow valid yyyy-mm, else snap to current
-                const v = e.target.value
-                if (/^\d{4}-\d{2}$/.test(v)) {
-                  setYearMonth(v)
-                } else if (v === '') {
-                  setYearMonth(getMexicoYearMonth())
-                }
-              }}
-              onBlur={(e) => {
-                // If cleared or invalid, snap back
-                if (!/^\d{4}-\d{2}$/.test(e.target.value)) {
-                  setYearMonth(getMexicoYearMonth())
-                }
-              }}
-              className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              disabled={loading}
-              max={getMexicoYearMonth()}
-            />
-            <div className="flex gap-2 ml-2">
-              <Button variant="ghost" size="sm" onClick={handleThisMonth} disabled={loading}>Este mes</Button>
-              <Button variant="ghost" size="sm" onClick={handlePrevMonth} disabled={loading}>Mes anterior</Button>
-              {isBeforeCurrentMonth() && (
-                <Button variant="ghost" size="sm" onClick={() => setYearMonth(getNextYearMonth(yearMonth))} disabled={loading}>Mes siguiente</Button>
+      {/* Month Selector & Actions - Main Control Panel */}
+      <Card>
+        <div className="p-4">
+          <h3 className="text-lg font-semibold text-gray-700 mb-4">Mes Seleccionado</h3>
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div className="flex flex-wrap items-center gap-2">
+              <label className="text-sm font-medium text-gray-700 whitespace-nowrap">Mes:</label>
+              <input
+                type="month"
+                value={yearMonth}
+                required
+                onChange={(e) => {
+                  const v = e.target.value
+                  if (/^\d{4}-\d{2}$/.test(v)) {
+                    setYearMonth(v)
+                  } else if (v === '') {
+                    setYearMonth(getMexicoYearMonth())
+                  }
+                }}
+                onBlur={(e) => {
+                  if (!/^\d{4}-\d{2}$/.test(e.target.value)) {
+                    setYearMonth(getMexicoYearMonth())
+                  }
+                }}
+                className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                disabled={loading}
+                max={getMexicoYearMonth()}
+              />
+              <div className="flex gap-2">
+                <Button variant="ghost" size="sm" onClick={handleThisMonth} disabled={loading}>Este mes</Button>
+                <Button variant="ghost" size="sm" onClick={handlePrevMonth} disabled={loading}>Mes anterior</Button>
+                {isBeforeCurrentMonth() && (
+                  <Button variant="ghost" size="sm" onClick={() => setYearMonth(getNextYearMonth(yearMonth))} disabled={loading}>Mes siguiente</Button>
+                )}
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="sm" onClick={refresh} disabled={loading}>🔄 Refrescar</Button>
+              <Button variant="ghost" size="sm" onClick={exportCSV} disabled={!data.length}>📊 Exportar CSV</Button>
+              {canWrite && (
+                <Button size="sm" onClick={() => { setEditing(null); setForm({ machineId: '76', systemTotal: '', paperTotal: '', notes: '' }); setModalOpen(true) }}>➕ Agregar</Button>
               )}
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" onClick={refresh} disabled={loading}>🔄 Refrescar</Button>
-          </div>
         </div>
-      </div>
+      </Card>
 
+      {/* Monthly Data Section */}
       {loading ? (
         <LoadingSpinner />
       ) : error ? (
@@ -233,7 +270,13 @@ const Commissions: React.FC = () => {
                               onClick={async () => {
                                 if (!e.id) return
                                 if (!window.confirm('¿Eliminar esta comisión?')) return
-                                try { await remove(e.id, e as CommissionEntry) } catch (err: any) { alert(err?.message || 'Error al eliminar') }
+                                try { 
+                                  await remove(e.id, e as CommissionEntry)
+                                  // Refresh comparison table if the deleted entry is in the current comparison year
+                                  if (e.year === compareYear) {
+                                    setCompareRefreshTrigger(prev => prev + 1)
+                                  }
+                                } catch (err: any) { alert(err?.message || 'Error al eliminar') }
                               }}
                             >🗑️ Borrar</Button>
                           </div>
@@ -252,6 +295,142 @@ const Commissions: React.FC = () => {
           </Card>
         </>
       )}
+
+      {/* Comparison & Insights Section */}
+      <div className="border-t-4 border-gray-200 pt-6">
+        <div className="mb-4">
+          <h3 className="text-xl font-bold text-gray-800">Análisis Comparativo</h3>
+          <p className="text-sm text-gray-600 mt-1">Compara comisiones a lo largo del año</p>
+        </div>
+
+        <Card>
+          <div className="p-4">
+            <div className="flex items-center gap-2 mb-4">
+              <label className="text-sm font-medium text-gray-700 whitespace-nowrap">Año:</label>
+              <input
+                type="number"
+                value={compareYear}
+                onChange={e => {
+                  const val = parseInt(e.target.value, 10)
+                  if (!isNaN(val) && val <= thisYear) {
+                    setCompareYear(val)
+                  }
+                }}
+                onBlur={e => {
+                  const val = parseInt(e.target.value, 10)
+                  if (isNaN(val) || val > thisYear || val < 1900) {
+                    setCompareYear(thisYear)
+                  }
+                }}
+                min="1900"
+                max={thisYear}
+                placeholder="YYYY"
+                className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-28"
+              />
+              <div className="flex gap-2 ml-2">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => setCompareYear(thisYear)} 
+                  disabled={compareYear === thisYear}
+                >
+                  Este año
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => setCompareYear(compareYear - 1)} 
+                  disabled={compareLoading}
+                >
+                  Año anterior
+                </Button>
+              </div>
+            </div>
+
+            {compareLoading ? (
+              <LoadingSpinner />
+            ) : compareError ? (
+              <div className="p-4 text-red-600">{compareError}</div>
+            ) : (
+              <>
+                {/* Insights Cards */}
+                {Object.keys(compareData).length > 0 && (
+                  <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {(() => {
+                      const months = Object.values(compareData)
+                      const totals = months.map(entries => entries.reduce((s, e) => s + (e.systemTotal || 0), 0))
+                      const validTotals = totals.filter(t => t > 0)
+                      if (validTotals.length === 0) return null
+                      
+                      const best = Math.max(...validTotals)
+                      const worst = Math.min(...validTotals)
+                      const avg = totals.reduce((a, b) => a + b, 0) / (totals.length || 1)
+                      const bestMonth = Object.keys(compareData)[totals.indexOf(best)]
+                      const worstMonth = Object.keys(compareData)[totals.indexOf(worst)]
+                      
+                      return [
+                        <div key="best" className="bg-green-50 border border-green-200 rounded-lg p-4">
+                          <div className="text-sm font-semibold text-green-700 mb-1">🏆 Mejor Mes</div>
+                          <div className="text-lg font-bold text-green-900">{numberFmt(best)}</div>
+                          <div className="text-xs text-green-600 mt-1">{new Date(bestMonth + '-01').toLocaleString('es-MX', { month: 'long', year: 'numeric' })}</div>
+                        </div>,
+                        <div key="worst" className="bg-red-50 border border-red-200 rounded-lg p-4">
+                          <div className="text-sm font-semibold text-red-700 mb-1">📉 Menor Mes</div>
+                          <div className="text-lg font-bold text-red-900">{numberFmt(worst)}</div>
+                          <div className="text-xs text-red-600 mt-1">{new Date(worstMonth + '-01').toLocaleString('es-MX', { month: 'long', year: 'numeric' })}</div>
+                        </div>,
+                        <div key="avg" className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                          <div className="text-sm font-semibold text-blue-700 mb-1">📊 Promedio Anual</div>
+                          <div className="text-lg font-bold text-blue-900">{numberFmt(avg)}</div>
+                          <div className="text-xs text-blue-600 mt-1">Basado en {totals.length} meses</div>
+                        </div>
+                      ]
+                    })()}
+                  </div>
+                )}
+
+                {/* Comparison Table */}
+                <div className="overflow-x-auto">
+                  <table className="min-w-full text-sm">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-4 py-3 text-left font-semibold">Mes</th>
+                        <th className="px-4 py-3 text-right font-semibold">LN</th>
+                        <th className="px-4 py-3 text-right font-semibold">Tira</th>
+                        <th className="px-4 py-3 text-right font-semibold">Diferencia</th>
+                        <th className="px-4 py-3 text-center font-semibold">Registros</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {Object.entries(compareData).map(([ym, entries]) => {
+                        const monthName = new Date(ym + '-01').toLocaleString('es-MX', { month: 'long' })
+                        const system = entries.reduce((s, e) => s + (e.systemTotal || 0), 0)
+                        const paper = entries.reduce((s, e) => s + (e.paperTotal || 0), 0)
+                        const diff = system - paper
+                        const hasData = entries.length > 0
+                        
+                        return (
+                          <tr key={ym} className={`border-b ${!hasData ? 'text-gray-400' : 'hover:bg-gray-50'}`}>
+                            <td className="px-4 py-3 font-medium">{monthName.charAt(0).toUpperCase() + monthName.slice(1)}</td>
+                            <td className="px-4 py-3 text-right">{hasData ? numberFmt(system) : '-'}</td>
+                            <td className="px-4 py-3 text-right">{hasData ? numberFmt(paper) : '-'}</td>
+                            <td className={`px-4 py-3 text-right font-semibold ${!hasData ? '' : diff === 0 ? 'text-green-600' : diff > 0 ? 'text-blue-600' : 'text-red-600'}`}>
+                              {hasData ? numberFmt(diff) : '-'}
+                            </td>
+                            <td className="px-4 py-3 text-center">
+                              {hasData ? <span className="inline-block bg-gray-100 rounded-full px-2 py-1 text-xs">{entries.length}</span> : '-'}
+                            </td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            )}
+          </div>
+        </Card>
+      </div>
 
       <Modal isOpen={isModalOpen} onClose={() => setModalOpen(false)} title={editing ? 'Editar Comisión' : 'Registrar Comisión'}>
         <div className="space-y-3">
