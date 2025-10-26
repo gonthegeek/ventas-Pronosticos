@@ -104,6 +104,20 @@ const Commissions: React.FC = () => {
     return `${yy}-${mm}`
   }
 
+  const getNextYearMonth = (ym: string) => {
+    const [y, m] = ym.split('-').map((v) => parseInt(v, 10))
+    const d = new Date(y, m - 1, 1)
+    d.setMonth(d.getMonth() + 1)
+    const yy = d.getFullYear()
+    const mm = String(d.getMonth() + 1).padStart(2, '0')
+    return `${yy}-${mm}`
+  }
+
+  const isBeforeCurrentMonth = () => {
+    const current = getMexicoYearMonth()
+    return yearMonth < current
+  }
+
   const handleThisMonth = () => setYearMonth(getMexicoYearMonth())
   const handlePrevMonth = () => setYearMonth(getPrevYearMonth(yearMonth))
 
@@ -127,13 +141,32 @@ const Commissions: React.FC = () => {
             <input
               type="month"
               value={yearMonth}
-              onChange={(e) => setYearMonth(e.target.value)}
+              required
+              onChange={(e) => {
+                // Only allow valid yyyy-mm, else snap to current
+                const v = e.target.value
+                if (/^\d{4}-\d{2}$/.test(v)) {
+                  setYearMonth(v)
+                } else if (v === '') {
+                  setYearMonth(getMexicoYearMonth())
+                }
+              }}
+              onBlur={(e) => {
+                // If cleared or invalid, snap back
+                if (!/^\d{4}-\d{2}$/.test(e.target.value)) {
+                  setYearMonth(getMexicoYearMonth())
+                }
+              }}
               className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               disabled={loading}
+              max={getMexicoYearMonth()}
             />
             <div className="flex gap-2 ml-2">
               <Button variant="ghost" size="sm" onClick={handleThisMonth} disabled={loading}>Este mes</Button>
               <Button variant="ghost" size="sm" onClick={handlePrevMonth} disabled={loading}>Mes anterior</Button>
+              {isBeforeCurrentMonth() && (
+                <Button variant="ghost" size="sm" onClick={() => setYearMonth(getNextYearMonth(yearMonth))} disabled={loading}>Mes siguiente</Button>
+              )}
             </div>
           </div>
           <div className="flex items-center gap-2">
