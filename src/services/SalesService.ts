@@ -167,6 +167,8 @@ export class SalesService {
           hour: numericHour, // Always ensure this is a number
           operatorId: data.operatorId,
           notes: data.notes || '',
+          // Include the stored date field for proper update/delete operations
+          ...(data.date && { date: data.date })
         }
         return result
       }) as SaleEntry[]
@@ -337,8 +339,8 @@ export class SalesService {
    */
   static async deleteSale(saleId: string, saleData: SaleEntry): Promise<void> {
     try {
-      // Use the correct Mexico timezone date for the sale
-      const saleDateStr = this.getSaleDateString(saleData.timestamp)
+      // Prefer the stored date field if available, otherwise compute from timestamp
+      const saleDateStr = (saleData as any).date || this.getSaleDateString(saleData.timestamp)
       
       let collectionPath = this.getCollectionPath(saleDateStr)
       
@@ -509,8 +511,8 @@ export class SalesService {
    */
   static async updateSale(saleId: string, oldData: SaleEntry, newData: Partial<SaleEntry>): Promise<void> {
     try {
-      // Use the correct Mexico timezone date for the sale
-      const saleDateStr = this.getSaleDateString(oldData.timestamp)
+      // Prefer the stored date field if available, otherwise compute from timestamp
+      const saleDateStr = (oldData as any).date || this.getSaleDateString(oldData.timestamp)
       
       let collectionPath = this.getCollectionPath(saleDateStr)
       

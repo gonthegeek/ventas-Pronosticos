@@ -102,8 +102,9 @@ const HourlySales: React.FC = () => {
       setIsLoading(true)
       await SalesService.deleteSale(sale.id, sale)
       await loadSalesData() // Refresh data
-    } catch (error) {
-      alert('Error al eliminar la venta. Por favor intenta de nuevo.')
+    } catch (error: any) {
+      console.error('Delete error:', error)
+      alert(`Error al eliminar la venta: ${error.message || 'Por favor intenta de nuevo.'}`)
     } finally {
       setIsLoading(false)
     }
@@ -139,12 +140,13 @@ const HourlySales: React.FC = () => {
       await loadSalesData() // Refresh data
       setShowForm(false)
       setEditingSale(null)
-    } catch (error) {
-      alert('Error al guardar la venta. Por favor intenta de nuevo.')
+    } catch (error: any) {
+      console.error('Save error:', error)
+      alert(`Error al guardar la venta: ${error.message || 'Por favor intenta de nuevo.'}`)
     } finally {
       setIsLoading(false)
     }
-  }, [editingSale, selectedMachine, userProfile?.uid, loadSalesData])
+  }, [editingSale, selectedMachine, userProfile?.uid, loadSalesData, selectedDate])
   
   const handleCloseForm = useCallback(() => {
     setShowForm(false)
