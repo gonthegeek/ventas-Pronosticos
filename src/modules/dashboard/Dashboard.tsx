@@ -3,6 +3,8 @@ import { useSelector } from 'react-redux'
 import { Link } from 'react-router-dom'
 import { RootState } from '../../state/store'
 import { useCachedDashboard, useCacheStats, useCachePreloader } from '../../hooks/useCachedSales'
+import { useCachedMonthlyCommissions } from '../../hooks/useCachedCommissions'
+import { CommissionsService } from '../../services/CommissionsService'
 import QuickSalesEntry from '../../components/sales/QuickSalesEntry'
 
 /**
@@ -23,6 +25,47 @@ const Dashboard: React.FC = () => {
     refresh
   } = useCachedDashboard(10)
   
+  // Get current month commissions
+  const nowMexico = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Mexico_City' }))
+  const currentYearMonth = `${nowMexico.getFullYear()}-${String(nowMexico.getMonth() + 1).padStart(2, '0')}`
+  const { data: commissionsData, loading: commissionsLoading } = useCachedMonthlyCommissions(currentYearMonth)
+  
+  // Calculate monthly commission total
+  const monthlyCommissionTotal = React.useMemo(() => {
+    return commissionsData.reduce((sum, entry) => sum + (entry.systemTotal || 0), 0)
+  }, [commissionsData])
+  
+  // Get annual commissions total
+  const [annualCommissionTotal, setAnnualCommissionTotal] = useState(0)
+  const [annualLoading, setAnnualLoading] = useState(false)
+  
+  useEffect(() => {
+    const loadAnnualCommissions = async () => {
+      setAnnualLoading(true)
+      try {
+        const currentYear = nowMexico.getFullYear()
+        let yearTotal = 0
+        
+        // Fetch all 12 months
+        for (let month = 1; month <= 12; month++) {
+          const monthData = await CommissionsService.list(currentYear, month)
+          const monthTotal = monthData.reduce((sum, entry) => sum + (entry.systemTotal || 0), 0)
+          yearTotal += monthTotal
+        }
+        
+        setAnnualCommissionTotal(yearTotal)
+      } catch (err) {
+        console.error('Error loading annual commissions:', err)
+      } finally {
+        setAnnualLoading(false)
+      }
+    }
+    
+    loadAnnualCommissions()
+  }, [commissionsData]) // Refresh when current month data changes
+  
+  const numberFmt = (n: number) => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 0 }).format(n || 0)
+  
   // Cache statistics for monitoring
   const { stats } = useCacheStats()
   
@@ -39,15 +82,15 @@ const Dashboard: React.FC = () => {
           <div className="flex justify-between items-center">
             <div>
               <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                Welcome to Casa Pronósticos
+                Bienvenido a Casa Pronósticos
               </h2>
               <p className="text-gray-600">
-                Logged in as: <span className="font-medium capitalize">{userProfile?.role.name}</span>
+                Conectado como: <span className="font-medium capitalize">{userProfile?.role.name}</span>
               </p>
               {lastUpdated && (
                 <p className="text-sm text-gray-500 mt-1">
-                  Last updated: {lastUpdated.toLocaleTimeString()}
-                  {preloading && <span className="ml-2 text-blue-500">(Cache loading...)</span>}
+                  Última actualización: {lastUpdated.toLocaleTimeString()}
+                  {preloading && <span className="ml-2 text-blue-500">(Cargando caché...)</span>}
                   {preloaded && !preloading && <span className="ml-2 text-green-500">✓ Cached</span>}
                 </p>
               )}
@@ -69,10 +112,10 @@ const Dashboard: React.FC = () => {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    Updating...
+                    Actualizando...
                   </span>
                 ) : (
-                  'Refresh Data'
+                  'Actualizar Datos'
                 )}
               </button>
               
@@ -94,18 +137,18 @@ const Dashboard: React.FC = () => {
         <div className="bg-white shadow rounded-lg">
           <div className="px-4 py-5 sm:p-6">
             <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
-              Cache Performance
+              Rendimiento de Caché
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="bg-blue-50 p-4 rounded-lg">
-                <div className="text-sm font-medium text-blue-600">Efficiency</div>
+                <div className="text-sm font-medium text-blue-600">Eficiencia</div>
                 <div className="text-2xl font-bold text-blue-900">{stats.efficiency}%</div>
-                <div className="text-xs text-blue-600">Cache hit rate</div>
+                <div className="text-xs text-blue-600">Tasa de aciertos de caché</div>
               </div>
               <div className="bg-green-50 p-4 rounded-lg">
-                <div className="text-sm font-medium text-green-600">Requests Saved</div>
+                <div className="text-sm font-medium text-green-600">Consultas Evitadas</div>
                 <div className="text-2xl font-bold text-green-900">{stats.requestsSaved}</div>
-                <div className="text-xs text-green-600">Firestore queries avoided</div>
+                <div className="text-xs text-green-600">Consultas de Firestore evitadas</div>
               </div>
               <div className="bg-purple-50 p-4 rounded-lg">
                 <div className="text-sm font-medium text-purple-600">Sales Cache</div>
@@ -120,8 +163,8 @@ const Dashboard: React.FC = () => {
             </div>
             <div className="mt-4 text-sm text-gray-600">
               <p>
-                <strong>Cache Benefits:</strong> Reduced Firestore requests by {stats.requestsSaved} queries. 
-                This helps stay within Firebase free tier limits while maintaining fast performance.
+                <strong>Beneficios de Caché:</strong> Se redujeron las consultas a Firestore en {stats.requestsSaved} consultas.
+                Esto ayuda a mantenerse dentro de los límites del nivel gratuito de Firebase mientras se mantiene un rendimiento rápido.
               </p>
             </div>
           </div>
@@ -142,11 +185,11 @@ const Dashboard: React.FC = () => {
               <div className="ml-5 w-0 flex-1">
                 <dl>
                   <dt className="text-sm font-medium text-gray-500 truncate">
-                    Today's Sales
+                    Ventas de Hoy
                   </dt>
                   <dd className="text-lg font-medium text-gray-900">
                     {loading ? (
-                      <span className="text-gray-500">Loading...</span>
+                      <span className="text-gray-500">Cargando...</span>
                     ) : (
                       <span className="text-green-600">
                         ${todaysSales?.toLocaleString() || '0'}
@@ -171,11 +214,11 @@ const Dashboard: React.FC = () => {
               <div className="ml-5 w-0 flex-1">
                 <dl>
                   <dt className="text-sm font-medium text-gray-500 truncate">
-                    This Week
+                    Ventas de esta Semana
                   </dt>
                   <dd className="text-lg font-medium text-gray-900">
                     {loading ? (
-                      <span className="text-gray-500">Loading...</span>
+                      <span className="text-gray-500">Cargando...</span>
                     ) : (
                       <span className="text-purple-600">
                         ${weekSales?.toLocaleString() || '0'}
@@ -200,14 +243,73 @@ const Dashboard: React.FC = () => {
               <div className="ml-5 w-0 flex-1">
                 <dl>
                   <dt className="text-sm font-medium text-gray-500 truncate">
-                    This Month
+                    Ventas de este Mes
                   </dt>
                   <dd className="text-lg font-medium text-gray-900">
                     {loading ? (
-                      <span className="text-gray-500">Loading...</span>
+                      <span className="text-gray-500">Cargando...</span>
                     ) : (
                       <span className="text-blue-600">
                         ${monthSales?.toLocaleString() || '0'}
+                      </span>
+                    )}
+                  </dd>
+                </dl>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Commission Cards */}
+        <div className="bg-white overflow-hidden shadow rounded-lg">
+          <div className="p-5">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <svg className="h-8 w-8 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                        d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <div className="ml-5 w-0 flex-1">
+                <dl>
+                  <dt className="text-sm font-medium text-gray-500 truncate">
+                    Comisiones del Mes
+                  </dt>
+                  <dd className="text-lg font-medium text-gray-900">
+                    {commissionsLoading ? (
+                      <span className="text-gray-500">Cargando...</span>
+                    ) : (
+                      <span className="text-indigo-600">
+                        {numberFmt(monthlyCommissionTotal)}
+                      </span>
+                    )}
+                  </dd>
+                </dl>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white overflow-hidden shadow rounded-lg">
+          <div className="p-5">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <svg className="h-8 w-8 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                        d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+              </div>
+              <div className="ml-5 w-0 flex-1">
+                <dl>
+                  <dt className="text-sm font-medium text-gray-500 truncate">
+                    Comisiones Anuales
+                  </dt>
+                  <dd className="text-lg font-medium text-gray-900">
+                    {annualLoading ? (
+                      <span className="text-gray-500">Cargando...</span>
+                    ) : (
+                      <span className="text-amber-600">
+                        {numberFmt(annualCommissionTotal)}
                       </span>
                     )}
                   </dd>
@@ -248,7 +350,7 @@ const Dashboard: React.FC = () => {
       <div className="bg-white shadow rounded-lg">
         <div className="px-4 py-5 sm:p-6">
           <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
-            Quick Actions
+            Acciones Rápidas
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <Link 
@@ -261,8 +363,8 @@ const Dashboard: React.FC = () => {
                         d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 <div>
-                  <div className="font-medium text-gray-900">Hourly Sales</div>
-                  <div className="text-sm text-gray-500">Record and view sales by hour</div>
+                  <div className="font-medium text-gray-900">Ventas por Hora</div>
+                  <div className="text-sm text-gray-500">Registrar y ver ventas por hora</div>
                 </div>
               </div>
             </Link>
@@ -274,8 +376,8 @@ const Dashboard: React.FC = () => {
                         d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2-2V7a2 2 0 012-2h2a2 2 0 002 2v2a2 2 0 002 2h6a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2-2V3a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 002 2v8a2 2 0 01-2 2h-6a2 2 0 00-2 2v2a2 2 0 01-2 2H5a2 2 0 01-2-2v-2z" />
                 </svg>
                 <div>
-                  <div className="font-medium text-gray-900">Daily Reports</div>
-                  <div className="text-sm text-gray-500">Coming soon...</div>
+                  <div className="font-medium text-gray-900">Reportes Diarios</div>
+                  <div className="text-sm text-gray-500">Próximamente...</div>
                 </div>
               </div>
             </button>
@@ -292,8 +394,8 @@ const Dashboard: React.FC = () => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                   </svg>
                   <div>
-                    <div className="font-medium text-gray-900">Admin Panel</div>
-                    <div className="text-sm text-gray-500">Manage users and permissions</div>
+                    <div className="font-medium text-gray-900">Panel de Administración</div>
+                    <div className="text-sm text-gray-500">Gestionar usuarios y permisos</div>
                   </div>
                 </div>
               </Link>
