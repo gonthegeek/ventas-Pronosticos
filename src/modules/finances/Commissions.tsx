@@ -41,9 +41,37 @@ const Commissions: React.FC = () => {
   const [compareLoading, setCompareLoading] = useState(false)
   const [compareError, setCompareError] = useState<string | null>(null)
   const [compareRefreshTrigger, setCompareRefreshTrigger] = useState(0)
-  const [chartMode, setChartMode] = useState<'line' | 'bar'>('line')
-  const [showChart, setShowChart] = useState(true)
-  const [showTable, setShowTable] = useState(true)
+  
+  // Chart mode with localStorage persistence
+  const [chartMode, setChartMode] = useState<'line' | 'bar'>(() => {
+    const saved = localStorage.getItem('commissions_chartMode')
+    return (saved === 'line' || saved === 'bar') ? saved : 'line'
+  })
+  
+  // Toggle visibility with localStorage persistence
+  const [showChart, setShowChart] = useState(() => {
+    const saved = localStorage.getItem('commissions_showChart')
+    return saved !== null ? saved === 'true' : true
+  })
+  const [showTable, setShowTable] = useState(() => {
+    const saved = localStorage.getItem('commissions_showTable')
+    return saved !== null ? saved === 'true' : true
+  })
+
+  // Persist chart mode preference
+  useEffect(() => {
+    localStorage.setItem('commissions_chartMode', chartMode)
+  }, [chartMode])
+
+  // Persist chart visibility preference
+  useEffect(() => {
+    localStorage.setItem('commissions_showChart', String(showChart))
+  }, [showChart])
+
+  // Persist table visibility preference
+  useEffect(() => {
+    localStorage.setItem('commissions_showTable', String(showTable))
+  }, [showTable])
 
   const loadComparisonData = async () => {
     setCompareLoading(true)

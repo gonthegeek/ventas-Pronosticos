@@ -47,11 +47,35 @@ const SalesComparison: React.FC<SalesComparisonProps> = ({ className = '' }) => 
   const [weekdayHourCount, setWeekdayHourCount] = useState<number>(8); // Last 8 weeks
   
   // Chart mode for weekday-hour visualization
-  const [chartMode, setChartMode] = useState<'line' | 'bar'>('line');
+  const [chartMode, setChartMode] = useState<'line' | 'bar'>(() => {
+    const saved = localStorage.getItem('salesComparison_chartMode');
+    return (saved === 'line' || saved === 'bar') ? saved : 'line';
+  });
   
-  // Toggle visibility
-  const [showChart, setShowChart] = useState(true);
-  const [showTable, setShowTable] = useState(true);
+  // Toggle visibility with localStorage persistence
+  const [showChart, setShowChart] = useState(() => {
+    const saved = localStorage.getItem('salesComparison_showChart');
+    return saved !== null ? saved === 'true' : true;
+  });
+  const [showTable, setShowTable] = useState(() => {
+    const saved = localStorage.getItem('salesComparison_showTable');
+    return saved !== null ? saved === 'true' : true;
+  });
+
+  // Persist chart mode preference
+  useEffect(() => {
+    localStorage.setItem('salesComparison_chartMode', chartMode);
+  }, [chartMode]);
+
+  // Persist chart visibility preference
+  useEffect(() => {
+    localStorage.setItem('salesComparison_showChart', String(showChart));
+  }, [showChart]);
+
+  // Persist table visibility preference
+  useEffect(() => {
+    localStorage.setItem('salesComparison_showTable', String(showTable));
+  }, [showTable]);
 
   useEffect(() => {
     // Clear data when switching modes
