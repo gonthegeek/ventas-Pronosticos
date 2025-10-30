@@ -3,7 +3,7 @@ import { SalesService } from '../../services/SalesService';
 import { HourlySalesData } from '../../state/slices/salesSlice';
 import { formatCurrency } from '../../utils/timezone';
 import LoadingSpinner from '../ui/LoadingSpinner';
-import WeekdayHourChart from './WeekdayHourChart';
+import SalesComparisonChart from './SalesComparisonChart';
 
 interface ComparisonData {
   date: string;
@@ -49,6 +49,10 @@ const SalesComparison: React.FC<SalesComparisonProps> = ({ className = '' }) => 
   const [chartMode, setChartMode] = useState<'line' | 'bar'>('line');
 
   useEffect(() => {
+    // Clear data when switching modes
+    setComparisonData([]);
+    setError(null);
+    
     // Set default dates to last 7 days for weekly mode
     if (mode === 'weekly') {
       const today = new Date();
@@ -752,13 +756,16 @@ const SalesComparison: React.FC<SalesComparisonProps> = ({ className = '' }) => 
             </div>
           )}
 
-          {/* Visualization for Weekday-Hour Mode */}
-          {mode === 'weekdayHour' && comparisonData.length > 0 && (
+          {/* Visualization for All Modes */}
+          {comparisonData.length > 0 && comparisonData.length <= 100 && (
             <div className="mb-6">
               <div className="bg-white rounded-lg border border-gray-200 p-6">
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="text-lg font-semibold text-gray-800">
-                    Tendencia de Ventas por Semana
+                    {mode === 'weekdayHour' 
+                      ? 'Tendencia de Ventas por Semana'
+                      : 'Comparación Visual de Ventas'
+                    }
                   </h3>
                   <div className="flex gap-2">
                     <button
@@ -783,12 +790,20 @@ const SalesComparison: React.FC<SalesComparisonProps> = ({ className = '' }) => 
                     </button>
                   </div>
                 </div>
-                <WeekdayHourChart
+                <SalesComparisonChart
                   data={comparisonData}
                   selectedMachines={selectedMachines}
                   mode={chartMode}
                 />
               </div>
+            </div>
+          )}
+          {comparisonData.length > 100 && (
+            <div className="mb-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+              <p className="text-sm text-yellow-800">
+                📊 El gráfico está oculto debido al gran número de datos ({comparisonData.length} fechas). 
+                Para visualización gráfica, selecciona un rango menor (máximo 100 fechas).
+              </p>
             </div>
           )}
 

@@ -13,7 +13,7 @@ import {
 } from 'recharts';
 import { formatCurrency } from '../../utils/timezone';
 
-interface WeekdayHourChartProps {
+interface SalesComparisonChartProps {
   data: Array<{
     date: string;
     displayName: string;
@@ -25,7 +25,7 @@ interface WeekdayHourChartProps {
   mode?: 'line' | 'bar';
 }
 
-const WeekdayHourChart: React.FC<WeekdayHourChartProps> = ({
+const SalesComparisonChart: React.FC<SalesComparisonChartProps> = ({
   data,
   selectedMachines,
   mode = 'line',
@@ -178,4 +178,4 @@ const WeekdayHourChart: React.FC<WeekdayHourChartProps> = ({
   );
 };
 
-export default WeekdayHourChart;
+export default SalesComparisonChart;
