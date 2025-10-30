@@ -44,6 +44,9 @@ const SalesComparison: React.FC<SalesComparisonProps> = ({ className = '' }) => 
   const [weekdayHourDay, setWeekdayHourDay] = useState<number>(3); // Wednesday
   const [weekdayHourHour, setWeekdayHourHour] = useState<number>(21); // 21:00
   const [weekdayHourCount, setWeekdayHourCount] = useState<number>(8); // Last 8 weeks
+  
+  // Chart mode for weekday-hour visualization
+  const [chartMode, setChartMode] = useState<'line' | 'bar'>('line');
 
   useEffect(() => {
     // Set default dates to last 7 days for weekly mode
@@ -759,20 +762,22 @@ const SalesComparison: React.FC<SalesComparisonProps> = ({ className = '' }) => 
                   </h3>
                   <div className="flex gap-2">
                     <button
-                      onClick={() => {
-                        const chartMode = document.querySelector('[data-chart-mode]');
-                        if (chartMode) chartMode.setAttribute('data-chart-mode', 'line');
-                      }}
-                      className="px-3 py-1 text-sm bg-blue-100 text-blue-700 rounded hover:bg-blue-200"
+                      onClick={() => setChartMode('line')}
+                      className={`px-3 py-1 text-sm rounded transition-colors ${
+                        chartMode === 'line'
+                          ? 'bg-blue-500 text-white'
+                          : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                      }`}
                     >
                       Línea
                     </button>
                     <button
-                      onClick={() => {
-                        const chartMode = document.querySelector('[data-chart-mode]');
-                        if (chartMode) chartMode.setAttribute('data-chart-mode', 'bar');
-                      }}
-                      className="px-3 py-1 text-sm bg-blue-100 text-blue-700 rounded hover:bg-blue-200"
+                      onClick={() => setChartMode('bar')}
+                      className={`px-3 py-1 text-sm rounded transition-colors ${
+                        chartMode === 'bar'
+                          ? 'bg-blue-500 text-white'
+                          : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                      }`}
                     >
                       Barras
                     </button>
@@ -781,7 +786,7 @@ const SalesComparison: React.FC<SalesComparisonProps> = ({ className = '' }) => 
                 <WeekdayHourChart
                   data={comparisonData}
                   selectedMachines={selectedMachines}
-                  mode="line"
+                  mode={chartMode}
                 />
               </div>
             </div>
