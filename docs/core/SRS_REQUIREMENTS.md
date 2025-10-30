@@ -151,6 +151,16 @@ interface ComparisonData {
 - **Cache Strategy**: 4hr TTL via financesCache (current month 2h, historical 6h)
 - **Dashboard Integration**: Monthly and annual commission cards with quick action link
 
+#### **SRS #8: Boletos premiados pagados** ✅
+- **Status**: Complete Implementation
+- **Module**: `src/modules/finances/PaidPrizes.tsx`
+- **Service**: `src/services/PaidPrizesService.ts` + `src/services/PaidPrizesService.cached.ts`
+- **Hook**: `src/hooks/useCachedPaidPrizes.ts`
+- **Route**: `/finances/paid-prizes`
+- **Collection**: `data/paidPrizes/{year}/{month}/entries/{entryId}`
+- **Cache Strategy**: 2hr TTL via financesCache (current month 1h, historical 2h)
+- **Firestore Rules**: Supervisor and Admin access only
+
 **Features**:
 - ✅ Complete CRUD operations for monthly commissions
 - ✅ Month picker with quick navigation (current/previous/next month)
@@ -191,9 +201,38 @@ interface CommissionsData {
 - Export functionality
 - Role-based access (Supervisor+)
 
+**Fields**:
+```typescript
+interface PaidPrizeEntry {
+  id?: string
+  date: string           // YYYY-MM-DD
+  week: string          // YYYY-Www format (ISO week)
+  machineId: '76' | '79'
+  amountPaid: number
+  ticketCount: number
+  notes?: string
+  operatorId: string
+  timestamp: Date
+  createdAt: Date
+  updatedAt?: Date
+}
+```
+
+**Features**:
+- ✅ Complete CRUD operations for paid prizes
+- ✅ Month picker with quick navigation (current/previous/next month)
+- ✅ Summary cards showing total amount, total tickets, and average per ticket
+- ✅ Machine breakdown (76/79) with individual totals
+- ✅ Weekly summary table with aggregated data by ISO week
+- ✅ Detailed entries table with machine column
+- ✅ Auto-calculated ISO week format (YYYY-Www)
+- ✅ CSV export functionality with machine data
+- ✅ Intelligent caching with adaptive TTL
+- ✅ Role-based access (Supervisor+ only)
+
 #### **SRS #4: Ventas diarias y semanales** ⭐ ✅
 
-### 🔄 **PENDING (6 of 9)**
+### 🔄 **PENDING (5 of 9)**
 
 #### **SRS #3: Cambio de rollo**
 - **Status**: Not Started
@@ -314,34 +353,43 @@ interface ScratchesData {
 - Export functionality
 - Role-based access (Supervisor+)
 
-#### **SRS #8: Boletos premiados pagados**
-- **Status**: Not Started
-- **Target Module**: `src/modules/finances/PaidPrizes.tsx`
-- **Collection**: `data/paidPrizes/{year}/{month}/{prizeId}`
-- **Cache Strategy**: 2hr TTL, weekly aggregation
-- **Purpose**: Track paid out prize tickets with weekly reconciliation
+#### **SRS #8: Boletos premiados pagados** ✅
+- **Status**: Complete Implementation  
+- **Module**: `src/modules/finances/PaidPrizes.tsx`
+- **Service**: `src/services/PaidPrizesService.ts` + `src/services/PaidPrizesService.cached.ts`
+- **Hook**: `src/hooks/useCachedPaidPrizes.ts`
+- **Route**: `/finances/paid-prizes`
+- **Collection**: `data/paidPrizes/{year}/{month}/entries/{prizeId}`
+- **Cache Strategy**: 2hr TTL, weekly aggregation (current month 1h, historical 2h)
+- **Firestore Rules**: Supervisor and Admin access only
 
 **Fields**:
 ```typescript
-interface PaidPrizesData {
+interface PaidPrizeEntry {
   id?: string
   date: string            // YYYY-MM-DD
-  week: string            // YYYY-Www format
+  week: string            // YYYY-Www format (ISO week)
+  machineId: '76' | '79'  // Machine tracking
   amountPaid: number      // Total amount paid out
   ticketCount: number     // Number of tickets paid
+  notes?: string          // Optional notes
   operatorId: string
   timestamp: Date
   createdAt: Date
+  updatedAt?: Date
 }
 ```
 
 **Features**:
-- Payment tracking
-- Weekly aggregation
-- Prize reconciliation
-- Payout analytics
-- Export functionality
-- Role-based access (Supervisor+)
+- ✅ Complete CRUD operations
+- ✅ Payment tracking by machine (76/79)
+- ✅ Weekly aggregation with ISO week format
+- ✅ Monthly totals with machine breakdown
+- ✅ Prize reconciliation analytics
+- ✅ Payout analytics with averages
+- ✅ CSV export functionality
+- ✅ Intelligent caching with adaptive TTL
+- ✅ Role-based access (Supervisor+)
 
 #### **SRS #9: Primeros lugares de sorteos**
 - **Status**: Not Started
@@ -517,10 +565,10 @@ Each SRS contributes specific KPIs to the main dashboard:
 
 ## 🚀 Implementation Priority
 
-### **Phase 2: Core Business Functions (Next)**
-1. **SRS #2 (Comisiones mensuales)** - High priority financial tracking
-2. **SRS #8 (Boletos premiados pagados)** - Prize tracking
-3. **SRS #5 (Boletos vendidos)** - Foundation for SRS #6
+### **Phase 2: Core Business Functions (Completed ✅)**
+1. ✅ **SRS #2 (Comisiones mensuales)** - Financial tracking implemented
+2. ✅ **SRS #8 (Boletos premiados pagados)** - Prize tracking implemented
+3. **SRS #5 (Boletos vendidos)** - Next: Foundation for SRS #6
 
 ### **Phase 3: Advanced Features**
 4. **SRS #6 (Promedio por boleto)** - Depends on SRS #5
@@ -567,7 +615,8 @@ For each new SRS implementation:
 
 ---
 
-**SRS Status**: 2 of 9 Complete (44%)  
-**Next Implementation**: SRS #2 (Comisiones mensuales)  
-**Reference**: SRS #1 (HourlySales) for implementation patterns  
-**Last Updated**: August 21, 2025
+**SRS Status**: 4 of 9 Complete (44%)  
+**Completed**: SRS #1 (Ventas), #2 (Comisiones), #4 (Comparación), #8 (Premiados)
+**Next Implementation**: SRS #5 (Boletos vendidos)  
+**Reference**: Established patterns for hierarchical data, caching, and permissions  
+**Last Updated**: October 29, 2025

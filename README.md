@@ -6,16 +6,17 @@
 
 Casa Pronósticos is a comprehensive sales and lottery management system for analyzing data from lottery machines. The system has been successfully migrated from legacy SPA to modern React architecture with intelligent caching to optimize Firebase usage and stay within free tier limits.
 
-**Current Status**: Phase 1 Complete (33% - React Migration + Cache System + SRS #1)
+**Current Status**: Phase 2 In Progress (44% - 4 of 9 SRS Complete)
 
 ### 🏆 Key Achievements
 
 - ✅ **Complete React Migration**: Modern React 18 + TypeScript architecture
 - ✅ **Intelligent Cache System**: 85-95% hit rate, 75-90% Firebase reduction
-- ✅ **SRS #1 Implementation**: Hourly Sales with full CRUD, comparisons, CSV export
+- ✅ **4 SRS Implemented**: Hourly Sales, Commissions, Sales Comparison, Paid Prizes
 - ✅ **Role-Based Security**: Granular permissions (Operador/Supervisor/Admin)
 - ✅ **Admin Panel**: User management, cache monitoring, data migration tools
 - ✅ **Firebase Optimization**: <10,000 reads/day (down from 500-1000/day)
+- ✅ **Firestore Security Rules**: Complete rules for all implemented SRS
 
 ## 🚀 Technology Stack
 
@@ -35,29 +36,45 @@ Casa Pronósticos is a comprehensive sales and lottery management system for ana
 
 ## 📊 SRS (System Requirements Specification) - 9 Core Functionalities
 
-### ✅ **IMPLEMENTED** (Phase 1 Complete)
+### ✅ **IMPLEMENTED** (4 of 9 Complete)
 
 #### **SRS #1: Ventas por hora** 
 - **Module**: `src/modules/sales/HourlySales.tsx`
+- **Route**: `/sales/hourly`
 - **Collection**: `data/sales/{year}/{month}/{day}/{saleId}`
 - **Features**: CRUD complete, CSV export, comparisons, real-time updates, cache optimization
 - **Fields**: date, hour (0-23), machineId ('76'|'79'), amount, totalSales, operatorId, notes, timestamp
 
+#### **SRS #2: Comisiones mensuales** 
+- **Module**: `src/modules/finances/Commissions.tsx`
+- **Route**: `/finances/commissions`
+- **Collection**: `data/commissions/{year}/{month}/entries/{entryId}`
+- **Features**: CRUD complete, monthly tracking, system vs paper comparison, year-over-year analysis, CSV export
+- **Fields**: year, month, machineId ('76'|'79'), systemTotal, paperTotal, difference (calculated), notes
+- **Access**: Supervisor and Admin only
+
 #### **SRS #4: Ventas diarias y semanales** ⭐ 
 - **Module**: `src/modules/sales/SalesComparisonPage.tsx` + `src/components/sales/SalesComparison.tsx`
+- **Route**: `/sales/comparison`
 - **Data Source**: Calculated from existing hourly sales data (no separate collection needed)
-- **Features**: Daily/weekly/monthly aggregation, day-of-week analysis, custom date ranges, quick selections
+- **Features**: Daily/weekly/monthly aggregation, day-of-week analysis, custom date ranges, weekday-hour comparison
 - **Calculations**: Daily totals (sum hourly), weekly patterns, peak hours, machine breakdowns
 - **Note**: *Smart implementation - leverages existing SRS #1 data instead of duplicate storage*
 
-### 🔄 **PENDING** (Phases 2-3)
+#### **SRS #8: Boletos premiados pagados** 
+- **Module**: `src/modules/finances/PaidPrizes.tsx`
+- **Route**: `/finances/paid-prizes`
+- **Collection**: `data/paidPrizes/{year}/{month}/entries/{prizeId}`
+- **Features**: CRUD complete, machine tracking (76/79), weekly aggregation, ISO week format, machine breakdown, CSV export
+- **Fields**: date, week (ISO), machineId ('76'|'79'), amountPaid, ticketCount, notes, operatorId, timestamp
+- **Access**: Supervisor and Admin only
 
-#### **SRS #2: Comisiones mensuales** - Monthly commission tracking
+### 🔄 **PENDING** (5 of 9)
+
 #### **SRS #3: Cambio de rollo** - Paper roll change event logging  
 #### **SRS #5: Boletos vendidos** - Ticket sales tracking
 #### **SRS #6: Promedio por boleto** - Average spending per ticket
 #### **SRS #7: Raspados premiados** - Scratch lottery prize tracking
-#### **SRS #8: Boletos premiados pagados** - Paid prize tracking
 #### **SRS #9: Primeros lugares de sorteos** - First place winner tracking
 
 *See [srs.json](./srs.json) for complete specifications*
@@ -81,6 +98,10 @@ src/
 │   ├── AuthService.ts      # ✅ Authentication service
 │   ├── SalesService.ts     # ✅ Sales data operations
 │   ├── SalesService.cached.ts # ✅ Cached wrapper
+│   ├── CommissionsService.ts # ✅ Commissions operations
+│   ├── CommissionsService.cached.ts # ✅ Cached wrapper
+│   ├── PaidPrizesService.ts # ✅ Paid prizes operations
+│   ├── PaidPrizesService.cached.ts # ✅ Cached wrapper
 │   └── CacheService.ts     # ✅ Intelligent cache engine
 ├── state/
 │   ├── store.ts            # ✅ Redux store
@@ -96,7 +117,8 @@ src/
 Firestore Collections:
 ├── /authorizedUsers/{userId}           # User authentication and roles
 ├── /data/sales/{year}/{month}/{day}   # ✅ SRS #1 - Hierarchical sales data
-├── /data/commissions/{year}/{month}   # 🔄 SRS #2 - Monthly commissions
+├── /data/commissions/{year}/{month}/entries # ✅ SRS #2 - Monthly commissions
+├── /data/paidPrizes/{year}/{month}/entries # ✅ SRS #8 - Paid prizes
 ├── /data/rollChanges/{year}/{month}   # 🔄 SRS #3 - Roll changes
 ├── /data/dailyWeeklySales/{year}/{month} # 🔄 SRS #4 - Daily/weekly sales
 ├── /data/tickets/{year}/{month}       # 🔄 SRS #5 - Tickets sold

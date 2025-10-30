@@ -9,18 +9,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+---
+
+## [2.1.0] - 2025-10-29
+
 ### Added
-- Weekday-hour comparison mode for granular sales analysis
-- Universal chart visualization for all comparison modes
-- View toggles for charts and tables with localStorage persistence
-- Chart visualization to annual commission comparison
+- **SRS #8: Boletos Premiados Pagados** (Complete Implementation)
+  - Full CRUD operations for paid prizes tracking
+  - Machine breakdown (76/79) with separate totals
+  - Weekly aggregation with ISO week format (YYYY-Www)
+  - Month picker with quick navigation (current/previous/next)
+  - Summary cards with machine-specific totals
+  - Weekly summary table with per-machine breakdown
+  - Detailed entries table with machine column
+  - CSV export functionality
+  - Intelligent caching with adaptive TTL (1hr current, 2hr historical)
+  - Hierarchical Firestore structure: `data/paidPrizes/{year}/{month}/entries`
+  - Dashboard integration with monthly paid prizes card
+  - Supervisor and Admin access only
+- **Cache System Enhancements**
+  - Added paid prizes cache configuration (PAID_PRIZES_WEEKLY, PAID_PRIZES_MONTHLY)
+  - Cache key generators for monthly and weekly lists
+  - `invalidatePaidPrizesData` method for automatic cache invalidation
+- **React Hooks**
+  - `useCachedMonthlyPaidPrizes`: Fetch all prizes for a month
+  - `useCachedWeeklyPaidPrizes`: Fetch prizes by ISO week
+  - `useCachedWeeklyTotals`: Get weekly aggregations
+  - `useCachedMonthlyTotals`: Get monthly totals with machine breakdown
 
 ### Changed
-- Enhanced sales comparison with line/bar chart mode selector
-- Improved UX by clearing data when switching comparison modes
+- Updated Firestore security rules for `data/paidPrizes` collection
+- Enhanced sidebar navigation with SRS #8 badge
+- Improved routing with `/finances/paid-prizes` route
+- Updated documentation (README, SRS_REQUIREMENTS, srs.json) for 44% completion
 
 ### Fixed
-- Chart mode toggle buttons now properly switch between line and bar views
+- Firestore permission errors for paid prizes collection
+- Machine field integration across all service layers
 
 ---
 

@@ -216,21 +216,42 @@
     {
       "id": 8,
       "name": "Boletos premiados pagados",
-      "srs_status": "pending",
-      "migration_status": "not_started",
-      "module": "src/modules/finances/paidPrizes.tsx (to be created)",
+      "srs_status": "implemented",
+      "migration_status": "completed",
+      "module": "src/modules/finances/PaidPrizes.tsx",
+      "route": "/finances/paid-prizes",
+      "services": [
+        "src/services/PaidPrizesService.ts",
+        "src/services/PaidPrizesService.cached.ts"
+      ],
+      "hooks": ["src/hooks/useCachedPaidPrizes.ts"],
       "fields": [
         "date (YYYY-MM-DD)",
-        "week (YYYY-Www)",
+        "week (YYYY-Www, ISO format)",
+        "machineId ('76' | '79')",
         "amountPaid (number)",
         "ticketCount (number)",
+        "notes (string, optional)",
         "operatorId (string)",
-        "timestamp (Date)"
+        "timestamp (Date)",
+        "createdAt (Firebase Timestamp)",
+        "updatedAt (Firebase Timestamp, optional)"
       ],
       "granularity": "semana",
-      "collection_path": "data/paidPrizes/{year}/{month}",
-      "cache_strategy": "2hr TTL, weekly aggregation",
-      "notes": "Registra boletos que tuvieron premio y fueron pagados"
+      "collection_path": "data/paidPrizes/{year}/{month}/entries",
+      "cache_strategy": "2hr TTL (current month 1h), weekly aggregation via financesCache",
+      "firestore_rules": "Supervisor and Admin access only",
+      "features": [
+        "CRUD operations for paid prizes",
+        "Month picker with quick navigation",
+        "Summary cards with machine breakdown (76/79)",
+        "Weekly summary table with ISO week aggregation",
+        "Detailed entries table with machine column",
+        "Auto-calculated ISO week format",
+        "CSV export with machine data",
+        "Intelligent caching with adaptive TTL"
+      ],
+      "notes": "Completamente implementado con CRUD, agregación semanal, desglose por máquina, cache inteligente, y reglas de Firestore. Acceso exclusivo para Supervisor y Admin."
     },
     {
       "id": 9,
@@ -496,19 +517,25 @@
       "Firebase v10 integration",
       "Authentication and authorization",
       "SRS #1: Hourly Sales (complete CRUD)",
+      "SRS #2: Comisiones mensuales (CRUD + cache)",
+      "SRS #4: Ventas diarias y semanales (smart aggregation)",
+      "SRS #8: Boletos premiados pagados (CRUD + cache + machine tracking)",
       "Dashboard with KPIs",
       "Intelligent cache system",
       "Admin panel with cache management",
       "Data migration tools",
       "Responsive UI with TailwindCSS",
-      "SRS #2: Comisiones mensuales (CRUD + cache)"
+      "Firestore security rules for all implemented SRS"
     ],
     "in_progress": [
-      "SRS documentation updates",
       "Testing and optimization"
     ],
     "pending": [
-      "SRS #3-9: Remaining functionalities",
+      "SRS #3: Cambio de rollo",
+      "SRS #5: Boletos vendidos",
+      "SRS #6: Promedio por boleto",
+      "SRS #7: Raspados premiados",
+      "SRS #9: Primeros lugares de sorteos",
       "Advanced reporting features",
       "Mobile app considerations",
       "Performance monitoring dashboard"
