@@ -42,6 +42,8 @@ const Commissions: React.FC = () => {
   const [compareError, setCompareError] = useState<string | null>(null)
   const [compareRefreshTrigger, setCompareRefreshTrigger] = useState(0)
   const [chartMode, setChartMode] = useState<'line' | 'bar'>('line')
+  const [showChart, setShowChart] = useState(true)
+  const [showTable, setShowTable] = useState(true)
 
   const loadComparisonData = async () => {
     setCompareLoading(true)
@@ -409,8 +411,37 @@ const Commissions: React.FC = () => {
                   </div>
                 )}
 
-                {/* Chart Visualization */}
+                {/* View Controls */}
                 {Object.keys(compareData).length > 0 && (
+                  <div className="mb-4">
+                    <div className="bg-white rounded-lg border border-gray-200 p-4">
+                      <div className="flex items-center gap-4">
+                        <span className="text-sm font-medium text-gray-700">Vista:</span>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={showChart}
+                            onChange={(e) => setShowChart(e.target.checked)}
+                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                          />
+                          <span className="text-sm text-gray-700">📊 Mostrar Gráfica</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={showTable}
+                            onChange={(e) => setShowTable(e.target.checked)}
+                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                          />
+                          <span className="text-sm text-gray-700">📋 Mostrar Tabla</span>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Chart Visualization */}
+                {showChart && Object.keys(compareData).length > 0 && (
                   <div className="mb-6">
                     <div className="bg-white rounded-lg border border-gray-200 p-6">
                       <div className="flex justify-between items-center mb-4">
@@ -547,8 +578,9 @@ const Commissions: React.FC = () => {
                 )}
 
                 {/* Comparison Table */}
-                <div className="overflow-x-auto">
-                  <table className="min-w-full text-sm">
+                {showTable && (
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full text-sm">
                     <thead className="bg-gray-50">
                       <tr>
                         <th className="px-4 py-3 text-left font-semibold">Mes</th>
@@ -608,7 +640,8 @@ const Commissions: React.FC = () => {
                       })()}
                     </tbody>
                   </table>
-                </div>
+                  </div>
+                )}
               </>
             )}
           </div>

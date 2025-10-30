@@ -4,6 +4,7 @@ import { HourlySalesData } from '../../state/slices/salesSlice';
 import { formatCurrency } from '../../utils/timezone';
 import LoadingSpinner from '../ui/LoadingSpinner';
 import SalesComparisonChart from './SalesComparisonChart';
+import Card from '../ui/Card';
 
 interface ComparisonData {
   date: string;
@@ -47,6 +48,10 @@ const SalesComparison: React.FC<SalesComparisonProps> = ({ className = '' }) => 
   
   // Chart mode for weekday-hour visualization
   const [chartMode, setChartMode] = useState<'line' | 'bar'>('line');
+  
+  // Toggle visibility
+  const [showChart, setShowChart] = useState(true);
+  const [showTable, setShowTable] = useState(true);
 
   useEffect(() => {
     // Clear data when switching modes
@@ -756,8 +761,39 @@ const SalesComparison: React.FC<SalesComparisonProps> = ({ className = '' }) => 
             </div>
           )}
 
+          {/* View Controls */}
+          {comparisonData.length > 0 && (
+            <div className="mb-4">
+              <Card>
+                <div className="p-4">
+                  <div className="flex items-center gap-4">
+                    <span className="text-sm font-medium text-gray-700">Vista:</span>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={showChart}
+                        onChange={(e) => setShowChart(e.target.checked)}
+                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      />
+                      <span className="text-sm text-gray-700">📊 Mostrar Gráfica</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={showTable}
+                        onChange={(e) => setShowTable(e.target.checked)}
+                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      />
+                      <span className="text-sm text-gray-700">📋 Mostrar Tabla</span>
+                    </label>
+                  </div>
+                </div>
+              </Card>
+            </div>
+          )}
+
           {/* Visualization for All Modes */}
-          {comparisonData.length > 0 && comparisonData.length <= 100 && (
+          {showChart && comparisonData.length > 0 && comparisonData.length <= 100 && (
             <div className="mb-6">
               <div className="bg-white rounded-lg border border-gray-200 p-6">
                 <div className="flex justify-between items-center mb-4">
@@ -808,8 +844,9 @@ const SalesComparison: React.FC<SalesComparisonProps> = ({ className = '' }) => 
           )}
 
           {/* Comparison Table */}
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
+          {showTable && (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -873,7 +910,8 @@ const SalesComparison: React.FC<SalesComparisonProps> = ({ className = '' }) => 
                 ))}
               </tbody>
             </table>
-          </div>
+            </div>
+          )}
         </div>
       )}
     </div>
