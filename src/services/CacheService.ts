@@ -350,6 +350,10 @@ export const CACHE_CONFIG = {
 
   // Commissions (monthly data)
   COMMISSIONS_MONTHLY: { ttl: 240, pattern: 'commissions:monthly:*' }, // 4 hours
+
+  // Paid prizes (weekly aggregation)
+  PAID_PRIZES_WEEKLY: { ttl: 120, pattern: 'paidPrizes:weekly:*' }, // 2 hours
+  PAID_PRIZES_MONTHLY: { ttl: 120, pattern: 'paidPrizes:monthly:*' }, // 2 hours
 }
 
 // Cache key generators
@@ -384,6 +388,12 @@ export const CACHE_KEYS = {
 
   // Commissions keys
   commissionsMonthlyList: (year: number, month: number) => `commissions:monthly:list:${year}-${String(month).padStart(2, '0')}`,
+
+  // Paid prizes keys
+  paidPrizesMonthlyList: (year: number, month: number) => `paidPrizes:monthly:list:${year}-${String(month).padStart(2, '0')}`,
+  paidPrizesWeeklyList: (week: string) => `paidPrizes:weekly:list:${week}`,
+  paidPrizesWeeklyTotals: (week: string) => `paidPrizes:weekly:totals:${week}`,
+  paidPrizesMonthlyTotals: (year: number, month: number) => `paidPrizes:monthly:totals:${year}-${String(month).padStart(2, '0')}`,
 }
 
 // Global cache instances
@@ -431,6 +441,14 @@ export class CacheManager {
       financesCache.invalidatePattern(`commissions:monthly:.*:${year}-${String(month).padStart(2, '0')}`)
     } else {
       financesCache.invalidatePattern('commissions:.*')
+    }
+  }
+
+  static invalidatePaidPrizesData(year?: number, month?: number): void {
+    if (year && month) {
+      financesCache.invalidatePattern(`paidPrizes:.*:${year}-${String(month).padStart(2, '0')}`)
+    } else {
+      financesCache.invalidatePattern('paidPrizes:.*')
     }
   }
   

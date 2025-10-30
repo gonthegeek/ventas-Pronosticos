@@ -130,6 +130,12 @@ service cloud.firestore {
       allow write: if isSupervisorOrAdmin();
     }
     
+    // Paid prizes data - hierarchical structure: data/paidPrizes/{year}/{month}/entries/{id}
+    match /data/paidPrizes/{document=**} {
+      allow read: if isSupervisorOrAdmin();
+      allow write: if isSupervisorOrAdmin();
+    }
+    
     // Inventory data
     match /inventory/{document=**} {
       allow read: if isAuthorizedUser();
