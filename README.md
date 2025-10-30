@@ -17,6 +17,27 @@ Casa Pronósticos is a comprehensive sales and lottery management system for ana
 - ✅ **Admin Panel**: User management, cache monitoring, data migration tools
 - ✅ **Firebase Optimization**: <10,000 reads/day (down from 500-1000/day)
 - ✅ **Firestore Security Rules**: Complete rules for all implemented SRS
+- ✅ **Comprehensive Dashboard**: Real-time KPIs with 9 insight cards and quick actions
+
+### 📊 Dashboard Overview
+
+The dashboard (`src/modules/dashboard/Dashboard.tsx`) provides a comprehensive overview with real-time metrics:
+
+**Insight Cards (9 Total)**:
+- 💰 **Sales KPIs**: Today's sales, weekly sales, monthly sales
+- 💼 **Commission Tracking**: Monthly commissions, annual commissions (year-to-date)
+- 🎁 **Prize Tracking**: Monthly paid prizes, annual paid prizes (year-to-date)
+- ⏰ **Current Hour**: Real-time hour display
+
+**Quick Actions**:
+- Direct links to Hourly Sales, Commissions, and Paid Prizes modules
+- Admin panel access (admin role only)
+
+**Features**:
+- Auto-refresh with configurable intervals (10min default)
+- Cache statistics panel with efficiency metrics
+- Loading states and error handling
+- Role-based menu access
 
 ## 🚀 Technology Stack
 

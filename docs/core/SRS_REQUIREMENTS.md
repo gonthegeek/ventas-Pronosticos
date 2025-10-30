@@ -229,6 +229,8 @@ interface PaidPrizeEntry {
 - ✅ CSV export functionality with machine data
 - ✅ Intelligent caching with adaptive TTL
 - ✅ Role-based access (Supervisor+ only)
+- ✅ Dashboard integration with monthly and annual paid prizes cards
+- ✅ Quick action link from dashboard to paid prizes module
 
 #### **SRS #4: Ventas diarias y semanales** ⭐ ✅
 
@@ -542,9 +544,18 @@ Each SRS contributes specific KPIs to the main dashboard:
 - Machine performance comparison
 
 #### **SRS #2 Contributions**
-- Monthly commission differences
+- Monthly commission total (current month)
+- Annual commission total (year-to-date)
 - System vs paper accuracy
 - Commission trends
+- Quick action link to commissions
+
+#### **SRS #8 Contributions**
+- Monthly paid prizes total (current month)
+- Annual paid prizes total (year-to-date)
+- Machine breakdown (76/79)
+- Prize payout tracking
+- Quick action link to paid prizes
 
 #### **SRS #3 Contributions**
 - Roll change frequency
@@ -557,11 +568,11 @@ Each SRS contributes specific KPIs to the main dashboard:
 - Monthly comparisons
 
 #### **Remaining SRS Contributions**
-- #5: Ticket sales trends
-- #6: Average spending patterns
-- #7: Prize distribution analysis
-- #8: Payout tracking
-- #9: Jackpot accumulation trends
+- #3: Roll change frequency and machine reliability
+- #5: Ticket sales trends and volume
+- #6: Average spending patterns per ticket
+- #7: Prize distribution and scratch lottery analysis
+- #9: Jackpot accumulation and first place trends
 
 ## 🚀 Implementation Priority
 

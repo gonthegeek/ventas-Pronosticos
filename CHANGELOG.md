@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Enhanced dashboard with paid prizes insights (monthly and annual)
+- Updated documentation with dashboard KPI details
+
 ---
 
 ## [2.1.0] - 2025-10-29
