@@ -8,6 +8,19 @@ import LoadingSpinner from '../../components/ui/LoadingSpinner'
 import { useCachedMonthlyCommissions } from '../../hooks/useCachedCommissions'
 import CommissionsService from '../../services/CommissionsService'
 import { CommissionEntry } from '../../services/CommissionsService'
+import {
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from 'recharts'
+import { formatCurrency } from '../../utils/timezone'
 
 const nowMexico = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Mexico_City' }))
 const defaultYearMonth = `${nowMexico.getFullYear()}-${String(nowMexico.getMonth() + 1).padStart(2, '0')}`
@@ -28,6 +41,7 @@ const Commissions: React.FC = () => {
   const [compareLoading, setCompareLoading] = useState(false)
   const [compareError, setCompareError] = useState<string | null>(null)
   const [compareRefreshTrigger, setCompareRefreshTrigger] = useState(0)
+  const [chartMode, setChartMode] = useState<'line' | 'bar'>('line')
 
   const loadComparisonData = async () => {
     setCompareLoading(true)
@@ -392,6 +406,143 @@ const Commissions: React.FC = () => {
                         </div>
                       ]
                     })()}
+                  </div>
+                )}
+
+                {/* Chart Visualization */}
+                {Object.keys(compareData).length > 0 && (
+                  <div className="mb-6">
+                    <div className="bg-white rounded-lg border border-gray-200 p-6">
+                      <div className="flex justify-between items-center mb-4">
+                        <h3 className="text-lg font-semibold text-gray-800">
+                          Tendencia Anual de Comisiones
+                        </h3>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => setChartMode('line')}
+                            className={`px-3 py-1 text-sm rounded transition-colors ${
+                              chartMode === 'line'
+                                ? 'bg-blue-500 text-white'
+                                : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                            }`}
+                          >
+                            Línea
+                          </button>
+                          <button
+                            onClick={() => setChartMode('bar')}
+                            className={`px-3 py-1 text-sm rounded transition-colors ${
+                              chartMode === 'bar'
+                                ? 'bg-blue-500 text-white'
+                                : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                            }`}
+                          >
+                            Barras
+                          </button>
+                        </div>
+                      </div>
+                      {(() => {
+                        const chartData = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(m => {
+                          const ym = `${compareYear}-${String(m).padStart(2, '0')}`
+                          const entries = compareData[ym] || []
+                          const date = new Date(compareYear, m - 1, 1)
+                          const monthName = date.toLocaleString('es-ES', { month: 'short' })
+                          const system = entries.reduce((s, e) => s + (e.systemTotal || 0), 0)
+                          const paper = entries.reduce((s, e) => s + (e.paperTotal || 0), 0)
+                          const diff = system - paper
+                          
+                          return {
+                            month: monthName.charAt(0).toUpperCase() + monthName.slice(1),
+                            fullMonth: date.toLocaleString('es-MX', { month: 'long', year: 'numeric' }),
+                            ln: system,
+                            tira: paper,
+                            diferencia: diff,
+                          }
+                        })
+
+                        const CustomTooltip = ({ active, payload }: any) => {
+                          if (active && payload && payload.length) {
+                            return (
+                              <div className="bg-white p-3 border border-gray-300 rounded-lg shadow-lg">
+                                <p className="font-semibold text-gray-900 mb-2">{payload[0].payload.fullMonth}</p>
+                                {payload.map((entry: any, index: number) => (
+                                  <p key={index} className="text-sm" style={{ color: entry.color }}>
+                                    {entry.name}: <strong>{formatCurrency(entry.value)}</strong>
+                                  </p>
+                                ))}
+                              </div>
+                            )
+                          }
+                          return null
+                        }
+
+                        const formatYAxis = (value: number) => {
+                          if (value >= 1000) {
+                            return `$${(value / 1000).toFixed(0)}k`
+                          }
+                          return `$${value}`
+                        }
+
+                        if (chartMode === 'bar') {
+                          return (
+                            <div className="w-full h-96">
+                              <ResponsiveContainer width="100%" height="100%">
+                                <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 40 }}>
+                                  <CartesianGrid strokeDasharray="3 3" />
+                                  <XAxis dataKey="month" />
+                                  <YAxis tickFormatter={formatYAxis} />
+                                  <Tooltip content={<CustomTooltip />} />
+                                  <Legend />
+                                  <Bar dataKey="ln" name="LN" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                                  <Bar dataKey="tira" name="Tira" fill="#10b981" radius={[4, 4, 0, 0]} />
+                                  <Bar dataKey="diferencia" name="Diferencia" fill="#f59e0b" radius={[4, 4, 0, 0]} />
+                                </BarChart>
+                              </ResponsiveContainer>
+                            </div>
+                          )
+                        }
+
+                        return (
+                          <div className="w-full h-96">
+                            <ResponsiveContainer width="100%" height="100%">
+                              <LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 40 }}>
+                                <CartesianGrid strokeDasharray="3 3" />
+                                <XAxis dataKey="month" />
+                                <YAxis tickFormatter={formatYAxis} />
+                                <Tooltip content={<CustomTooltip />} />
+                                <Legend />
+                                <Line
+                                  type="monotone"
+                                  dataKey="ln"
+                                  name="LN"
+                                  stroke="#3b82f6"
+                                  strokeWidth={2}
+                                  dot={{ r: 4 }}
+                                  activeDot={{ r: 6 }}
+                                />
+                                <Line
+                                  type="monotone"
+                                  dataKey="tira"
+                                  name="Tira"
+                                  stroke="#10b981"
+                                  strokeWidth={2}
+                                  dot={{ r: 4 }}
+                                  activeDot={{ r: 6 }}
+                                />
+                                <Line
+                                  type="monotone"
+                                  dataKey="diferencia"
+                                  name="Diferencia"
+                                  stroke="#f59e0b"
+                                  strokeWidth={3}
+                                  dot={{ r: 5 }}
+                                  activeDot={{ r: 7 }}
+                                />
+                              </LineChart>
+                            </ResponsiveContainer>
+                          </div>
+                        )
+                      })()}
+                    </div>
                   </div>
                 )}
 
