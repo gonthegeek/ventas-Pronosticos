@@ -32,7 +32,31 @@ SALES_HOURLY: 5 minutes    // Current day hourly data
 DASHBOARD_STATS: 10 minutes // Dashboard summaries
 USER_PROFILE: 30 minutes   // User information
 COMPARISON_DATA: 4 hours   // Historical comparisons
+WEEKDAY_HOUR: 60 minutes   // Weekday-hour comparison data
 ```
+
+### localStorage Persistence for User Preferences
+
+In addition to Firebase cache, the system uses `localStorage` to persist user display preferences across browser sessions:
+
+```typescript
+// Sales Comparison Preferences
+localStorage.setItem('salesComparison_showChart', 'true' | 'false')
+localStorage.setItem('salesComparison_showTable', 'true' | 'false')
+localStorage.setItem('salesComparison_chartMode', 'line' | 'bar')
+
+// Commissions Preferences
+localStorage.setItem('commissions_showChart', 'true' | 'false')
+localStorage.setItem('commissions_showTable', 'true' | 'false')
+localStorage.setItem('commissions_chartMode', 'line' | 'bar')
+```
+
+**Benefits**:
+- Instant preference restoration on page load
+- No server calls required for UI preferences
+- Survives browser refresh and reopening
+- Per-module granularity (different preferences for different features)
+- Minimal storage footprint (~100 bytes per module)
 
 ## 🚀 Implementation
 
@@ -55,6 +79,9 @@ COMPARISON_DATA: 4 hours   // Historical comparisons
 #### Hooks Available
 - `useCachedDashboard()`: Dashboard data with auto-refresh
 - `useCachedHourlySales()`: Hourly sales data
+- `useCachedWeekdayHourComparison()`: Weekday-hour specific comparison data
+- `useCachedWeekdayFullComparison()`: Full 24-hour data for a specific weekday
+- `useCachedCommissions()`: Monthly commission data
 - `useCacheStats()`: Cache performance monitoring
 - `useCachePreloader()`: Preload cache on app startup
 - `useBatchSalesData()`: Efficient multi-date loading
@@ -95,10 +122,17 @@ const { stats, cleanup } = useCacheStats()
 
 ```typescript
 // Automatic cache invalidation triggers
-- New sale added → Invalidate related date caches
-- Sale updated → Invalidate specific date and aggregations  
-- Sale deleted → Invalidate affected date ranges
+- New sale added → Invalidate related date caches + weekday-hour caches
+- Sale updated → Invalidate specific date and aggregations + weekday-hour  
+- Sale deleted → Invalidate affected date ranges + related weekday-hour
 - User data change → Invalidate user-specific caches
+- Commission added/updated → Invalidate commission caches + dashboard
+
+// Weekday-hour cache invalidation pattern
+// When a sale is modified for date X, invalidate:
+const dayOfWeek = new Date(X).getDay()
+const affectedKeys = hours.map(h => `weekday-hour-${dayOfWeek}-${h}-*`)
+// This ensures weekday comparisons stay fresh
 ```
 
 ## 🔧 Cache Management

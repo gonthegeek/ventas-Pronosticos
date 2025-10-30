@@ -46,11 +46,11 @@ interface HourlySalesData {
 ```
 
 #### **SRS #4: Ventas diarias y semanales** ⭐ ✅
-- **Status**: Smart Implementation Complete
+- **Status**: Smart Implementation Complete + Enhanced with Weekday-Hour Comparison
 - **Module**: `src/modules/sales/SalesComparisonPage.tsx` + `src/components/sales/SalesComparison.tsx`
 - **Implementation Approach**: Intelligent aggregation from existing SRS #1 data
 - **Data Source**: Calculated on-demand from hourly sales (no separate collection)
-- **Cache Strategy**: Leverages existing sales cache + calculation caching
+- **Cache Strategy**: Leverages existing sales cache + calculation caching (1hr TTL for weekday-hour queries)
 
 **Smart Features**:
 - ✅ Daily totals calculation from hourly data
@@ -62,6 +62,50 @@ interface HourlySalesData {
 - ✅ Peak hour identification
 - ✅ Best/worst/average day statistics
 - ✅ No duplicate data storage required
+- ✅ **NEW: Weekday-Hour Comparison** - Compare same day-of-week and hour across multiple weeks
+- ✅ **NEW: Chart Visualizations** - Line and bar charts for all comparison modes
+- ✅ **NEW: View Controls** - Toggle chart/table visibility with persistence
+- ✅ **NEW: User Preferences** - localStorage persistence for display preferences
+
+**Weekday-Hour Comparison Mode** (New Feature):
+```typescript
+// Compare all Wednesdays at 21:00 for the last 8 weeks
+interface WeekdayHourParams {
+  dayOfWeek: 0-6           // 0=Sunday, 3=Wednesday, 6=Saturday
+  hour: 0-23               // Hour of day to compare
+  numberOfOccurrences: 4-12 // How many weeks back to compare
+}
+
+// Service method with caching
+CachedSalesService.getWeekdayHourlyComparison(
+  dayOfWeek: 3,           // Wednesday
+  hour: 21,               // 21:00
+  numberOfOccurrences: 8  // Last 8 weeks
+)
+
+// Returns array of ComparisonData for each matching occurrence
+// Cache key: `weekday-hour-${dayOfWeek}-${hour}-${count}`
+// TTL: 1 hour (historical data unlikely to change)
+```
+
+**UI Features**:
+- Mode selector with 4 tabs: Custom, Weekly, Monthly, **Weekday-Hour**
+- Dynamic selectors: Day of week dropdown, hour selector (0-23), week count
+- Chart visualization with smart labeling (day names for ≤7 items, day numbers for ≤31, abbreviated dates for longer periods)
+- Chart mode toggle: Line charts or bar charts
+- View toggles: Show/hide chart and table independently
+- Auto-refresh on data changes
+- Data clearing when switching modes for cleaner UX
+
+**localStorage Persistence**:
+```typescript
+// Keys used for preference storage
+'salesComparison_showChart': 'true' | 'false'
+'salesComparison_showTable': 'true' | 'false'
+'salesComparison_chartMode': 'line' | 'bar'
+
+// Survives browser refresh and provides consistent UX
+```
 
 **Calculated Fields**:
 ```typescript
@@ -77,7 +121,25 @@ interface DailyWeeklySalesData {
     '79': number
   }
 }
+
+interface ComparisonData {
+  date: string              // Date of the comparison point
+  displayName: string       // User-friendly label (e.g., "Mié 2024-01-10 - 21:00")
+  totalSales: number        // Combined sales for both machines
+  machine76: number         // Machine 76 specific total
+  machine79: number         // Machine 79 specific total
+  peakHour: number          // Hour with highest sales (or selected hour)
+  peakAmount: number        // Amount at peak hour
+  hourlyData: HourlySalesData[] // Full hourly breakdown if needed
+}
 ```
+
+**Example Use Cases**:
+1. **Weekly Performance**: Compare this week vs last 3 weeks
+2. **Monthly Trends**: Compare current month vs last month vs same month last year
+3. **Peak Hour Analysis**: Compare all Fridays at 20:00 to identify consistent patterns
+4. **Day-of-Week Patterns**: Compare all Mondays, Tuesdays, etc. at specific hours
+5. **Custom Ranges**: Any date range for special events or promotions
 
 #### **SRS #2: Comisiones mensuales** ✅
 - **Status**: Complete Implementation

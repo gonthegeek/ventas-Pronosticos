@@ -533,6 +533,202 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
 
 ## 📊 Sales Components
 
+### **SalesComparisonChart.tsx - Universal Comparison Chart**
+**Purpose**: Reusable chart component for all sales comparison modes
+
+```typescript
+interface SalesComparisonChartProps {
+  data: Array<{
+    date: string
+    displayName: string
+    totalSales: number
+    machine76: number
+    machine79: number
+  }>
+  selectedMachines: string[]
+  mode?: 'line' | 'bar'
+}
+
+const SalesComparisonChart: React.FC<SalesComparisonChartProps> = ({
+  data,
+  selectedMachines,
+  mode = 'line',
+}) => {
+  // Smart label formatting based on data length
+  const chartData = data.map((item, index) => {
+    let shortName: string
+    if (data.length <= 7) {
+      // Show day names for weekly view (e.g., "Lun", "Mar")
+      shortName = new Date(item.date).toLocaleDateString('es-ES', { weekday: 'short' })
+    } else if (data.length <= 31) {
+      // Show day numbers for monthly view (e.g., "1", "15")
+      shortName = new Date(item.date).getDate().toString()
+    } else {
+      // Show abbreviated dates for longer periods (e.g., "Sep 1")
+      shortName = new Date(item.date).toLocaleDateString('es-ES', { 
+        month: 'short', 
+        day: 'numeric' 
+      })
+    }
+    return { name: item.displayName, shortName, ...item }
+  })
+  
+  // Renders either LineChart or BarChart based on mode
+  return mode === 'bar' ? (
+    <BarChart data={chartData}>
+      <Bar dataKey="machine76" name="Máquina 76" fill="#3b82f6" />
+      <Bar dataKey="machine79" name="Máquina 79" fill="#10b981" />
+      <Bar dataKey="total" name="Total" fill="#8b5cf6" />
+    </BarChart>
+  ) : (
+    <LineChart data={chartData}>
+      <Line dataKey="machine76" name="Máquina 76" stroke="#3b82f6" />
+      <Line dataKey="machine79" name="Máquina 79" stroke="#10b981" />
+      <Line dataKey="total" name="Total" stroke="#8b5cf6" />
+    </LineChart>
+  )
+}
+
+// Usage:
+// <SalesComparisonChart 
+//   data={comparisonData} 
+//   selectedMachines={['76', '79']}
+//   mode={chartMode}
+// />
+```
+
+**Features**:
+- **Smart Labeling**: Automatically adjusts X-axis labels based on data range
+- **Dual Chart Modes**: Supports both line and bar chart visualizations
+- **Machine Filtering**: Shows/hides machine-specific data based on selection
+- **Responsive Design**: Adapts to container size with ResponsiveContainer
+- **Custom Tooltips**: Rich tooltips with formatted currency and date info
+- **Consistent Colors**: Machine 76 (blue), Machine 79 (green), Total (purple)
+
+### **SalesComparison.tsx - Advanced Comparison Module**
+**Purpose**: Multi-mode sales comparison with visualization controls
+
+```typescript
+type ComparisonMode = 'custom' | 'weekly' | 'monthly' | 'weekdayHour'
+
+export const SalesComparison: React.FC = () => {
+  const [mode, setMode] = useState<ComparisonMode>('custom')
+  
+  // View preferences with localStorage persistence
+  const [showChart, setShowChart] = useState(() => {
+    const saved = localStorage.getItem('salesComparison_showChart')
+    return saved !== null ? saved === 'true' : true
+  })
+  const [showTable, setShowTable] = useState(() => {
+    const saved = localStorage.getItem('salesComparison_showTable')
+    return saved !== null ? saved === 'true' : true
+  })
+  const [chartMode, setChartMode] = useState<'line' | 'bar'>(() => {
+    const saved = localStorage.getItem('salesComparison_chartMode')
+    return (saved === 'line' || saved === 'bar') ? saved : 'line'
+  })
+  
+  // Persist preferences on change
+  useEffect(() => {
+    localStorage.setItem('salesComparison_showChart', String(showChart))
+  }, [showChart])
+  
+  useEffect(() => {
+    localStorage.setItem('salesComparison_showTable', String(showTable))
+  }, [showTable])
+  
+  useEffect(() => {
+    localStorage.setItem('salesComparison_chartMode', chartMode)
+  }, [chartMode])
+  
+  // Clear data when switching modes
+  useEffect(() => {
+    setComparisonData([])
+    setError(null)
+  }, [mode])
+  
+  return (
+    <Card title="Comparación de Ventas">
+      {/* Mode selector buttons */}
+      <div className="flex space-x-2 mb-4">
+        <button onClick={() => setMode('custom')}>Personalizado</button>
+        <button onClick={() => setMode('weekly')}>Semanal</button>
+        <button onClick={() => setMode('monthly')}>Mensual</button>
+        <button onClick={() => setMode('weekdayHour')}>Mismo Día y Hora</button>
+      </div>
+      
+      {/* View toggle controls */}
+      <div className="flex items-center space-x-4 mb-4">
+        <label className="flex items-center">
+          <input
+            type="checkbox"
+            checked={showChart}
+            onChange={(e) => setShowChart(e.target.checked)}
+          />
+          <span className="ml-2">Mostrar Gráfica</span>
+        </label>
+        <label className="flex items-center">
+          <input
+            type="checkbox"
+            checked={showTable}
+            onChange={(e) => setShowTable(e.target.checked)}
+          />
+          <span className="ml-2">Mostrar Tabla</span>
+        </label>
+      </div>
+      
+      {/* Chart mode selector (only when chart is visible) */}
+      {showChart && (
+        <div className="flex space-x-2 mb-4">
+          <button 
+            onClick={() => setChartMode('line')}
+            className={chartMode === 'line' ? 'active' : ''}
+          >
+            Líneas
+          </button>
+          <button 
+            onClick={() => setChartMode('bar')}
+            className={chartMode === 'bar' ? 'active' : ''}
+          >
+            Barras
+          </button>
+        </div>
+      )}
+      
+      {/* Conditional rendering based on preferences */}
+      {showChart && (
+        <SalesComparisonChart 
+          data={comparisonData} 
+          selectedMachines={selectedMachines}
+          mode={chartMode}
+        />
+      )}
+      {showTable && (
+        <SalesTable data={comparisonData} />
+      )}
+    </Card>
+  )
+}
+```
+
+**Comparison Modes**:
+1. **Custom**: Select any date range for comparison
+2. **Weekly**: Compare last 7 days or specific weeks
+3. **Monthly**: Compare this month vs last month or custom months
+4. **Weekday-Hour**: Compare same weekday and hour across multiple weeks (e.g., all Wednesdays at 21:00)
+
+**Persistence Features**:
+- **Chart Visibility**: Remembers user's preference to show/hide chart
+- **Table Visibility**: Remembers user's preference to show/hide table
+- **Chart Mode**: Remembers line vs bar chart selection
+- **Storage Key**: `salesComparison_showChart`, `salesComparison_showTable`, `salesComparison_chartMode`
+
+**UX Improvements**:
+- Auto-clears data when switching comparison modes
+- Separate toggles for chart and table visibility
+- Chart mode selector only appears when chart is visible
+- All preferences persist across browser sessions
+
 ### **QuickSalesEntry.tsx - Fast Sales Input**
 **Purpose**: Quick data entry for hourly sales
 
