@@ -4,7 +4,9 @@ import { Link } from 'react-router-dom'
 import { RootState } from '../../state/store'
 import { useCachedDashboard, useCacheStats, useCachePreloader } from '../../hooks/useCachedSales'
 import { useCachedMonthlyCommissions } from '../../hooks/useCachedCommissions'
+import { useCachedMonthlyTotals } from '../../hooks/useCachedPaidPrizes'
 import { CommissionsService } from '../../services/CommissionsService'
+import { PaidPrizesService } from '../../services/PaidPrizesService'
 import QuickSalesEntry from '../../components/sales/QuickSalesEntry'
 
 /**
@@ -25,10 +27,11 @@ const Dashboard: React.FC = () => {
     refresh
   } = useCachedDashboard(10)
   
-  // Get current month commissions
+  // Get current month commissions and paid prizes
   const nowMexico = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Mexico_City' }))
   const currentYearMonth = `${nowMexico.getFullYear()}-${String(nowMexico.getMonth() + 1).padStart(2, '0')}`
   const { data: commissionsData, loading: commissionsLoading } = useCachedMonthlyCommissions(currentYearMonth)
+  const { totals: paidPrizesTotals, loading: paidPrizesLoading } = useCachedMonthlyTotals(currentYearMonth)
   
   // Calculate monthly commission total
   const monthlyCommissionTotal = React.useMemo(() => {
@@ -63,6 +66,35 @@ const Dashboard: React.FC = () => {
     
     loadAnnualCommissions()
   }, [commissionsData]) // Refresh when current month data changes
+  
+  // Get annual paid prizes total
+  const [annualPaidPrizesTotal, setAnnualPaidPrizesTotal] = useState(0)
+  const [annualPaidPrizesLoading, setAnnualPaidPrizesLoading] = useState(false)
+  
+  useEffect(() => {
+    const loadAnnualPaidPrizes = async () => {
+      setAnnualPaidPrizesLoading(true)
+      try {
+        const currentYear = nowMexico.getFullYear()
+        let yearTotal = 0
+        
+        // Fetch all 12 months
+        for (let month = 1; month <= 12; month++) {
+          const monthData = await PaidPrizesService.list(currentYear, month)
+          const monthTotal = monthData.reduce((sum, entry) => sum + (entry.amountPaid || 0), 0)
+          yearTotal += monthTotal
+        }
+        
+        setAnnualPaidPrizesTotal(yearTotal)
+      } catch (err) {
+        console.error('Error loading annual paid prizes:', err)
+      } finally {
+        setAnnualPaidPrizesLoading(false)
+      }
+    }
+    
+    loadAnnualPaidPrizes()
+  }, [paidPrizesTotals]) // Refresh when current month data changes
   
   const numberFmt = (n: number) => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 0 }).format(n || 0)
   
@@ -323,6 +355,64 @@ const Dashboard: React.FC = () => {
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
+                <svg className="h-8 w-8 text-rose-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                        d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div className="ml-5 w-0 flex-1">
+                <dl>
+                  <dt className="text-sm font-medium text-gray-500 truncate">
+                    Premios Pagados (Mes)
+                  </dt>
+                  <dd className="text-lg font-medium text-gray-900">
+                    {paidPrizesLoading ? (
+                      <span className="text-gray-500">Cargando...</span>
+                    ) : (
+                      <span className="text-rose-600">
+                        {numberFmt(paidPrizesTotals?.totalAmount || 0)}
+                      </span>
+                    )}
+                  </dd>
+                </dl>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white overflow-hidden shadow rounded-lg">
+          <div className="p-5">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <svg className="h-8 w-8 text-pink-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                        d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+              </div>
+              <div className="ml-5 w-0 flex-1">
+                <dl>
+                  <dt className="text-sm font-medium text-gray-500 truncate">
+                    Premios Pagados (Año)
+                  </dt>
+                  <dd className="text-lg font-medium text-gray-900">
+                    {annualPaidPrizesLoading ? (
+                      <span className="text-gray-500">Cargando...</span>
+                    ) : (
+                      <span className="text-pink-600">
+                        {numberFmt(annualPaidPrizesTotal)}
+                      </span>
+                    )}
+                  </dd>
+                </dl>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white overflow-hidden shadow rounded-lg">
+          <div className="p-5">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
                 <svg className="h-8 w-8 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
                         d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -381,6 +471,22 @@ const Dashboard: React.FC = () => {
                 <div>
                   <div className="font-medium text-gray-900">Comisiones Mensuales</div>
                   <div className="text-sm text-gray-500">Registrar comisiones del mes</div>
+                </div>
+              </div>
+            </Link>
+
+            <Link 
+              to="/finances/paid-prizes" 
+              className="block text-left p-4 rounded-lg border-2 border-dashed border-gray-300 hover:border-rose-500 hover:bg-rose-50 transition-colors"
+            >
+              <div className="flex items-center">
+                <svg className="h-6 w-6 text-rose-600 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                        d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <div>
+                  <div className="font-medium text-gray-900">Premios Pagados</div>
+                  <div className="text-sm text-gray-500">Registrar premios pagados</div>
                 </div>
               </div>
             </Link>
