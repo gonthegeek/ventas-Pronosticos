@@ -3,6 +3,7 @@ import { SalesService } from '../../services/SalesService';
 import { HourlySalesData } from '../../state/slices/salesSlice';
 import { formatCurrency } from '../../utils/timezone';
 import LoadingSpinner from '../ui/LoadingSpinner';
+import WeekdayHourChart from './WeekdayHourChart';
 
 interface ComparisonData {
   date: string;
@@ -19,7 +20,7 @@ interface SalesComparisonProps {
   className?: string;
 }
 
-type ComparisonMode = 'custom' | 'weekly' | 'monthly';
+type ComparisonMode = 'custom' | 'weekly' | 'monthly' | 'weekdayHour';
 
 const SalesComparison: React.FC<SalesComparisonProps> = ({ className = '' }) => {
   const [mode, setMode] = useState<ComparisonMode>('custom');
@@ -38,6 +39,11 @@ const SalesComparison: React.FC<SalesComparisonProps> = ({ className = '' }) => 
   // Custom weekday selector
   const [customWeekday, setCustomWeekday] = useState<number>(3); // Default to Wednesday
   const [customWeekdayCount, setCustomWeekdayCount] = useState<number>(4);
+  
+  // Weekday-Hour comparison mode
+  const [weekdayHourDay, setWeekdayHourDay] = useState<number>(3); // Wednesday
+  const [weekdayHourHour, setWeekdayHourHour] = useState<number>(21); // 21:00
+  const [weekdayHourCount, setWeekdayHourCount] = useState<number>(8); // Last 8 weeks
 
   useEffect(() => {
     // Set default dates to last 7 days for weekly mode
@@ -180,6 +186,12 @@ const SalesComparison: React.FC<SalesComparisonProps> = ({ className = '' }) => 
   };
 
   const loadComparisonData = async () => {
+    if (mode === 'weekdayHour') {
+      // Use dedicated weekday-hour comparison logic
+      await loadWeekdayHourComparison();
+      return;
+    }
+
     if (selectedDates.length === 0) {
       setError('Por favor selecciona fechas para comparar');
       return;
@@ -247,6 +259,81 @@ const SalesComparison: React.FC<SalesComparisonProps> = ({ className = '' }) => 
     }
   };
 
+  const loadWeekdayHourComparison = async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      // Get weekday hour comparison data from cached service
+      const dates: string[] = [];
+      const today = new Date();
+      let currentDate = new Date(today);
+      
+      // Find the most recent occurrence of the specified day
+      while (currentDate.getDay() !== weekdayHourDay) {
+        currentDate.setDate(currentDate.getDate() - 1);
+      }
+      
+      // Collect the last N occurrences
+      for (let i = 0; i < weekdayHourCount; i++) {
+        const year = currentDate.getFullYear();
+        const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+        const day = String(currentDate.getDate()).padStart(2, '0');
+        dates.push(`${year}-${month}-${day}`);
+        currentDate.setDate(currentDate.getDate() - 7);
+      }
+      
+      dates.reverse();
+
+      const comparisons: ComparisonData[] = [];
+
+      for (const date of dates) {
+        const hourlySales = await SalesService.getHourlySalesForDate(date);
+        const hourData = hourlySales.find(h => h.hour === weekdayHourHour) || {
+          hour: weekdayHourHour,
+          machine76: 0,
+          machine79: 0,
+          total: 0,
+          lastUpdated: new Date().toISOString(),
+        };
+        
+        // Calculate totals for selected hour based on selected machines
+        let totalSales = 0;
+        let machine76Total = hourData.machine76;
+        let machine79Total = hourData.machine79;
+
+        if (selectedMachines.includes('76')) {
+          totalSales += hourData.machine76;
+        }
+        
+        if (selectedMachines.includes('79')) {
+          totalSales += hourData.machine79;
+        }
+
+        const dateObj = new Date(date + 'T12:00:00');
+        const dayName = dateObj.toLocaleDateString('es-ES', { weekday: 'short' });
+        const displayName = `${dayName} ${date} - ${weekdayHourHour.toString().padStart(2, '0')}:00`;
+
+        comparisons.push({
+          date,
+          displayName,
+          totalSales,
+          machine76: machine76Total,
+          machine79: machine79Total,
+          peakHour: weekdayHourHour,
+          peakAmount: totalSales,
+          hourlyData: [hourData]
+        });
+      }
+
+      setComparisonData(comparisons);
+    } catch (error) {
+      setError('Error al cargar los datos de comparación por día y hora. Por favor intenta de nuevo.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const formatHour = (hour: number): string => {
     return `${hour.toString().padStart(2, '0')}:00`;
   };
@@ -273,7 +360,7 @@ const SalesComparison: React.FC<SalesComparisonProps> = ({ className = '' }) => 
 
       {/* Mode Selection */}
       <div className="mb-6">
-        <div className="flex space-x-4 mb-4">
+        <div className="flex flex-wrap gap-3 mb-4">
           <button
             onClick={() => setMode('custom')}
             className={`px-4 py-2 rounded-md font-medium ${
@@ -293,6 +380,16 @@ const SalesComparison: React.FC<SalesComparisonProps> = ({ className = '' }) => 
             }`}
           >
             Selecciones Rápidas
+          </button>
+          <button
+            onClick={() => setMode('weekdayHour')}
+            className={`px-4 py-2 rounded-md font-medium ${
+              mode === 'weekdayHour'
+                ? 'bg-blue-500 text-white'
+                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+            }`}
+          >
+            Mismo Día y Hora
           </button>
         </div>
 
@@ -467,10 +564,88 @@ const SalesComparison: React.FC<SalesComparisonProps> = ({ className = '' }) => 
             </div>
           </div>
         )}
+
+        {mode === 'weekdayHour' && (
+          <div className="space-y-4">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <h4 className="text-sm font-semibold text-blue-900 mb-2">
+                📊 Análisis de Mismo Día y Hora
+              </h4>
+              <p className="text-sm text-blue-700">
+                Compara las ventas del mismo día de la semana a la misma hora a lo largo de varias semanas.
+                Ideal para identificar patrones y tendencias específicas.
+              </p>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Día de la Semana:
+                </label>
+                <select
+                  value={weekdayHourDay}
+                  onChange={(e) => setWeekdayHourDay(parseInt(e.target.value))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                >
+                  <option value={0}>Domingo</option>
+                  <option value={1}>Lunes</option>
+                  <option value={2}>Martes</option>
+                  <option value={3}>Miércoles</option>
+                  <option value={4}>Jueves</option>
+                  <option value={5}>Viernes</option>
+                  <option value={6}>Sábado</option>
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Hora:
+                </label>
+                <select
+                  value={weekdayHourHour}
+                  onChange={(e) => setWeekdayHourHour(parseInt(e.target.value))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                >
+                  {Array.from({ length: 24 }, (_, i) => (
+                    <option key={i} value={i}>
+                      {i.toString().padStart(2, '0')}:00
+                    </option>
+                  ))}
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Número de Semanas:
+                </label>
+                <select
+                  value={weekdayHourCount}
+                  onChange={(e) => setWeekdayHourCount(parseInt(e.target.value))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                >
+                  <option value={4}>Últimas 4 semanas</option>
+                  <option value={8}>Últimas 8 semanas</option>
+                  <option value={12}>Últimas 12 semanas</option>
+                  <option value={16}>Últimas 16 semanas</option>
+                  <option value={20}>Últimas 20 semanas</option>
+                  <option value={26}>Últimas 26 semanas (6 meses)</option>
+                  <option value={52}>Últimas 52 semanas (1 año)</option>
+                </select>
+              </div>
+            </div>
+            
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+              <p className="text-sm text-yellow-800">
+                💡 <strong>Ejemplo:</strong> Selecciona "Miércoles" a las "21:00" con "8 semanas" para comparar
+                las ventas de todos los miércoles a las 21:00 durante los últimos 2 meses.
+              </p>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Selected Dates Display */}
-      {selectedDates.length > 0 && (
+      {mode !== 'weekdayHour' && selectedDates.length > 0 && (
         <div className="mb-4">
           <p className="text-sm text-gray-600 mb-2">
             Fechas seleccionadas ({selectedDates.length}):
@@ -495,12 +670,21 @@ const SalesComparison: React.FC<SalesComparisonProps> = ({ className = '' }) => 
       <div className="mb-6">
         <button
           onClick={loadComparisonData}
-          disabled={selectedDates.length === 0 || selectedMachines.length === 0 || loading}
+          disabled={
+            (mode !== 'weekdayHour' && selectedDates.length === 0) || 
+            selectedMachines.length === 0 || 
+            loading
+          }
           className="bg-green-500 text-white px-6 py-2 rounded-md hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
         >
-          {loading ? 'Cargando...' : 'Comparar Datos de Ventas'}
+          {loading ? 'Cargando...' : mode === 'weekdayHour' ? 'Analizar Patrón de Día y Hora' : 'Comparar Datos de Ventas'}
         </button>
-        {selectedDates.length > 50 && (
+        {mode === 'weekdayHour' && (
+          <p className="text-sm text-gray-600 mt-2">
+            ✨ Analizando: Todos los <strong>{getWeekdayName(weekdayHourDay)}s</strong> a las <strong>{weekdayHourHour.toString().padStart(2, '0')}:00</strong> de las últimas <strong>{weekdayHourCount}</strong> semanas
+          </p>
+        )}
+        {mode !== 'weekdayHour' && selectedDates.length > 50 && (
           <p className="text-sm text-gray-500 mt-2">
             💡 Tip: Para datasets grandes (más de 50 fechas), considera usar comparaciones por días específicos de la semana para un análisis más eficiente.
           </p>
@@ -526,20 +710,79 @@ const SalesComparison: React.FC<SalesComparisonProps> = ({ className = '' }) => 
         <div>
           {/* Summary Stats */}
           {stats && (
-            <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                <h3 className="font-semibold text-green-800">Mejor Día</h3>
-                <p className="text-green-600">{stats.bestDay?.displayName}</p>
-                <p className="text-2xl font-bold text-green-800">{formatCurrency(stats.best)}</p>
+            <div className="mb-6">
+              {mode === 'weekdayHour' && (
+                <div className="mb-4 bg-purple-50 border border-purple-200 rounded-lg p-4">
+                  <h3 className="font-semibold text-purple-900 mb-2">
+                    📈 Análisis: {getWeekdayName(weekdayHourDay)}s a las {weekdayHourHour.toString().padStart(2, '0')}:00
+                  </h3>
+                  <p className="text-sm text-purple-700">
+                    Comparando <strong>{comparisonData.length}</strong> ocurrencias del mismo día y hora
+                  </p>
+                </div>
+              )}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                  <h3 className="font-semibold text-green-800">
+                    {mode === 'weekdayHour' ? 'Mejor Semana' : 'Mejor Día'}
+                  </h3>
+                  <p className="text-green-600">{stats.bestDay?.displayName}</p>
+                  <p className="text-2xl font-bold text-green-800">{formatCurrency(stats.best)}</p>
+                </div>
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <h3 className="font-semibold text-blue-800">Promedio</h3>
+                  <p className="text-2xl font-bold text-blue-800">{formatCurrency(stats.average)}</p>
+                  {mode === 'weekdayHour' && (
+                    <p className="text-xs text-blue-600 mt-1">
+                      Por {getWeekdayName(weekdayHourDay)} a las {weekdayHourHour.toString().padStart(2, '0')}:00
+                    </p>
+                  )}
+                </div>
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                  <h3 className="font-semibold text-red-800">
+                    {mode === 'weekdayHour' ? 'Peor Semana' : 'Peor Día'}
+                  </h3>
+                  <p className="text-red-600">{stats.worstDay?.displayName}</p>
+                  <p className="text-2xl font-bold text-red-800">{formatCurrency(stats.worst)}</p>
+                </div>
               </div>
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <h3 className="font-semibold text-blue-800">Promedio</h3>
-                <p className="text-2xl font-bold text-blue-800">{formatCurrency(stats.average)}</p>
-              </div>
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                <h3 className="font-semibold text-red-800">Peor Día</h3>
-                <p className="text-red-600">{stats.worstDay?.displayName}</p>
-                <p className="text-2xl font-bold text-red-800">{formatCurrency(stats.worst)}</p>
+            </div>
+          )}
+
+          {/* Visualization for Weekday-Hour Mode */}
+          {mode === 'weekdayHour' && comparisonData.length > 0 && (
+            <div className="mb-6">
+              <div className="bg-white rounded-lg border border-gray-200 p-6">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-lg font-semibold text-gray-800">
+                    Tendencia de Ventas por Semana
+                  </h3>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => {
+                        const chartMode = document.querySelector('[data-chart-mode]');
+                        if (chartMode) chartMode.setAttribute('data-chart-mode', 'line');
+                      }}
+                      className="px-3 py-1 text-sm bg-blue-100 text-blue-700 rounded hover:bg-blue-200"
+                    >
+                      Línea
+                    </button>
+                    <button
+                      onClick={() => {
+                        const chartMode = document.querySelector('[data-chart-mode]');
+                        if (chartMode) chartMode.setAttribute('data-chart-mode', 'bar');
+                      }}
+                      className="px-3 py-1 text-sm bg-blue-100 text-blue-700 rounded hover:bg-blue-200"
+                    >
+                      Barras
+                    </button>
+                  </div>
+                </div>
+                <WeekdayHourChart
+                  data={comparisonData}
+                  selectedMachines={selectedMachines}
+                  mode="line"
+                />
               </div>
             </div>
           )}
@@ -550,7 +793,7 @@ const SalesComparison: React.FC<SalesComparisonProps> = ({ className = '' }) => 
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Fecha
+                    {mode === 'weekdayHour' ? 'Fecha y Hora' : 'Fecha'}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Ventas Totales
@@ -565,12 +808,16 @@ const SalesComparison: React.FC<SalesComparisonProps> = ({ className = '' }) => 
                       Máquina 79
                     </th>
                   )}
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Hora Pico
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Monto Pico
-                  </th>
+                  {mode !== 'weekdayHour' && (
+                    <>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Hora Pico
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Monto Pico
+                      </th>
+                    </>
+                  )}
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -592,12 +839,16 @@ const SalesComparison: React.FC<SalesComparisonProps> = ({ className = '' }) => 
                         {formatCurrency(data.machine79)}
                       </td>
                     )}
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {data.peakAmount > 0 ? formatHour(data.peakHour) : 'Sin ventas'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {formatCurrency(data.peakAmount)}
-                    </td>
+                    {mode !== 'weekdayHour' && (
+                      <>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {data.peakAmount > 0 ? formatHour(data.peakHour) : 'Sin ventas'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {formatCurrency(data.peakAmount)}
+                        </td>
+                      </>
+                    )}
                   </tr>
                 ))}
               </tbody>

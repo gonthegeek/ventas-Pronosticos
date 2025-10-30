@@ -215,3 +215,99 @@ export const useBatchSalesData = () => {
     error,
   }
 }
+
+/**
+ * Hook for comparing sales at a specific hour on a specific weekday
+ * Example: Compare all Wednesdays at 21:00 for the last 8 weeks
+ */
+export const useCachedWeekdayHourComparison = (
+  dayOfWeek: number,
+  hour: number,
+  numberOfOccurrences: number
+) => {
+  const [data, setData] = useState<Array<{ date: string; displayName: string; hourData: HourlySalesData }>>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
+
+  const loadData = useCallback(async (forceRefresh = false) => {
+    try {
+      setLoading(true)
+      setError(null)
+      
+      const results = await CachedSalesService.getWeekdayHourlyComparison(
+        dayOfWeek,
+        hour,
+        numberOfOccurrences
+      )
+      
+      setData(results)
+      setLastUpdated(new Date())
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load weekday-hour comparison')
+    } finally {
+      setLoading(false)
+    }
+  }, [dayOfWeek, hour, numberOfOccurrences])
+
+  useEffect(() => {
+    loadData()
+  }, [loadData])
+
+  const refresh = useCallback(() => loadData(true), [loadData])
+
+  return {
+    data,
+    loading,
+    error,
+    lastUpdated,
+    refresh,
+  }
+}
+
+/**
+ * Hook for comparing full day patterns for a specific weekday
+ * Returns all 24 hours for each occurrence
+ */
+export const useCachedWeekdayFullComparison = (
+  dayOfWeek: number,
+  numberOfOccurrences: number
+) => {
+  const [data, setData] = useState<Array<{ date: string; displayName: string; hourlyData: HourlySalesData[] }>>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
+
+  const loadData = useCallback(async (forceRefresh = false) => {
+    try {
+      setLoading(true)
+      setError(null)
+      
+      const results = await CachedSalesService.getWeekdayFullComparison(
+        dayOfWeek,
+        numberOfOccurrences
+      )
+      
+      setData(results)
+      setLastUpdated(new Date())
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load weekday full comparison')
+    } finally {
+      setLoading(false)
+    }
+  }, [dayOfWeek, numberOfOccurrences])
+
+  useEffect(() => {
+    loadData()
+  }, [loadData])
+
+  const refresh = useCallback(() => loadData(true), [loadData])
+
+  return {
+    data,
+    loading,
+    error,
+    lastUpdated,
+    refresh,
+  }
+}

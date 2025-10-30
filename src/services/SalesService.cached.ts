@@ -597,6 +597,142 @@ export class CachedSalesService {
   }
 
   /**
+   * Get hourly sales for specific weekday and hour across multiple dates
+   * Example: Get all Wednesday 21:00 sales from last 8 weeks
+   */
+  static async getWeekdayHourlyComparison(
+    dayOfWeek: number, // 0 = Sunday, 1 = Monday, ... 6 = Saturday
+    hour: number, // 0-23
+    numberOfOccurrences: number
+  ): Promise<Array<{ date: string; displayName: string; hourData: HourlySalesData }>> {
+    const cacheKey = `weekday_hour_${dayOfWeek}_${hour}_${numberOfOccurrences}`
+    
+    // Try cache first
+    const cachedData = salesCache.get<Array<{ date: string; displayName: string; hourData: HourlySalesData }>>(cacheKey)
+    if (cachedData) {
+      return cachedData
+    }
+
+    try {
+      // Get the last N occurrences of the specified weekday
+      const dates: string[] = []
+      const today = new Date()
+      let currentDate = new Date(today)
+      
+      // Find the most recent occurrence of the specified day
+      while (currentDate.getDay() !== dayOfWeek) {
+        currentDate.setDate(currentDate.getDate() - 1)
+      }
+      
+      // Collect the last N occurrences
+      for (let i = 0; i < numberOfOccurrences; i++) {
+        const year = currentDate.getFullYear()
+        const month = String(currentDate.getMonth() + 1).padStart(2, '0')
+        const day = String(currentDate.getDate()).padStart(2, '0')
+        dates.push(`${year}-${month}-${day}`)
+        currentDate.setDate(currentDate.getDate() - 7)
+      }
+      
+      dates.reverse()
+
+      // Fetch hourly data for each date
+      const results = await Promise.all(
+        dates.map(async (date) => {
+          const hourlySales = await this.getHourlySalesForDate(date)
+          const hourData = hourlySales.find(h => h.hour === hour) || {
+            hour,
+            machine76: 0,
+            machine79: 0,
+            total: 0,
+            lastUpdated: new Date().toISOString(),
+          }
+
+          const dateObj = new Date(date + 'T12:00:00')
+          const dayName = dateObj.toLocaleDateString('es-ES', { weekday: 'short' })
+          const displayName = `${dayName} ${date}`
+
+          return {
+            date,
+            displayName,
+            hourData,
+          }
+        })
+      )
+
+      // Cache the results for 1 hour
+      salesCache.set(cacheKey, results, 60 * 60 * 1000)
+      
+      return results
+    } catch (error) {
+      return []
+    }
+  }
+
+  /**
+   * Get hourly sales comparison for a specific weekday across date range
+   * Returns all hours for each occurrence of the specified weekday
+   */
+  static async getWeekdayFullComparison(
+    dayOfWeek: number,
+    numberOfOccurrences: number
+  ): Promise<Array<{ date: string; displayName: string; hourlyData: HourlySalesData[] }>> {
+    const cacheKey = `weekday_full_${dayOfWeek}_${numberOfOccurrences}`
+    
+    // Try cache first
+    const cachedData = salesCache.get<Array<{ date: string; displayName: string; hourlyData: HourlySalesData[] }>>(cacheKey)
+    if (cachedData) {
+      return cachedData
+    }
+
+    try {
+      // Get the last N occurrences of the specified weekday
+      const dates: string[] = []
+      const today = new Date()
+      let currentDate = new Date(today)
+      
+      // Find the most recent occurrence of the specified day
+      while (currentDate.getDay() !== dayOfWeek) {
+        currentDate.setDate(currentDate.getDate() - 1)
+      }
+      
+      // Collect the last N occurrences
+      for (let i = 0; i < numberOfOccurrences; i++) {
+        const year = currentDate.getFullYear()
+        const month = String(currentDate.getMonth() + 1).padStart(2, '0')
+        const day = String(currentDate.getDate()).padStart(2, '0')
+        dates.push(`${year}-${month}-${day}`)
+        currentDate.setDate(currentDate.getDate() - 7)
+      }
+      
+      dates.reverse()
+
+      // Fetch full hourly data for each date
+      const results = await Promise.all(
+        dates.map(async (date) => {
+          const hourlySales = await this.getHourlySalesForDate(date)
+
+          const dateObj = new Date(date + 'T12:00:00')
+          const dayName = dateObj.toLocaleDateString('es-ES', { weekday: 'short' })
+          const displayName = `${dayName} ${date}`
+
+          return {
+            date,
+            displayName,
+            hourlyData: hourlySales,
+          }
+        })
+      )
+
+      // Cache the results for 30 minutes
+      salesCache.set(cacheKey, results, 30 * 60 * 1000)
+      
+      return results
+    } catch (error) {
+      return []
+    }
+  }
+
+  /**
    * Get cache statistics for monitoring
    */
   static getCacheStats(): {
