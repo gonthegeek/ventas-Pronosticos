@@ -12,7 +12,7 @@ Casa Pronósticos implements 10 core System Requirements Specifications (SRS) fo
 
 ## 🎯 SRS Implementation Status
 
-### ✅ **IMPLEMENTED (3 of 10)**
+### ✅ **IMPLEMENTED (6 of 10)**
 
 #### **SRS #1: Ventas por hora** ✅
 - **Status**: Complete Implementation
@@ -235,7 +235,56 @@ interface PaidPrizeEntry {
 
 #### **SRS #4: Ventas diarias y semanales** ⭐ ✅
 
-### 🔄 **PENDING (5 of 9)**
+#### **SRS #6: Promedio por boleto** ✅
+- **Status**: Complete Implementation
+- **Module**: `src/modules/finances/TicketAverages.tsx`
+- **Service**: `src/services/TicketAveragesService.ts` + `src/services/TicketAveragesService.cached.ts`
+- **Hook**: `src/hooks/useCachedTicketAverages.ts`
+- **Route**: `/finances/ticket-averages`
+- **Collection**: `data/ticketAverages/{year}/{month}/entries/{id}`
+- **Cache Strategy**: 1-2hr adaptive TTL (current month 1h, historical 2h)
+- **Purpose**: Calculate average spending per ticket by combining SRS #1 and SRS #5 data
+- **Dashboard Integration**: Quick action link with calculator icon
+
+**Fields**:
+```typescript
+interface TicketAverageEntry {
+  id?: string
+  date: string            // YYYY-MM-DD
+  week: string            // YYYY-Www format (auto-calculated)
+  machineId: '76' | '79'
+  ticketsSold: number     // From SRS #5
+  totalSale: number       // From SRS #1
+  averagePerTicket: number // Calculated: totalSale / ticketsSold
+  operatorId: string
+  notes?: string
+  timestamp: Date
+  createdAt: Date
+  updatedAt?: Date
+}
+```
+
+**Features**:
+- ✅ Automatic daily average calculations from sales and tickets data
+- ✅ Monthly statistics with machine breakdown (76/79)
+- ✅ Best/worst day identification based on averages
+- ✅ Month picker with navigation (current/previous/next)
+- ✅ Summary cards: overall average, machine averages, best day
+- ✅ Trend chart visualization (line chart with Recharts)
+- ✅ Detailed table showing daily breakdown by machine
+- ✅ CSV export functionality with full daily data
+- ✅ Intelligent caching with adaptive TTL
+- ✅ Dashboard integration with quick action link
+- ✅ Role-based access (Supervisor+ only)
+
+**Calculation Logic**:
+- Fetches tickets sold from SRS #5 (TicketsService)
+- Fetches daily sales from SRS #1 (SalesService)
+- Groups by date and machine
+- Calculates: `averagePerTicket = totalSale / ticketsSold` (2 decimal precision)
+- Aggregates weekly and monthly statistics
+
+### 🔄 **PENDING (4 of 10)**
 
 #### **SRS #10: Comparación de ventas por hora cross-semana** 🆕
 - **Status**: Planned Enhancement to SRS #4
@@ -350,8 +399,6 @@ interface RollChangesData {
 - Change frequency analysis
 - Operator tracking
 - Role-based access (Operador+)
-
-#### **SRS #5: Boletos vendidos** ✅
 - **Status**: Complete Implementation + Advanced Comparison Features
 - **Module**: `src/modules/finances/Tickets.tsx`
 - **Comparison Module**: `src/modules/finances/TicketsComparison.tsx`
@@ -439,37 +486,6 @@ interface TicketEntry {
 'ticketsComparison_showChart': 'true' | 'false'
 'ticketsComparison_showTable': 'true' | 'false'
 ```
-
-#### **SRS #6: Promedio por boleto**
-- **Status**: Not Started
-- **Target Module**: `src/modules/finances/TicketAverages.tsx`
-- **Collection**: `data/ticketAverages/{year}/{month}/{averageId}`
-- **Cache Strategy**: 2hr TTL, calculated metrics
-- **Purpose**: Calculate average spending per ticket with trend analysis
-
-**Fields**:
-```typescript
-interface TicketAveragesData {
-  id?: string
-  week: string            // YYYY-Www format
-  date: string            // YYYY-MM-DD
-  machineId: '76' | '79'
-  ticketsSold: number     // From SRS #5
-  totalSale: number       // From SRS #1
-  averagePerTicket: number // Calculated: totalSale / ticketsSold
-  operatorId: string
-  timestamp: Date
-  createdAt: Date
-}
-```
-
-**Features**:
-- Automatic average calculations
-- Trend analysis over time
-- Machine comparison metrics
-- Performance insights
-- Export functionality
-- Role-based access (Supervisor+)
 
 #### **SRS #7: Raspados premiados**
 - **Status**: Not Started
@@ -733,10 +749,10 @@ Each SRS contributes specific KPIs to the main dashboard:
 1. ✅ **SRS #2 (Comisiones mensuales)** - Financial tracking implemented
 2. ✅ **SRS #8 (Boletos premiados pagados)** - Prize tracking implemented
 3. ✅ **SRS #5 (Boletos vendidos)** - Complete with advanced comparison features
+4. ✅ **SRS #6 (Promedio por boleto)** - Average ticket calculations implemented
 
 ### **Phase 3: Advanced Features**
-4. **SRS #10 (Mismo Día y Hora Comparison)** - Next: Enhancement to SRS #4 for hourly weekday pattern analysis with date ranges
-5. **SRS #6 (Promedio por boleto)** - Depends on SRS #5 (now available)
+5. **SRS #10 (Mismo Día y Hora Comparison)** - Next: Enhancement to SRS #4 for hourly weekday pattern analysis with date ranges
 6. **SRS #7 (Raspados premiados)** - Lottery management
 7. **SRS #9 (Primeros lugares)** - Jackpot management
 8. **SRS #3 (Cambio de rollo)** - Operational necessity
@@ -782,9 +798,9 @@ For each new SRS implementation:
 
 ---
 
-**SRS Status**: 5 of 10 Complete (50%) + 1 Enhancement Planned  
-**Completed**: SRS #1 (Ventas), #2 (Comisiones), #4 (Comparación), #5 (Boletos), #8 (Premiados)  
-**Next Implementation**: SRS #6 (Promedio por boleto) - Now ready with SRS #5 data available  
-**New Enhancement**: SRS #10 (Hourly Cross-Week Comparison) - Extension to SRS #4 for hourly weekday pattern analysis  
+**SRS Status**: 6 of 10 Complete (60%) + 1 Enhancement Planned  
+**Completed**: SRS #1 (Ventas), #2 (Comisiones), #4 (Comparación), #5 (Boletos), #6 (Promedio), #8 (Premiados)  
+**Next Implementation**: SRS #3 (Cambio de rollo) or SRS #7 (Raspados premiados)  
+**Planned Enhancement**: SRS #10 (Mismo Día y Hora Comparison) - Extension to SRS #4  
 **Reference**: Established patterns for hierarchical data, caching, permissions, and advanced comparisons  
 **Last Updated**: November 2, 2025

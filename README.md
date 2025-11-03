@@ -6,13 +6,13 @@
 
 Casa Pronósticos is a comprehensive sales and lottery management system for analyzing data from lottery machines. The system has been successfully migrated from legacy SPA to modern React architecture with intelligent caching to optimize Firebase usage and stay within free tier limits.
 
-**Current Status**: Phase 2 Complete (56% - 5 of 9 SRS Complete + 1 Enhancement Planned)
+**Current Status**: Phase 2 Complete (60% - 6 of 9 SRS Complete + 1 Enhancement Planned)
 
 ### ✅ **Key Achievements**
 
 - ✅ **Complete React Migration**: Modern React 18 + TypeScript architecture
 - ✅ **Intelligent Cache System**: 85-95% hit rate, 75-90% Firebase reduction
-- ✅ **5 SRS Implemented**: Hourly Sales, Commissions, Sales Comparison, Tickets, Paid Prizes
+- ✅ **6 SRS Implemented**: Hourly Sales, Commissions, Sales Comparison, Tickets, Ticket Averages, Paid Prizes
 - ✅ **Role-Based Security**: Granular permissions (Operador/Supervisor/Admin)
 - ✅ **Admin Panel**: User management, cache monitoring, data migration tools
 - ✅ **Firebase Optimization**: <10,000 reads/day (down from 500-1000/day)
@@ -58,7 +58,7 @@ The dashboard (`src/modules/dashboard/Dashboard.tsx`) provides a comprehensive o
 
 ## 📊 SRS (System Requirements Specification) - 10 Functionalities (9 Core + 1 Enhancement)
 
-### ✅ **IMPLEMENTED** (5 of 9 Core Complete)
+### ✅ **IMPLEMENTED** (6 of 9 Core Complete)
 
 #### **SRS #1: Ventas por hora** 
 - **Module**: `src/modules/sales/HourlySales.tsx`
@@ -91,6 +91,15 @@ The dashboard (`src/modules/dashboard/Dashboard.tsx`) provides a comprehensive o
 - **Fields**: date, week (ISO), machineId ('76'|'79'), ticketsDay, ticketsTotal, notes, operatorId, timestamp
 - **Access**: Operador+ can create/read, Supervisor+ can update/delete
 
+#### **SRS #6: Promedio por boleto** 
+- **Module**: `src/modules/finances/TicketAverages.tsx`
+- **Route**: `/finances/ticket-averages`
+- **Collection**: `data/ticketAverages/{year}/{month}/entries/{id}`
+- **Features**: Automatic daily averages combining SRS #1 and #5, monthly stats, trend charts, machine breakdown, CSV export
+- **Fields**: date, week (ISO), machineId ('76'|'79'), ticketsSold, totalSale, averagePerTicket (calculated), notes, operatorId
+- **Access**: Supervisor and Admin only
+- **Note**: *Calculates average spending per ticket by combining sales and tickets data*
+
 #### **SRS #8: Boletos premiados pagados** 
 - **Module**: `src/modules/finances/PaidPrizes.tsx`
 - **Route**: `/finances/paid-prizes`
@@ -109,10 +118,9 @@ The dashboard (`src/modules/dashboard/Dashboard.tsx`) provides a comprehensive o
 - **UI**: Hour selector, weekday selector, date range picker, line/bar charts, quick selections
 - **Use Cases**: Monday trends, Friday peaks, weekend patterns, seasonal analysis, promotional effectiveness
 
-### 🔄 **PENDING** (4 of 9 Core)
+### 🔄 **PENDING** (3 of 9 Core)
 
 #### **SRS #3: Cambio de rollo** - Paper roll change event logging  
-#### **SRS #6: Promedio por boleto** - Average spending per ticket (depends on SRS #5, now ready)
 #### **SRS #7: Raspados premiados** - Scratch lottery prize tracking
 #### **SRS #9: Primeros lugares de sorteos** - First place winner tracking
 
@@ -159,8 +167,8 @@ Firestore Collections:
 ├── /data/commissions/{year}/{month}/entries # ✅ SRS #2 - Monthly commissions
 ├── /data/paidPrizes/{year}/{month}/entries # ✅ SRS #8 - Paid prizes
 ├── /data/rollChanges/{year}/{month}   # 🔄 SRS #3 - Roll changes
-├── /data/tickets/{year}/{month}       # ✅ SRS #5 - Tickets sold
-├── /data/ticketAverages/{year}/{month} # 🔄 SRS #6 - Ticket averages
+├── /data/tickets/{year}/{month}/entries # ✅ SRS #5 - Tickets sold
+├── /data/ticketAverages/{year}/{month}/entries # ✅ SRS #6 - Ticket averages
 ├── /data/scratches/{year}/{month}     # 🔄 SRS #7 - Scratch prizes
 ├── /data/paidPrizes/{year}/{month}    # ✅ SRS #8 - Paid prizes
 └── /data/firstPlaces/{year}/{month}   # 🔄 SRS #9 - First places
@@ -345,14 +353,15 @@ firebase deploy --only hosting
 - [x] Admin panel with user management and cache monitoring
 - [x] Responsive UI with TailwindCSS and mobile support
 
-### 🔄 **Phase 2: Core Business Functions (NEXT - 2.5 weeks)**
-- [ ] SRS #2: Monthly commission tracking
-- [ ] SRS #8: Paid prize tracking with reconciliation
-- [ ] SRS #5: Ticket sales tracking with calculations
-- [ ] Reusable components (FormBuilder, DataTable, ChartWrapper)
+### ✅ **Phase 2: Core Business Functions (COMPLETED)**
+- [x] SRS #2: Monthly commission tracking ✅
+- [x] SRS #8: Paid prize tracking with reconciliation ✅
+- [x] SRS #5: Ticket sales tracking with advanced comparisons ✅
+- [x] SRS #6: Average per ticket calculations ✅
+- [x] Reusable components and chart visualizations ✅
 
-### 🔄 **Phase 3: Advanced Features (2 weeks)**
-- [ ] SRS #6: Automatic average calculations
+### 🔄 **Phase 3: Advanced Features (NEXT - 2 weeks)**
+- [ ] SRS #10: Mismo Día y Hora comparison (enhancement to SRS #4)
 - [ ] SRS #7: Scratch lottery prize tracking
 - [ ] SRS #9: First place winner and jackpot management
 - [ ] SRS #3: Paper roll change event logging
@@ -363,7 +372,7 @@ firebase deploy --only hosting
 - [ ] CI/CD pipeline optimization
 - [ ] User documentation and training materials
 
-*Current Progress: **56% Complete** (Phases 1-2 Complete, 5 of 9 core SRS + 1 enhancement planned)*
+*Current Progress: **60% Complete** (Phases 1-2 Complete, 6 of 9 core SRS + 1 enhancement planned)*
 
 ## 📈 Performance Metrics
 
@@ -453,7 +462,7 @@ firebase deploy --only hosting
 
 ---
 
-**Migration Status**: 🟢 **Phase 1 Complete** | 🟡 **Phase 2 Next** | 🔴 **Phases 3-4 Planned**
+**Migration Status**: 🟢 **Phase 1 Complete** | � **Phase 2 Complete** | �🟡 **Phase 3 Next** | 🔴 **Phase 4 Planned**
 
 **Performance**: 🟢 **85-95% Cache Hit Rate** | 🟢 **<10k Firebase Reads/Day** | 🟢 **<2s Load Times**
 
