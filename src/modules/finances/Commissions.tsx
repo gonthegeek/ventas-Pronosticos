@@ -409,8 +409,13 @@ const Commissions: React.FC = () => {
                       
                       const best = Math.max(...validTotals)
                       const worst = Math.min(...validTotals)
-                      const avg = totals.reduce((a, b) => a + b, 0) / (totals.length || 1)
                       const annualTotal = totals.reduce((a, b) => a + b, 0)
+                      
+                      // Calculate average based on months elapsed if current year, otherwise use all 12 months
+                      const isCurrentYear = compareYear === nowMexico.getFullYear()
+                      const monthsElapsed = isCurrentYear ? (nowMexico.getMonth() + 1) : 12
+                      const avg = annualTotal / monthsElapsed
+                      
                       const bestMonth = Object.keys(compareData)[totals.indexOf(best)]
                       const worstMonth = Object.keys(compareData)[totals.indexOf(worst)]
                       
@@ -431,9 +436,9 @@ const Commissions: React.FC = () => {
                           <div className="text-xs text-red-600 mt-1">{new Date(worstMonth + '-01').toLocaleString('es-MX', { month: 'long', year: 'numeric' })}</div>
                         </div>,
                         <div key="avg" className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                          <div className="text-sm font-semibold text-blue-700 mb-1">📊 Promedio Anual</div>
+                          <div className="text-sm font-semibold text-blue-700 mb-1">📊 Promedio Mensual</div>
                           <div className="text-lg font-bold text-blue-900">{numberFmt(avg)}</div>
-                          <div className="text-xs text-blue-600 mt-1">Basado en {totals.length} meses</div>
+                          <div className="text-xs text-blue-600 mt-1">Basado en {monthsElapsed} {monthsElapsed === 1 ? 'mes' : 'meses'}</div>
                         </div>
                       ]
                     })()}
