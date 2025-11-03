@@ -461,9 +461,9 @@ const Dashboard: React.FC = () => {
                     {ticketsLoading ? (
                       <span className="text-gray-500">Cargando...</span>
                     ) : (
-                      <Link to="/finances/tickets" className="text-cyan-600 hover:text-cyan-700">
+                      <span className="text-cyan-600">
                         {(ticketsStats?.totalTickets || 0).toLocaleString()}
-                      </Link>
+                      </span>
                     )}
                   </dd>
                 </dl>
@@ -490,9 +490,9 @@ const Dashboard: React.FC = () => {
                     {annualTicketsLoading ? (
                       <span className="text-gray-500">Cargando...</span>
                     ) : (
-                      <Link to="/finances/tickets" className="text-teal-600 hover:text-teal-700">
+                      <span className="text-teal-600">
                         {annualTicketsTotal.toLocaleString()}
-                      </Link>
+                      </span>
                     )}
                   </dd>
                 </dl>
