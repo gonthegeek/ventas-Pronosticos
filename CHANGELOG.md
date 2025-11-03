@@ -26,6 +26,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Weekly summary clarification: totals only include days within selected month
   - Modal date defaulting: uses selected month's first day instead of today's date
   - Improved user experience when adding entries to historical months
+- **Commissions Insights - Improved Calculations**
+  - Dashboard commission totals now use Tira (paperTotal) instead of LN (systemTotal)
+  - Commissions page comparative analysis insights now use Tira values
+  - Monthly average calculation now adapts to elapsed months (current year only)
+  - Updated label from "Promedio Anual" to "Promedio Mensual" for accuracy
+  - For current year: average divides by months elapsed (1-11 in November)
+  - For past years: average continues to use all 12 months
 
 ---
 

@@ -152,7 +152,7 @@
 - ✅ Automatic difference calculation with color coding
 - ✅ Month picker with quick navigation (current/previous/next)
 - ✅ Year-over-year comparison table (all 12 months)
-- ✅ Insights cards (best/worst/average month)
+- ✅ Insights cards (best/worst month, monthly average based on elapsed months)
 - ✅ Auto-refresh comparison on data changes
 - ✅ CSV export functionality
 - ✅ Dashboard integration (monthly and annual totals)
