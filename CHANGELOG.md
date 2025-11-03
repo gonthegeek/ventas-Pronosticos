@@ -19,6 +19,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - CSV export for all comparison modes
   - Route: `/finances/tickets/comparison` with navigation integration
 
+### Fixed
+- **Timezone Consistency Across Application**
+  - Fixed x-axis labels showing incorrect day in comparison charts
+  - Charts now correctly parse dates in Mexico City timezone to prevent day shift
+  - Date inputs and selectors now use Mexico City timezone consistently
+  - Modal date defaults now respect Mexico City timezone
+  - Quick date selections (today, yesterday, last 7 days, etc.) now use Mexico timezone
+  - Added utility functions: `getTodayInMexico()`, `getYesterdayInMexico()`, `getCurrentYearMonthInMexico()`, `formatDateInMexico()`
+  - Affected components: SalesComparisonChart, TicketsComparisonChart, WeekdayHourChart, SalesComparison, PaidPrizes, Tickets, TicketsComparison, Commissions
+  - All date operations now consistently use America/Mexico_City timezone
+
 ### Changed
 - Enhanced dashboard with paid prizes insights (monthly and annual)
 - Updated documentation with dashboard KPI details

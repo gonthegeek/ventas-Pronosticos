@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { SalesService } from '../../services/SalesService';
 import { HourlySalesData } from '../../state/slices/salesSlice';
-import { formatCurrency } from '../../utils/timezone';
+import { formatCurrency, getTodayInMexico, formatDateInMexico } from '../../utils/timezone';
 import LoadingSpinner from '../ui/LoadingSpinner';
 import SalesComparisonChart from './SalesComparisonChart';
 import Card from '../ui/Card';
@@ -92,7 +92,7 @@ const SalesComparison: React.FC<SalesComparisonProps> = ({ className = '' }) => 
       for (let i = 0; i < 7; i++) {
         const date = new Date(lastWeek);
         date.setDate(lastWeek.getDate() + i);
-        dates.push(date.toISOString().split('T')[0]);
+        dates.push(formatDateInMexico(date));
       }
       setSelectedDates(dates);
     }
@@ -100,12 +100,12 @@ const SalesComparison: React.FC<SalesComparisonProps> = ({ className = '' }) => 
 
   const generateDateRange = (start: string, end: string): string[] => {
     const dates: string[] = [];
-    const startDate = new Date(start);
-    const endDate = new Date(end);
+    const startDate = new Date(start + 'T12:00:00');
+    const endDate = new Date(end + 'T12:00:00');
     
     const currentDate = new Date(startDate);
     while (currentDate <= endDate) {
-      dates.push(currentDate.toISOString().split('T')[0]);
+      dates.push(formatDateInMexico(currentDate));
       currentDate.setDate(currentDate.getDate() + 1);
     }
     
@@ -145,11 +145,8 @@ const SalesComparison: React.FC<SalesComparisonProps> = ({ className = '' }) => 
     
     // Collect the last N occurrences
     for (let i = 0; i < count; i++) {
-      // Use local date formatting to avoid timezone conversion issues
-      const year = currentDate.getFullYear();
-      const month = String(currentDate.getMonth() + 1).padStart(2, '0');
-      const day = String(currentDate.getDate()).padStart(2, '0');
-      dates.push(`${year}-${month}-${day}`);
+      // Use Mexico timezone formatting
+      dates.push(formatDateInMexico(currentDate));
       currentDate.setDate(currentDate.getDate() - 7);
     }
     
@@ -159,16 +156,20 @@ const SalesComparison: React.FC<SalesComparisonProps> = ({ className = '' }) => 
   const handleQuickSelection = (type: string) => {
     switch (type) {
       case 'last7Days':
+        const last7Days = new Date();
+        last7Days.setDate(last7Days.getDate() - 6);
         const last7 = generateDateRange(
-          new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-          new Date().toISOString().split('T')[0]
+          formatDateInMexico(last7Days),
+          getTodayInMexico()
         );
         setSelectedDates(last7);
         break;
       case 'last14Days':
+        const last14Days = new Date();
+        last14Days.setDate(last14Days.getDate() - 13);
         const last14 = generateDateRange(
-          new Date(Date.now() - 13 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-          new Date().toISOString().split('T')[0]
+          formatDateInMexico(last14Days),
+          getTodayInMexico()
         );
         setSelectedDates(last14);
         break;
@@ -176,8 +177,8 @@ const SalesComparison: React.FC<SalesComparisonProps> = ({ className = '' }) => 
         const todayThisMonth = new Date();
         const firstDay = new Date(todayThisMonth.getFullYear(), todayThisMonth.getMonth(), 1);
         const thisMonth = generateDateRange(
-          firstDay.toISOString().split('T')[0],
-          todayThisMonth.toISOString().split('T')[0]
+          formatDateInMexico(firstDay),
+          getTodayInMexico()
         );
         setSelectedDates(thisMonth);
         break;
@@ -186,8 +187,8 @@ const SalesComparison: React.FC<SalesComparisonProps> = ({ className = '' }) => 
         const lastMonth = new Date(nowLastMonth.getFullYear(), nowLastMonth.getMonth() - 1, 1);
         const lastMonthEnd = new Date(nowLastMonth.getFullYear(), nowLastMonth.getMonth(), 0);
         const lastMonthDates = generateDateRange(
-          lastMonth.toISOString().split('T')[0],
-          lastMonthEnd.toISOString().split('T')[0]
+          formatDateInMexico(lastMonth),
+          formatDateInMexico(lastMonthEnd)
         );
         setSelectedDates(lastMonthDates);
         break;
@@ -197,15 +198,15 @@ const SalesComparison: React.FC<SalesComparisonProps> = ({ className = '' }) => 
         for (let i = 11; i >= 0; i--) {
           const monthDate = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
           // Take first day of each month for comparison
-          last12MonthsDates.push(monthDate.toISOString().split('T')[0]);
+          last12MonthsDates.push(formatDateInMexico(monthDate));
         }
         setSelectedDates(last12MonthsDates);
         break;
       case 'yearToDate':
         const yearStart = new Date(new Date().getFullYear(), 0, 1);
         const yearToDateRange = generateDateRange(
-          yearStart.toISOString().split('T')[0],
-          new Date().toISOString().split('T')[0]
+          formatDateInMexico(yearStart),
+          getTodayInMexico()
         );
         setSelectedDates(yearToDateRange);
         break;
@@ -310,12 +311,9 @@ const SalesComparison: React.FC<SalesComparisonProps> = ({ className = '' }) => 
         currentDate.setDate(currentDate.getDate() - 1);
       }
       
-      // Collect the last N occurrences
+      // Collect the last N occurrences using Mexico timezone
       for (let i = 0; i < weekdayHourCount; i++) {
-        const year = currentDate.getFullYear();
-        const month = String(currentDate.getMonth() + 1).padStart(2, '0');
-        const day = String(currentDate.getDate()).padStart(2, '0');
-        dates.push(`${year}-${month}-${day}`);
+        dates.push(formatDateInMexico(currentDate));
         currentDate.setDate(currentDate.getDate() - 7);
       }
       

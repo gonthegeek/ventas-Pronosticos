@@ -20,10 +20,9 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts'
-import { formatCurrency } from '../../utils/timezone'
+import { formatCurrency, getCurrentYearMonthInMexico } from '../../utils/timezone'
 
-const nowMexico = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Mexico_City' }))
-const defaultYearMonth = `${nowMexico.getFullYear()}-${String(nowMexico.getMonth() + 1).padStart(2, '0')}`
+const defaultYearMonth = getCurrentYearMonthInMexico()
 
 const numberFmt = (n: number) => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 0 }).format(n || 0)
 
@@ -35,6 +34,7 @@ const Commissions: React.FC = () => {
   const { data, loading, error, refresh, create, update, remove } = useCachedMonthlyCommissions(yearMonth)
 
   // --- Comparison Table State ---
+  const nowMexico = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Mexico_City' }))
   const thisYear = nowMexico.getFullYear()
   const [compareYear, setCompareYear] = useState<number>(thisYear)
   const [compareData, setCompareData] = useState<{ [month: string]: CommissionEntry[] }>({})

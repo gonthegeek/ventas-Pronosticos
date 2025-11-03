@@ -8,9 +8,9 @@ import LoadingSpinner from '../../components/ui/LoadingSpinner'
 import { useCachedMonthlyPaidPrizes } from '../../hooks/useCachedPaidPrizes'
 import { PaidPrizeEntry } from '../../services/PaidPrizesService'
 import { useAppSelector } from '../../state/hooks'
+import { getCurrentYearMonthInMexico, getTodayInMexico } from '../../utils/timezone'
 
-const nowMexico = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Mexico_City' }))
-const defaultYearMonth = `${nowMexico.getFullYear()}-${String(nowMexico.getMonth() + 1).padStart(2, '0')}`
+const defaultYearMonth = getCurrentYearMonthInMexico()
 
 const numberFmt = (n: number) => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 0 }).format(n || 0)
 
@@ -212,8 +212,7 @@ const PaidPrizes: React.FC = () => {
   }
 
   const getMexicoYearMonth = () => {
-    const now = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Mexico_City' }))
-    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+    return getCurrentYearMonthInMexico()
   }
 
   const getPrevYearMonth = (ym: string) => {
@@ -511,7 +510,7 @@ const PaidPrizes: React.FC = () => {
               onChange={(e) => handleDateChange(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
-              max={new Date().toISOString().split('T')[0]}
+              max={getTodayInMexico()}
             />
           </div>
 

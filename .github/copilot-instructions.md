@@ -43,6 +43,7 @@ This app is a React 18 + TypeScript + Firebase (Auth/Firestore) system with a st
 - All dates/times must be created/read in `America/Mexico_City` (`utils/timezone.ts`). Never store client-local times.
 - Keep Firestore reads minimal: narrow by year/month/day collections; lean on cache and avoid N+1 queries.
 - Reuse shared UI and Export tools in `components/sales/ExportTools.tsx` for CSV/print.
+- **CHANGELOG.md**: Always add new entries at the top under `[Unreleased]` section. Never modify historical entries—follow [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) conventions.
 
 ## Key files/directories to know
 - Services: `src/services/{firebase.ts, SalesService.ts, TicketsService.ts, CommissionsService.ts, PaidPrizesService.ts, CacheService.ts}` (+ their `.cached.ts` versions)

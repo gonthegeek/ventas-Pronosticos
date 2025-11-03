@@ -10,9 +10,9 @@ import { useCachedMonthlyTickets, useCachedMonthlyTicketStats } from '../../hook
 import TicketsService from '../../services/TicketsService'
 import { TicketEntry } from '../../services/TicketsService'
 import { useAppSelector } from '../../state/hooks'
+import { getCurrentYearMonthInMexico, getTodayInMexico } from '../../utils/timezone'
 
-const nowMexico = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Mexico_City' }))
-const defaultYearMonth = `${nowMexico.getFullYear()}-${String(nowMexico.getMonth() + 1).padStart(2, '0')}`
+const defaultYearMonth = getCurrentYearMonthInMexico()
 
 const numberFmt = (n: number) => new Intl.NumberFormat('es-MX', { maximumFractionDigits: 0 }).format(n || 0)
 
@@ -33,7 +33,7 @@ const Tickets: React.FC = () => {
     ticketsDay: string
     notes: string 
   }>({ 
-    date: nowMexico.toISOString().split('T')[0],
+    date: getTodayInMexico(),
     machineId: '76', 
     ticketsDay: '', 
     notes: '' 
@@ -106,7 +106,7 @@ const Tickets: React.FC = () => {
       setModalOpen(false)
       setEditing(null)
       setForm({ 
-        date: nowMexico.toISOString().split('T')[0],
+        date: getTodayInMexico(),
         machineId: '76', 
         ticketsDay: '', 
         notes: '' 
@@ -260,7 +260,7 @@ const Tickets: React.FC = () => {
                     let defaultDate: string
                     if (isCurrentMonth) {
                       // Current month: use today's date
-                      defaultDate = nowMexico.toISOString().split('T')[0]
+                      defaultDate = getTodayInMexico()
                     } else {
                       // Past/future month: use first day of that month
                       defaultDate = `${yearMonth}-01`
@@ -531,7 +531,7 @@ const Tickets: React.FC = () => {
               value={form.date}
               onChange={(e) => setForm({ ...form, date: e.target.value })}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              max={nowMexico.toISOString().split('T')[0]}
+              max={getTodayInMexico()}
             />
           </div>
 

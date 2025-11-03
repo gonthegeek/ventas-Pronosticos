@@ -82,3 +82,37 @@ export function formatCurrency(amount: number): string {
     maximumFractionDigits: 2,
   }).format(amount);
 }
+
+/**
+ * Get today's date in Mexico City timezone in YYYY-MM-DD format
+ * Use this for date inputs and comparisons to ensure timezone consistency
+ */
+export function getTodayInMexico(): string {
+  return new Date().toLocaleDateString('en-CA', { timeZone: 'America/Mexico_City' });
+}
+
+/**
+ * Get yesterday's date in Mexico City timezone in YYYY-MM-DD format
+ */
+export function getYesterdayInMexico(): string {
+  const date = new Date();
+  date.setDate(date.getDate() - 1);
+  return date.toLocaleDateString('en-CA', { timeZone: 'America/Mexico_City' });
+}
+
+/**
+ * Get current year-month in Mexico City timezone in YYYY-MM format
+ */
+export function getCurrentYearMonthInMexico(): string {
+  const now = new Date().toLocaleString('en-US', { timeZone: 'America/Mexico_City' });
+  const mexicoDate = new Date(now);
+  return `${mexicoDate.getFullYear()}-${String(mexicoDate.getMonth() + 1).padStart(2, '0')}`;
+}
+
+/**
+ * Format a Date object to YYYY-MM-DD string in Mexico timezone
+ */
+export function formatDateInMexico(date: Date): string {
+  return date.toLocaleDateString('en-CA', { timeZone: 'America/Mexico_City' });
+}
+

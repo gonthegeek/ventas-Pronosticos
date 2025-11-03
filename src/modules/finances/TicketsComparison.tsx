@@ -7,6 +7,7 @@ import TicketsComparisonChart from '../../components/sales/TicketsComparisonChar
 import Card from '../../components/ui/Card';
 import { useHasPermission } from '../../hooks/usePermissions';
 import { PERMISSIONS } from '../../utils/permissions';
+import { formatDateInMexico } from '../../utils/timezone';
 
 interface ComparisonData {
   date: string;
@@ -84,12 +85,12 @@ const TicketsComparison: React.FC = () => {
 
   const generateDateRange = (start: string, end: string): string[] => {
     const dates: string[] = [];
-    const startDate = new Date(start);
-    const endDate = new Date(end);
+    const startDate = new Date(start + 'T12:00:00');
+    const endDate = new Date(end + 'T12:00:00');
     
     const currentDate = new Date(startDate);
     while (currentDate <= endDate) {
-      dates.push(currentDate.toISOString().split('T')[0]);
+      dates.push(formatDateInMexico(currentDate));
       currentDate.setDate(currentDate.getDate() + 1);
     }
     
@@ -333,8 +334,8 @@ const TicketsComparison: React.FC = () => {
         return;
     }
     
-    setStartDate(start.toISOString().split('T')[0]);
-    setEndDate(end.toISOString().split('T')[0]);
+    setStartDate(formatDateInMexico(start));
+    setEndDate(formatDateInMexico(end));
   };
 
   const toggleMachine = (machine: string) => {

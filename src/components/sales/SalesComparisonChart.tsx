@@ -36,15 +36,16 @@ const SalesComparisonChart: React.FC<SalesComparisonChartProps> = ({
     let shortName: string;
     if (data.length <= 7) {
       // For 7 or fewer items, show day name (e.g., "Lun", "Mar")
-      const date = new Date(item.date);
+      // Parse date in Mexico City timezone to avoid day shift
+      const date = new Date(item.date + 'T12:00:00');
       shortName = date.toLocaleDateString('es-ES', { weekday: 'short' });
     } else if (data.length <= 31) {
       // For up to a month, show day number (e.g., "1", "15", "31")
-      const date = new Date(item.date);
+      const date = new Date(item.date + 'T12:00:00');
       shortName = date.getDate().toString();
     } else {
       // For longer periods, show abbreviated date (e.g., "Sep 1", "Oct 15")
-      const date = new Date(item.date);
+      const date = new Date(item.date + 'T12:00:00');
       shortName = date.toLocaleDateString('es-ES', { month: 'short', day: 'numeric' });
     }
 
