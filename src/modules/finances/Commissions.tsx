@@ -402,7 +402,8 @@ const Commissions: React.FC = () => {
                   <div className="mb-6 grid grid-cols-1 md:grid-cols-4 gap-4">
                     {(() => {
                       const months = Object.values(compareData)
-                      const totals = months.map(entries => entries.reduce((s, e) => s + (e.systemTotal || 0), 0))
+                      // Use paperTotal (Tira) instead of systemTotal (LN) for insights
+                      const totals = months.map(entries => entries.reduce((s, e) => s + (e.paperTotal || 0), 0))
                       const validTotals = totals.filter(t => t > 0)
                       if (validTotals.length === 0) return null
                       

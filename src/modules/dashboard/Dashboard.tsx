@@ -38,9 +38,9 @@ const Dashboard: React.FC = () => {
   // Get current month tickets stats
   const { stats: ticketsStats, loading: ticketsLoading } = useCachedMonthlyTicketStats(currentYearMonth)
   
-  // Calculate monthly commission total
+  // Calculate monthly commission total from Tira (paperTotal) instead of LN (systemTotal)
   const monthlyCommissionTotal = React.useMemo(() => {
-    return commissionsData.reduce((sum, entry) => sum + (entry.systemTotal || 0), 0)
+    return commissionsData.reduce((sum, entry) => sum + (entry.paperTotal || 0), 0)
   }, [commissionsData])
   
   // Get annual commissions total
@@ -54,10 +54,10 @@ const Dashboard: React.FC = () => {
         const currentYear = nowMexico.getFullYear()
         let yearTotal = 0
         
-        // Fetch all 12 months
+        // Fetch all 12 months - using Tira (paperTotal) instead of LN (systemTotal)
         for (let month = 1; month <= 12; month++) {
           const monthData = await CommissionsService.list(currentYear, month)
-          const monthTotal = monthData.reduce((sum, entry) => sum + (entry.systemTotal || 0), 0)
+          const monthTotal = monthData.reduce((sum, entry) => sum + (entry.paperTotal || 0), 0)
           yearTotal += monthTotal
         }
         
