@@ -143,6 +143,12 @@ service cloud.firestore {
       allow update, delete: if isSupervisorOrAdmin();
     }
     
+    // Ticket averages data - hierarchical structure: data/ticketAverages/{year}/{month}/entries/{id}
+    match /data/ticketAverages/{document=**} {
+      allow read: if isSupervisorOrAdmin();
+      allow write: if isSupervisorOrAdmin();
+    }
+    
     // Inventory data
     match /inventory/{document=**} {
       allow read: if isAuthorizedUser();

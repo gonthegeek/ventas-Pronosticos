@@ -210,9 +210,16 @@
     {
       "id": 6,
       "name": "Promedio por boleto",
-      "srs_status": "pending",
-      "migration_status": "not_started",
-      "module": "src/modules/finances/ticketAverages.tsx (to be created)",
+      "srs_status": "implemented",
+      "migration_status": "completed",
+      "module": "src/modules/finances/TicketAverages.tsx",
+      "route": "/finances/ticket-averages",
+      "services": [
+        "src/services/TicketAveragesService.ts",
+        "src/services/TicketAveragesService.cached.ts"
+      ],
+      "hooks": ["src/hooks/useCachedTicketAverages.ts"],
+      "dashboard_integration": "Ticket averages card with quick action link",
       "fields": [
         "week (YYYY-Www)",
         "date (YYYY-MM-DD)",
@@ -224,9 +231,21 @@
         "timestamp (Date)"
       ],
       "granularity": "día/semana",
-      "collection_path": "data/ticketAverages/{year}/{month}",
-      "cache_strategy": "2hr TTL, calculated metrics",
-      "notes": "Relaciona cuánto se gastó/vendió por cada boleto"
+      "collection_path": "data/ticketAverages/{year}/{month}/entries",
+      "cache_strategy": "2hr TTL (current month 1h, historical 2h), calculated metrics via financesCache",
+      "firestore_rules": "Supervisor and Admin access only",
+      "features": [
+        "Automatic daily average calculations from sales and tickets",
+        "Monthly statistics with machine breakdown (76/79)",
+        "Best/worst day identification",
+        "Trend chart visualization (line chart)",
+        "Detailed table with daily breakdown",
+        "CSV export functionality",
+        "Month picker with navigation",
+        "Dashboard integration with quick action link",
+        "Intelligent caching with adaptive TTL"
+      ],
+      "notes": "Completamente implementado combinando datos de SRS #1 (ventas) y SRS #5 (boletos). Calcula automáticamente el promedio de gasto por boleto por día y máquina. Acceso exclusivo para Supervisor y Admin."
     },
     {
       "id": 7,
@@ -602,6 +621,8 @@
       "SRS #1: Hourly Sales (complete CRUD)",
       "SRS #2: Comisiones mensuales (CRUD + cache)",
       "SRS #4: Ventas diarias y semanales (smart aggregation)",
+      "SRS #5: Boletos vendidos (CRUD + cache + comparison)",
+      "SRS #6: Promedio por boleto (CRUD + cache + calculations)",
       "SRS #8: Boletos premiados pagados (CRUD + cache + machine tracking)",
       "Dashboard with KPIs",
       "Intelligent cache system",
@@ -615,10 +636,9 @@
     ],
     "pending": [
       "SRS #3: Cambio de rollo",
-      "SRS #5: Boletos vendidos",
-      "SRS #6: Promedio por boleto",
       "SRS #7: Raspados premiados",
       "SRS #9: Primeros lugares de sorteos",
+      "SRS #10: Mismo Día y Hora Comparison (enhancement to SRS #4)",
       "Advanced reporting features",
       "Mobile app considerations",
       "Performance monitoring dashboard"

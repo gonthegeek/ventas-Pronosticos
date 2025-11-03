@@ -10,6 +10,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **SRS #6: Promedio por Boleto** (Complete Implementation)
+  - Full calculation module combining SRS #1 (sales) and SRS #5 (tickets) data
+  - Automatic daily average calculations per machine
+  - Monthly statistics with best/worst day identification
+  - Comprehensive UI with month picker and summary cards
+  - Trend chart visualization using Recharts (line chart)
+  - Detailed table showing daily breakdown by machine
+  - CSV export functionality with full daily data
+  - Intelligent caching with adaptive TTL (1hr current, 2hr historical)
+  - Services: `TicketAveragesService.ts`, `TicketAveragesService.cached.ts`
+  - Hook: `useCachedTicketAverages.ts` with multiple data-fetching hooks
+  - Route: `/finances/ticket-averages`
+  - Dashboard integration with quick action link
+  - Hierarchical Firestore structure: `data/ticketAverages/{year}/{month}/entries`
+  - Supervisor+ access only
+  - Permissions: `PROMEDIO_BOLETO_READ`, `PROMEDIO_BOLETO_WRITE`, `PROMEDIO_BOLETO_ALL`
+
 - **SRS #10: Mismo Día y Hora Comparison** (Planned)
   - New comparison mode for sales comparison: "Mismo Día y Hora" (Same Day and Hour)
   - Compare sales at specific day+hour combination across custom date ranges

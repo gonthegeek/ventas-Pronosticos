@@ -45,6 +45,11 @@ export const PERMISSIONS = {
     PREMIADOS_READ: 'premiados:read',
     PREMIADOS_WRITE: 'premiados:write',
     
+    // Promedio por boleto permissions (SRS #6)
+    PROMEDIO_BOLETO_READ: 'promedio-boleto:read',
+    PROMEDIO_BOLETO_WRITE: 'promedio-boleto:write',
+    PROMEDIO_BOLETO_ALL: 'promedio-boleto:all',
+    
     // Sorteos permissions
     SORTEOS_ALL: 'sorteos:all',
     SORTEOS_READ: 'sorteos:read',
@@ -75,6 +80,7 @@ const supervisorPermissions: PermissionName[] = [
     ...operadorPermissions,
     PERMISSIONS.COMISIONES_ALL,
     PERMISSIONS.PREMIADOS_ALL,
+    PERMISSIONS.PROMEDIO_BOLETO_ALL,
     PERMISSIONS.SORTEOS_ALL
 ];
 
@@ -312,6 +318,9 @@ export class PermissionUtils {
             [PERMISSIONS.PREMIADOS_ALL]: 'Gestión Completa de Premiados',
             [PERMISSIONS.PREMIADOS_READ]: 'Ver Premiados',
             [PERMISSIONS.PREMIADOS_WRITE]: 'Editar Premiados',
+            [PERMISSIONS.PROMEDIO_BOLETO_ALL]: 'Gestión Completa de Promedio por Boleto',
+            [PERMISSIONS.PROMEDIO_BOLETO_READ]: 'Ver Promedio por Boleto',
+            [PERMISSIONS.PROMEDIO_BOLETO_WRITE]: 'Editar Promedio por Boleto',
             [PERMISSIONS.SORTEOS_ALL]: 'Gestión Completa de Sorteos',
             [PERMISSIONS.SORTEOS_READ]: 'Ver Sorteos',
             [PERMISSIONS.SORTEOS_WRITE]: 'Editar Sorteos',
