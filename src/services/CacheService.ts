@@ -394,6 +394,12 @@ export const CACHE_KEYS = {
   paidPrizesWeeklyList: (week: string) => `paidPrizes:weekly:list:${week}`,
   paidPrizesWeeklyTotals: (week: string) => `paidPrizes:weekly:totals:${week}`,
   paidPrizesMonthlyTotals: (year: number, month: number) => `paidPrizes:monthly:totals:${year}-${String(month).padStart(2, '0')}`,
+
+  // Tickets keys
+  ticketsMonthlyList: (year: number, month: number) => `tickets:monthly:list:${year}-${String(month).padStart(2, '0')}`,
+  ticketsWeeklyList: (week: string) => `tickets:weekly:list:${week}`,
+  ticketsWeeklyTotals: (week: string) => `tickets:weekly:totals:${week}`,
+  ticketsMonthlyStats: (year: number, month: number) => `tickets:monthly:stats:${year}-${String(month).padStart(2, '0')}`,
 }
 
 // Global cache instances
@@ -449,6 +455,14 @@ export class CacheManager {
       financesCache.invalidatePattern(`paidPrizes:.*:${year}-${String(month).padStart(2, '0')}`)
     } else {
       financesCache.invalidatePattern('paidPrizes:.*')
+    }
+  }
+
+  static invalidateTicketsData(year?: number, month?: number): void {
+    if (year && month) {
+      financesCache.invalidatePattern(`tickets:.*:${year}-${String(month).padStart(2, '0')}`)
+    } else {
+      financesCache.invalidatePattern('tickets:.*')
     }
   }
   

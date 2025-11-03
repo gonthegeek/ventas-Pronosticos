@@ -15,6 +15,8 @@ import EnhancedAdminPanel from './components/admin/EnhancedAdminPanel'
 import LoadingSpinner from './components/ui/LoadingSpinner'
 import Commissions from './modules/finances/Commissions'
 import PaidPrizes from './modules/finances/PaidPrizes'
+import Tickets from './modules/finances/Tickets'
+import TicketsComparison from './modules/finances/TicketsComparison'
 
 function App() {
   const dispatch = useAppDispatch()
@@ -60,6 +62,8 @@ function App() {
         <Route path="/sales/comparison" element={<SalesComparisonPage />} />
         <Route path="/finances/commissions" element={<Commissions />} />
         <Route path="/finances/paid-prizes" element={<PaidPrizes />} />
+        <Route path="/finances/tickets" element={<Tickets />} />
+        <Route path="/finances/tickets/comparison" element={<TicketsComparison />} />
         <Route path="/admin" element={<EnhancedAdminPanel />} />
         {/* Additional routes will be added as we migrate more modules */}
       </Routes>

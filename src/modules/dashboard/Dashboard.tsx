@@ -5,8 +5,10 @@ import { RootState } from '../../state/store'
 import { useCachedDashboard, useCacheStats, useCachePreloader } from '../../hooks/useCachedSales'
 import { useCachedMonthlyCommissions } from '../../hooks/useCachedCommissions'
 import { useCachedMonthlyTotals } from '../../hooks/useCachedPaidPrizes'
+import { useCachedMonthlyTicketStats } from '../../hooks/useCachedTickets'
 import { CommissionsService } from '../../services/CommissionsService'
 import { PaidPrizesService } from '../../services/PaidPrizesService'
+import TicketsService from '../../services/TicketsService'
 import QuickSalesEntry from '../../components/sales/QuickSalesEntry'
 
 /**
@@ -32,6 +34,9 @@ const Dashboard: React.FC = () => {
   const currentYearMonth = `${nowMexico.getFullYear()}-${String(nowMexico.getMonth() + 1).padStart(2, '0')}`
   const { data: commissionsData, loading: commissionsLoading } = useCachedMonthlyCommissions(currentYearMonth)
   const { totals: paidPrizesTotals, loading: paidPrizesLoading } = useCachedMonthlyTotals(currentYearMonth)
+  
+  // Get current month tickets stats
+  const { stats: ticketsStats, loading: ticketsLoading } = useCachedMonthlyTicketStats(currentYearMonth)
   
   // Calculate monthly commission total
   const monthlyCommissionTotal = React.useMemo(() => {
@@ -95,6 +100,34 @@ const Dashboard: React.FC = () => {
     
     loadAnnualPaidPrizes()
   }, [paidPrizesTotals]) // Refresh when current month data changes
+  
+  // Get annual tickets total
+  const [annualTicketsTotal, setAnnualTicketsTotal] = useState(0)
+  const [annualTicketsLoading, setAnnualTicketsLoading] = useState(false)
+  
+  useEffect(() => {
+    const loadAnnualTickets = async () => {
+      setAnnualTicketsLoading(true)
+      try {
+        const currentYear = nowMexico.getFullYear()
+        let yearTotal = 0
+        
+        // Fetch all 12 months
+        for (let month = 1; month <= 12; month++) {
+          const monthStats = await TicketsService.getMonthlyStats(currentYear, month)
+          yearTotal += monthStats.totalTickets
+        }
+        
+        setAnnualTicketsTotal(yearTotal)
+      } catch (err) {
+        console.error('Error loading annual tickets:', err)
+      } finally {
+        setAnnualTicketsLoading(false)
+      }
+    }
+    
+    loadAnnualTickets()
+  }, [ticketsStats]) // Refresh when current month data changes
   
   const numberFmt = (n: number) => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 0 }).format(n || 0)
   
@@ -409,6 +442,65 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
 
+        {/* Tickets Sold Cards */}
+        <div className="bg-white overflow-hidden shadow rounded-lg">
+          <div className="p-5">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <svg className="h-8 w-8 text-cyan-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                        d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
+                </svg>
+              </div>
+              <div className="ml-5 w-0 flex-1">
+                <dl>
+                  <dt className="text-sm font-medium text-gray-500 truncate">
+                    Boletos Vendidos (Mes)
+                  </dt>
+                  <dd className="text-lg font-medium text-gray-900">
+                    {ticketsLoading ? (
+                      <span className="text-gray-500">Cargando...</span>
+                    ) : (
+                      <Link to="/finances/tickets" className="text-cyan-600 hover:text-cyan-700">
+                        {(ticketsStats?.totalTickets || 0).toLocaleString()}
+                      </Link>
+                    )}
+                  </dd>
+                </dl>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white overflow-hidden shadow rounded-lg">
+          <div className="p-5">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <svg className="h-8 w-8 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                        d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
+                </svg>
+              </div>
+              <div className="ml-5 w-0 flex-1">
+                <dl>
+                  <dt className="text-sm font-medium text-gray-500 truncate">
+                    Boletos Vendidos (Año)
+                  </dt>
+                  <dd className="text-lg font-medium text-gray-900">
+                    {annualTicketsLoading ? (
+                      <span className="text-gray-500">Cargando...</span>
+                    ) : (
+                      <Link to="/finances/tickets" className="text-teal-600 hover:text-teal-700">
+                        {annualTicketsTotal.toLocaleString()}
+                      </Link>
+                    )}
+                  </dd>
+                </dl>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div className="bg-white overflow-hidden shadow rounded-lg">
           <div className="p-5">
             <div className="flex items-center">
@@ -487,6 +579,22 @@ const Dashboard: React.FC = () => {
                 <div>
                   <div className="font-medium text-gray-900">Premios Pagados</div>
                   <div className="text-sm text-gray-500">Registrar premios pagados</div>
+                </div>
+              </div>
+            </Link>
+
+            <Link 
+              to="/finances/tickets" 
+              className="block text-left p-4 rounded-lg border-2 border-dashed border-gray-300 hover:border-cyan-500 hover:bg-cyan-50 transition-colors"
+            >
+              <div className="flex items-center">
+                <svg className="h-6 w-6 text-cyan-600 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                        d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
+                </svg>
+                <div>
+                  <div className="font-medium text-gray-900">Boletos Vendidos</div>
+                  <div className="text-sm text-gray-500">Registrar boletos vendidos</div>
                 </div>
               </div>
             </Link>

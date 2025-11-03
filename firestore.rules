@@ -136,6 +136,13 @@ service cloud.firestore {
       allow write: if isSupervisorOrAdmin();
     }
     
+    // Tickets sold data - hierarchical structure: data/tickets/{year}/{month}/entries/{id}
+    match /data/tickets/{document=**} {
+      allow read: if isAuthorizedUser();
+      allow create: if isAuthorizedUser();
+      allow update, delete: if isSupervisorOrAdmin();
+    }
+    
     // Inventory data
     match /inventory/{document=**} {
       allow read: if isAuthorizedUser();
