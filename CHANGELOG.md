@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [Unreleased]
+## [2.2.0] - 2025-11-02
 
 ### Added
 - **SRS #5: Boletos Vendidos - Comparison Features**
@@ -44,6 +44,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Updated label from "Promedio Anual" to "Promedio Mensual" for accuracy
   - For current year: average divides by months elapsed (1-11 in November)
   - For past years: average continues to use all 12 months
+- **Sidebar Navigation**
+  - Delete SRS ids from sidebar items for cleaner UI
 
 ---
 
