@@ -25,7 +25,7 @@ The dashboard (`src/modules/dashboard/Dashboard.tsx`) provides a comprehensive o
 
 **Insight Cards (9 Total)**:
 - 💰 **Sales KPIs**: Today's sales, weekly sales, monthly sales
-- 💼 **Commission Tracking**: Monthly commissions, annual commissions (year-to-date)
+- 💼 **Commission Tracking**: Monthly commissions, annual commissions (calculated from Tira/paperTotal)
 - 🎁 **Prize Tracking**: Monthly paid prizes, annual paid prizes (year-to-date)
 - ⏰ **Current Hour**: Real-time hour display
 

@@ -173,7 +173,7 @@
 - Implemented adaptive caching: current month 2h TTL, historical months 6h TTL
 - Month ordering resolved with explicit [1...12] array iteration
 - Form UX improved with clearable numeric inputs
-- Dashboard shows monthly and annual commission totals
+- Dashboard shows monthly and annual commission totals (calculated from paperTotal/Tira)
 - Route standardized to match `/sales/*` pattern
 
 #### **🔄 SRS #3: Cambio de rollo** (12 hours)
