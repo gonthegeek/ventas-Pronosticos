@@ -43,7 +43,11 @@ This app is a React 18 + TypeScript + Firebase (Auth/Firestore) system with a st
 - All dates/times must be created/read in `America/Mexico_City` (`utils/timezone.ts`). Never store client-local times.
 - Keep Firestore reads minimal: narrow by year/month/day collections; lean on cache and avoid N+1 queries.
 - Reuse shared UI and Export tools in `components/sales/ExportTools.tsx` for CSV/print.
-- **CHANGELOG.md**: Always add new entries at the top under `[Unreleased]` section. Never modify historical entries—follow [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) conventions.
+- **CHANGELOG.md**: **ALWAYS** update CHANGELOG.md with every code change. Add entries at the top under `[Unreleased]` section before making the commit. Never modify historical entries—follow [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) conventions.
+  - Categories: `Added` (new features), `Changed` (changes to existing functionality), `Fixed` (bug fixes), `Removed` (removed features), `Security` (security improvements)
+  - Format: Brief title followed by bullet points with implementation details
+  - Be specific: mention file names, component names, and user-facing changes
+  - Update CHANGELOG even for small fixes or UI tweaks—everything should be documented
 - **Commit Messages**: Use conventional commit format: `type(scope): description`
   - Examples: `fix(console): resolve browser warnings`, `feat(tickets): add comparison module`, `refactor(cache): optimize invalidation logic`
   - Common types: `feat`, `fix`, `refactor`, `docs`, `style`, `test`, `chore`

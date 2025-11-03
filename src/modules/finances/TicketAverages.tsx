@@ -49,23 +49,42 @@ const TicketAverages: React.FC = () => {
     return `${monthNames[parsedYM.month - 1]} ${parsedYM.year}`
   }, [parsedYM])
 
-  // Prepare chart data
+  // Prepare chart data with separate lines for each machine and overall average
   const chartData = useMemo(() => {
     if (!dailyAverages || dailyAverages.length === 0) return []
     
-    // Group by date for chart (combine machines)
-    const dateMap = new Map<string, { date: string; avgPerTicket: number; totalSales: number; totalTickets: number }>()
+    // Group by date and separate by machine
+    const dateMap = new Map<string, { 
+      date: string
+      machine76Avg: number | null
+      machine79Avg: number | null
+      overallAvg: number
+      totalSales: number
+      totalTickets: number
+    }>()
     
     dailyAverages.forEach(day => {
       const existing = dateMap.get(day.date) || { 
-        date: day.date, 
-        avgPerTicket: 0, 
-        totalSales: 0, 
-        totalTickets: 0 
+        date: day.date,
+        machine76Avg: null,
+        machine79Avg: null,
+        overallAvg: 0,
+        totalSales: 0,
+        totalTickets: 0
       }
+      
+      // Track per-machine averages
+      if (day.machineId === '76') {
+        existing.machine76Avg = day.averagePerTicket
+      } else if (day.machineId === '79') {
+        existing.machine79Avg = day.averagePerTicket
+      }
+      
+      // Accumulate for overall average
       existing.totalSales += day.totalSale
       existing.totalTickets += day.ticketsSold
-      existing.avgPerTicket = existing.totalTickets > 0 ? existing.totalSales / existing.totalTickets : 0
+      existing.overallAvg = existing.totalTickets > 0 ? existing.totalSales / existing.totalTickets : 0
+      
       dateMap.set(day.date, existing)
     })
     
@@ -274,7 +293,7 @@ const TicketAverages: React.FC = () => {
             <h3 className="text-lg font-semibold text-gray-700 mb-4">
               Tendencia del Promedio por Boleto - {monthName}
             </h3>
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={400}>
               <LineChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis 
@@ -290,17 +309,36 @@ const TicketAverages: React.FC = () => {
                   tickFormatter={(value) => `$${value}`}
                 />
                 <Tooltip 
-                  formatter={(value: any) => currencyFmt(value)}
+                  formatter={(value: any) => value !== null ? currencyFmt(value) : 'Sin datos'}
                   labelFormatter={(label) => `Fecha: ${label}`}
                 />
                 <Legend />
                 <Line 
                   type="monotone" 
-                  dataKey="avgPerTicket" 
+                  dataKey="overallAvg" 
                   stroke="#3b82f6" 
+                  strokeWidth={3}
+                  name="Promedio General"
+                  dot={{ r: 4 }}
+                  strokeDasharray="5 5"
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="machine76Avg" 
+                  stroke="#10b981" 
                   strokeWidth={2}
-                  name="Promedio por Boleto"
+                  name="Máquina 76"
                   dot={{ r: 3 }}
+                  connectNulls
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="machine79Avg" 
+                  stroke="#9333ea" 
+                  strokeWidth={2}
+                  name="Máquina 79"
+                  dot={{ r: 3 }}
+                  connectNulls
                 />
               </LineChart>
             </ResponsiveContainer>

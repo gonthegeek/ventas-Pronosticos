@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [Unreleased]
+
+### Added
+- **Ticket Averages Chart Enhancement**
+  - Added three separate trend lines in the ticket averages chart:
+    - Overall average (blue dashed line) showing combined performance
+    - Machine 76 average (green line) showing individual machine performance
+    - Machine 79 average (purple line) showing individual machine performance
+  - Lines use `connectNulls` to handle missing data gracefully
+  - Increased chart height to 400px for better visibility
+  - Color-coded lines match summary card colors for consistency
+
+### Fixed
+- **Dashboard Tickets Sold Cards**
+  - Removed interactive links from monthly and annual tickets sold insight cards
+  - Cards now display as read-only data without navigation functionality
+  - Maintains visual styling (cyan/teal colors) for consistency
+
+---
+
 ## [2.3.0] - 2025-11-02
 
 ### Added
