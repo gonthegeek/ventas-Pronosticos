@@ -6,18 +6,19 @@
 
 Casa Pronósticos is a comprehensive sales and lottery management system for analyzing data from lottery machines. The system has been successfully migrated from legacy SPA to modern React architecture with intelligent caching to optimize Firebase usage and stay within free tier limits.
 
-**Current Status**: Phase 2 In Progress (44% - 4 of 9 SRS Complete)
+**Current Status**: Phase 2 Complete (56% - 5 of 9 SRS Complete + 1 Enhancement Planned)
 
-### 🏆 Key Achievements
+### ✅ **Key Achievements**
 
 - ✅ **Complete React Migration**: Modern React 18 + TypeScript architecture
 - ✅ **Intelligent Cache System**: 85-95% hit rate, 75-90% Firebase reduction
-- ✅ **4 SRS Implemented**: Hourly Sales, Commissions, Sales Comparison, Paid Prizes
+- ✅ **5 SRS Implemented**: Hourly Sales, Commissions, Sales Comparison, Tickets, Paid Prizes
 - ✅ **Role-Based Security**: Granular permissions (Operador/Supervisor/Admin)
 - ✅ **Admin Panel**: User management, cache monitoring, data migration tools
 - ✅ **Firebase Optimization**: <10,000 reads/day (down from 500-1000/day)
 - ✅ **Firestore Security Rules**: Complete rules for all implemented SRS
-- ✅ **Comprehensive Dashboard**: Real-time KPIs with 9 insight cards and quick actions
+- ✅ **Comprehensive Dashboard**: Real-time KPIs with 11 insight cards and quick actions
+- ✅ **Advanced Comparisons**: 4 comparison modes including weekday pattern analysis
 
 ### 📊 Dashboard Overview
 
@@ -55,9 +56,9 @@ The dashboard (`src/modules/dashboard/Dashboard.tsx`) provides a comprehensive o
 - **GitHub Actions** - CI/CD pipeline
 - **Firebase Hosting** - Production deployment
 
-## 📊 SRS (System Requirements Specification) - 9 Core Functionalities
+## 📊 SRS (System Requirements Specification) - 10 Functionalities (9 Core + 1 Enhancement)
 
-### ✅ **IMPLEMENTED** (4 of 9 Complete)
+### ✅ **IMPLEMENTED** (5 of 9 Core Complete)
 
 #### **SRS #1: Ventas por hora** 
 - **Module**: `src/modules/sales/HourlySales.tsx`
@@ -82,6 +83,14 @@ The dashboard (`src/modules/dashboard/Dashboard.tsx`) provides a comprehensive o
 - **Calculations**: Daily totals (sum hourly), weekly patterns, peak hours, machine breakdowns
 - **Note**: *Smart implementation - leverages existing SRS #1 data instead of duplicate storage*
 
+#### **SRS #5: Boletos vendidos** 
+- **Module**: `src/modules/finances/Tickets.tsx`
+- **Route**: `/finances/tickets` + `/finances/tickets/comparison`
+- **Collection**: `data/tickets/{year}/{month}/entries/{ticketId}`
+- **Features**: CRUD complete, ISO week tracking, machine breakdown (76/79), 4 comparison modes (day/week/month/weekday), charts, CSV export
+- **Fields**: date, week (ISO), machineId ('76'|'79'), ticketsDay, ticketsTotal, notes, operatorId, timestamp
+- **Access**: Operador+ can create/read, Supervisor+ can update/delete
+
 #### **SRS #8: Boletos premiados pagados** 
 - **Module**: `src/modules/finances/PaidPrizes.tsx`
 - **Route**: `/finances/paid-prizes`
@@ -90,11 +99,20 @@ The dashboard (`src/modules/dashboard/Dashboard.tsx`) provides a comprehensive o
 - **Fields**: date, week (ISO), machineId ('76'|'79'), amountPaid, ticketCount, notes, operatorId, timestamp
 - **Access**: Supervisor and Admin only
 
-### 🔄 **PENDING** (5 of 9)
+### 📋 **PLANNED ENHANCEMENT**
+
+#### **SRS #10: Mismo Día y Hora Comparison** 🆕
+- **Type**: Enhancement to SRS #4 (Sales Comparison)
+- **Module**: Extension of `src/modules/sales/SalesComparisonPage.tsx`
+- **Data Source**: Calculated from SRS #1 hourly sales data
+- **Features**: Compare same day+hour across custom date ranges, occurrence counter, trend analysis
+- **UI**: Hour selector, weekday selector, date range picker, line/bar charts, quick selections
+- **Use Cases**: Monday trends, Friday peaks, weekend patterns, seasonal analysis, promotional effectiveness
+
+### 🔄 **PENDING** (4 of 9 Core)
 
 #### **SRS #3: Cambio de rollo** - Paper roll change event logging  
-#### **SRS #5: Boletos vendidos** - Ticket sales tracking
-#### **SRS #6: Promedio por boleto** - Average spending per ticket
+#### **SRS #6: Promedio por boleto** - Average spending per ticket (depends on SRS #5, now ready)
 #### **SRS #7: Raspados premiados** - Scratch lottery prize tracking
 #### **SRS #9: Primeros lugares de sorteos** - First place winner tracking
 
@@ -141,12 +159,12 @@ Firestore Collections:
 ├── /data/commissions/{year}/{month}/entries # ✅ SRS #2 - Monthly commissions
 ├── /data/paidPrizes/{year}/{month}/entries # ✅ SRS #8 - Paid prizes
 ├── /data/rollChanges/{year}/{month}   # 🔄 SRS #3 - Roll changes
-├── /data/dailyWeeklySales/{year}/{month} # 🔄 SRS #4 - Daily/weekly sales
-├── /data/tickets/{year}/{month}       # 🔄 SRS #5 - Tickets sold
+├── /data/tickets/{year}/{month}       # ✅ SRS #5 - Tickets sold
 ├── /data/ticketAverages/{year}/{month} # 🔄 SRS #6 - Ticket averages
 ├── /data/scratches/{year}/{month}     # 🔄 SRS #7 - Scratch prizes
-├── /data/paidPrizes/{year}/{month}    # 🔄 SRS #8 - Paid prizes
+├── /data/paidPrizes/{year}/{month}    # ✅ SRS #8 - Paid prizes
 └── /data/firstPlaces/{year}/{month}   # 🔄 SRS #9 - First places
+Note: SRS #4 and #10 use calculated data from SRS #1 (no separate collection)
 ```
 
 **Benefits**:
@@ -345,7 +363,7 @@ firebase deploy --only hosting
 - [ ] CI/CD pipeline optimization
 - [ ] User documentation and training materials
 
-*Current Progress: **44% Complete** (Phase 1 + SRS #4 of 9 total functionalities)*
+*Current Progress: **56% Complete** (Phases 1-2 Complete, 5 of 9 core SRS + 1 enhancement planned)*
 
 ## 📈 Performance Metrics
 
