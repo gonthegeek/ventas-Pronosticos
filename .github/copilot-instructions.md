@@ -44,6 +44,10 @@ This app is a React 18 + TypeScript + Firebase (Auth/Firestore) system with a st
 - Keep Firestore reads minimal: narrow by year/month/day collections; lean on cache and avoid N+1 queries.
 - Reuse shared UI and Export tools in `components/sales/ExportTools.tsx` for CSV/print.
 - **CHANGELOG.md**: Always add new entries at the top under `[Unreleased]` section. Never modify historical entries—follow [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) conventions.
+- **Commit Messages**: Use conventional commit format: `type(scope): description`
+  - Examples: `fix(console): resolve browser warnings`, `feat(tickets): add comparison module`, `refactor(cache): optimize invalidation logic`
+  - Common types: `feat`, `fix`, `refactor`, `docs`, `style`, `test`, `chore`
+  - Keep first line under 72 characters; add bullet points for details if needed
 
 ## Key files/directories to know
 - Services: `src/services/{firebase.ts, SalesService.ts, TicketsService.ts, CommissionsService.ts, PaidPrizesService.ts, CacheService.ts}` (+ their `.cached.ts` versions)

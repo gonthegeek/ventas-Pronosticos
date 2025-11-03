@@ -4,6 +4,7 @@
  */
 
 import { useSelector } from 'react-redux'
+import { createSelector } from '@reduxjs/toolkit'
 import { RootState } from '../state/store'
 import { 
   PermissionName, 
@@ -12,14 +13,22 @@ import {
 } from '../utils/permissions'
 
 /**
+ * Memoized selector to prevent unnecessary rerenders
+ */
+const selectPermissions = createSelector(
+  [(state: RootState) => state.auth],
+  (auth) => ({
+    userProfile: auth.userProfile,
+    isAuthenticated: auth.isAuthenticated,
+    isLoading: auth.isLoading
+  })
+)
+
+/**
  * Hook to get current user permissions state
  */
 export const usePermissions = () => {
-  return useSelector((state: RootState) => ({
-    userProfile: state.auth.userProfile,
-    isAuthenticated: state.auth.isAuthenticated,
-    isLoading: state.auth.isLoading
-  }))
+  return useSelector(selectPermissions)
 }
 
 /**

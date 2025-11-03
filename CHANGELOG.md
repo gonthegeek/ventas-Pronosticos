@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [Unreleased]
+
+### Fixed
+- **Browser Console Warnings**
+  - Removed `X-Frame-Options` from HTML meta tags (must be set via HTTP headers)
+  - Fixed Redux selector rerender warnings by memoizing `usePermissions` selector with `createSelector`
+  - Added React Router v7 future flags (`v7_startTransition`, `v7_relativeSplatPath`) to suppress migration warnings
+
+---
+
 ## [2.2.0] - 2025-11-02
 
 ### Added
