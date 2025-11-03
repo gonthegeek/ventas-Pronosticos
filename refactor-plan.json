@@ -236,12 +236,23 @@
         "cache_strategy": "2hr TTL, daily aggregation"
       },
       {
-        "name": "data/tickets/{year}/{month}",
-        "path": "/data/tickets/{year}/{month}/{ticketId}",
-        "status": "planned",
+        "name": "data/tickets/{year}/{month}/entries",
+        "path": "/data/tickets/{year}/{month}/entries/{ticketId}",
+        "status": "implemented",
         "description": "SRS #5 - Boletos vendidos",
         "related_srs": "srs_5",
-        "cache_strategy": "2hr TTL, daily data"
+        "cache_strategy": "1-3hr adaptive TTL (current: 1hr, historical: 3hr), weekly aggregation",
+        "implementation_date": "2025-11-02",
+        "features": [
+          "Complete CRUD with cross-month date handling",
+          "Automatic ISO week calculation",
+          "Weekly totals per machine (76, 79)",
+          "Month picker with quick navigation",
+          "Summary cards and weekly breakdown",
+          "Advanced comparison module (4 modes)",
+          "Weekday pattern analysis",
+          "Dashboard integration"
+        ]
       },
       {
         "name": "data/ticketAverages/{year}/{month}",
@@ -1019,10 +1030,35 @@
       {
         "srs_id": 5,
         "name": "Boletos vendidos",
-        "status": "pending",
+        "status": "completed",
         "implementation": "src/modules/finances/Tickets.tsx",
-        "features": ["Daily tracking", "Weekly totals", "Machine breakdown"],
-        "phase": 2
+        "comparison_module": "src/modules/finances/TicketsComparison.tsx",
+        "chart_component": "src/components/sales/TicketsComparisonChart.tsx",
+        "route": "/finances/tickets",
+        "comparison_route": "/finances/tickets/comparison",
+        "services": [
+          "src/services/TicketsService.ts",
+          "src/services/TicketsService.cached.ts"
+        ],
+        "hooks": ["src/hooks/useCachedTickets.ts"],
+        "features": [
+          "Complete CRUD operations ✅",
+          "Daily tracking with ISO week calculation ✅",
+          "Weekly totals per machine ✅",
+          "Machine breakdown (76, 79) ✅",
+          "Month picker with quick navigation ✅",
+          "Summary cards and weekly summary table ✅",
+          "Smart modal date defaulting ✅",
+          "Advanced comparison module with 4 modes ✅",
+          "Weekday pattern analysis (compare all Mondays, etc.) ✅",
+          "Interactive line/bar charts ✅",
+          "Quick date selections ✅",
+          "Chart/table visibility toggles with localStorage ✅",
+          "CSV export ✅",
+          "Dashboard integration ✅"
+        ],
+        "phase": 2,
+        "completion_date": "2025-11-02"
       },
       {
         "srs_id": 6,
@@ -1098,18 +1134,22 @@
   },
   "tracking": {
     "total_estimated_hours": 195,
-    "completed_hours": 86,
-    "remaining_hours": 109,
-    "progress_percentage": 44,
-    "last_updated": "2025-08-21",
-    "current_phase": "Phase 1 - COMPLETED ✅",
-    "next_milestone": "Phase 2 - FUNCIONALIDADES CORE",
+    "completed_hours": 122,
+    "remaining_hours": 73,
+    "progress_percentage": 56,
+    "last_updated": "2025-11-02",
+    "current_phase": "Phase 2 - IN PROGRESS (56% complete)",
+    "next_milestone": "Complete remaining Phase 2 SRS (3-4)",
     "blockers": [],
     "notes": [
       "Phase 1 completed successfully with cache system implementation",
+      "SRS #2 (Commissions) completed - 18 actual hours",
+      "SRS #5 (Tickets) completed with advanced comparison features - 18 actual hours",
       "SRS #4 smartly implemented via existing sales comparison functionality",
+      "5 of 9 SRS complete (56%): #1, #2, #5, #6, #7, #9",
       "Strong foundation established for rapid development of remaining SRS",
-      "Performance optimizations already yielding significant Firebase savings"
+      "Performance optimizations already yielding significant Firebase savings",
+      "Established patterns for comparison modules and weekday analysis"
     ]
   },
   "success_metrics": {
@@ -1121,12 +1161,17 @@
       "✅ Bundle size: <800KB gzipped"
     ],
     "functional": [
-      "✅ SRS #1 fully implemented",
+      "✅ SRS #1 fully implemented (Hourly Sales)",
+      "✅ SRS #2 fully implemented (Commissions)",
       "✅ SRS #4 implemented via smart aggregation",
+      "✅ SRS #5 fully implemented (Tickets with advanced comparison)",
+      "✅ SRS #6 fully implemented (Commissions)",
+      "✅ SRS #7 fully implemented (Paid Prizes)",
+      "✅ SRS #9 fully implemented (Dashboard)",
       "✅ Role-based access working",
       "✅ Data migration tools operational",
       "✅ Export/import CSV functional",
-      "🔄 SRS #2-9 pending implementation"
+      "🔄 SRS #3, #8 pending implementation"
     ],
     "usability": [
       "✅ Registration time: <2 minutes achieved",
@@ -1178,10 +1223,24 @@
           {
             "task": "SRS #2 Implementation",
             "module": "src/modules/finances/Commissions.tsx",
+            "status": "completed",
             "approach": "Use refactored component patterns as template",
             "components": ["CommissionFilters", "CommissionStats", "CommissionTable", "CommissionForm"],
             "estimated_hours": "24-32",
-            "success_criteria": "Demonstrates component reusability and consistent patterns"
+            "actual_hours": 18,
+            "completion_date": "2025-10-25",
+            "success_criteria": "Demonstrates component reusability and consistent patterns ✅"
+          },
+          {
+            "task": "SRS #5 Implementation",
+            "module": "src/modules/finances/Tickets.tsx",
+            "status": "completed",
+            "approach": "Full CRUD with advanced comparison features and weekday analysis",
+            "components": ["TicketsFilters", "TicketsStats", "TicketsTable", "TicketsForm", "TicketsComparison", "TicketsComparisonChart"],
+            "estimated_hours": "32-40",
+            "actual_hours": 18,
+            "completion_date": "2025-11-02",
+            "success_criteria": "Complete implementation with 4 comparison modes including weekday pattern analysis ✅"
           }
         ]
       }

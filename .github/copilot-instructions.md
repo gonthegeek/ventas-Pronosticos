@@ -29,10 +29,14 @@ This app is a React 18 + TypeScript + Firebase (Auth/Firestore) system with a st
 - Update permissions in `utils/permissions.ts` and menu visibility in layout if needed.
 
 ## Concrete examples in this repo
-- SRS 1 (Hourly Sales): `modules/sales/HourlySales.tsx`, `services/SalesService.ts`, `services/SalesService.cached.ts`, hooks in `hooks/useCachedSales.ts`, UI in `components/sales/*`.
+- **SRS #1 (Hourly Sales)**: `modules/sales/HourlySales.tsx`, `services/SalesService.ts`, `services/SalesService.cached.ts`, hooks in `hooks/useCachedSales.ts`, UI in `components/sales/*`.
+- **SRS #5 (Tickets Sold)**: `modules/finances/Tickets.tsx`, `services/TicketsService.ts`, `services/TicketsService.cached.ts`, hooks in `hooks/useCachedTickets.ts`.
+  - Comparison module: `modules/finances/TicketsComparison.tsx` with 4 modes (day/week/month/weekday), chart component in `components/sales/TicketsComparisonChart.tsx`.
 - Cached usage example:
-  - Read: `const { data, loading } = useCachedHourlySales(selectedDate)`
-  - Write: call `SalesService.createOrUpdate(...)` then invalidate the relevant cache key via `CacheService`.
+  - Read: `const { data, loading, refresh } = useCachedMonthlyTickets(yearMonth)`
+  - Stats: `const { stats, loading: statsLoading, refresh: refreshStats } = useCachedMonthlyTicketStats(yearMonth)`
+  - Write: call `TicketsService.create(...)` then invalidate via `CacheManager.invalidateTicketsData(year, month)`.
+  - Update: call `update(id, prevEntry, changes)` - handles cross-month date changes automatically.
 
 ## Guardrails and conventions
 - Do not duplicate derived datasets: daily/weekly aggregates are computed from hourly sales unless a specific collection exists.
@@ -41,9 +45,10 @@ This app is a React 18 + TypeScript + Firebase (Auth/Firestore) system with a st
 - Reuse shared UI and Export tools in `components/sales/ExportTools.tsx` for CSV/print.
 
 ## Key files/directories to know
-- Services: `src/services/{firebase.ts, SalesService.ts, SalesService.cached.ts, CacheService.ts}`
-- Hooks: `src/hooks/useCachedSales.ts`
-- UI: `src/components/ui/*`, `src/components/sales/*`
+- Services: `src/services/{firebase.ts, SalesService.ts, TicketsService.ts, CommissionsService.ts, PaidPrizesService.ts, CacheService.ts}` (+ their `.cached.ts` versions)
+- Hooks: `src/hooks/{useCachedSales.ts, useCachedTickets.ts, useCachedCommissions.ts, useCachedPaidPrizes.ts}`
+- UI: `src/components/ui/*`, `src/components/sales/*` (includes reusable chart components)
 - Auth/Permissions: `src/services/AuthService.ts`, `src/utils/permissions.ts`
+- Modules: `src/modules/{sales/*, finances/*}` (feature pages with CRUD operations)
 
 Questions or gaps? If any section above feels ambiguous for the change you’re making (e.g., cache keying/TTL or permission strings), leave a short note in your PR and we’ll iterate this guide.

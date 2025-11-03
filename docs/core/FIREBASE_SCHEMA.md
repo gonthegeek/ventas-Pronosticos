@@ -38,7 +38,7 @@ Firestore Root
 │   │   │   └── 09/
 │   │   └── 2026/
 │   ├── rollChanges/                   # 🔄 SRS #3 - Roll Changes
-│   ├── tickets/                       # 🔄 SRS #5 - Tickets Sold
+│   ├── tickets/                       # ✅ SRS #5 - Tickets Sold (Implemented)
 │   ├── ticketAverages/               # 🔄 SRS #6 - Ticket Averages
 │   ├── scratches/                     # 🔄 SRS #7 - Scratch Prizes
 │   ├── paidPrizes/                   # 🔄 SRS #8 - Paid Prizes
@@ -203,31 +203,49 @@ interface RollChangesData {
 }
 ```
 
-### **🔄 SRS #5: Tickets Sold**
-**Collection**: `/data/tickets/{year}/{month}/{ticketId}`
+### **✅ SRS #5: Tickets Sold** (Implemented)
+**Collection**: `/data/tickets/{year}/{month}/entries/{entryId}`
 
 ```typescript
-interface TicketsData {
+interface TicketEntry {
   // Business Data
-  date: string                      // YYYY-MM-DD
-  week: string                     // YYYY-Www format
-  machineId: '76' | '79'          // Machine identifier
-  ticketsDay: number              // Tickets sold that day
-  ticketsTotal: number            // Calculated weekly total
+  date: string                    // YYYY-MM-DD
+  week: string                    // YYYY-Www format (ISO week, auto-calculated)
+  machineId: '76' | '79'         // Machine identifier
+  ticketsDay: number             // Tickets sold that day
+  ticketsTotal: number           // Calculated weekly total for this machine
+  notes?: string                 // Optional notes
   
   // Metadata
-  operatorId: string              // User who created record
+  operatorId: string             // User who created record
   
   // System Fields
-  timestamp: Timestamp            // Business timestamp
-  createdAt: Timestamp           // System creation time
-  
-  // Derived Fields
-  yearMonth: string              // "2025-08"
-  weekYear: number              // ISO week-year
-  weekNumber: number            // ISO week number
+  timestamp: Timestamp           // Business timestamp
+  createdAt: Timestamp          // Record creation time
+  updatedAt?: Timestamp         // Last update time
 }
 ```
+
+**Features Implemented**:
+- ✅ Complete CRUD with cross-month date handling
+- ✅ Automatic ISO week calculation (YYYY-Www format)
+- ✅ Weekly total calculation per machine
+- ✅ Month picker with navigation
+- ✅ Summary cards: total tickets, machine breakdown, daily average
+- ✅ Weekly summary table with month-spanning clarification
+- ✅ CSV export functionality
+- ✅ Comparison module with 4 modes (day/week/month/weekday)
+- ✅ Dashboard integration with monthly/annual KPIs
+- ✅ Cache strategy: 1hr current month, 3hr historical
+
+**Comparison Features**:
+- Day-by-day comparison across date ranges
+- Week-by-week comparison with ISO weeks
+- Month-by-month comparison
+- Weekday pattern analysis (compare all Mondays, Tuesdays, etc.)
+- Interactive line/bar charts
+- Machine filter (76/79/both)
+- Quick date selections
 
 ### **🔄 SRS #6: Ticket Averages**
 **Collection**: `/data/ticketAverages/{year}/{month}/{averageId}`

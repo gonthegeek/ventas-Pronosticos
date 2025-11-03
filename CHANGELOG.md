@@ -9,9 +9,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **SRS #5: Boletos Vendidos - Comparison Features**
+  - Complete comparison module with four modes: day, week, month, and weekday
+  - TicketsComparisonChart component for interactive visualizations (line/bar charts)
+  - Weekday comparison mode to analyze same day-of-week across multiple weeks
+  - Quick selection buttons for 8/12 week comparisons in weekday mode
+  - Chart/table visibility toggles with localStorage persistence
+  - CSV export for all comparison modes
+  - Route: `/finances/tickets/comparison` with navigation integration
+
 ### Changed
 - Enhanced dashboard with paid prizes insights (monthly and annual)
 - Updated documentation with dashboard KPI details
+- **Tickets Module UX Improvements**
+  - Weekly summary clarification: totals only include days within selected month
+  - Modal date defaulting: uses selected month's first day instead of today's date
+  - Improved user experience when adding entries to historical months
 
 ---
 

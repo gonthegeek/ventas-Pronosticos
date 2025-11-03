@@ -264,35 +264,94 @@ interface RollChangesData {
 - Operator tracking
 - Role-based access (Operador+)
 
-#### **SRS #5: Boletos vendidos**
-- **Status**: Not Started
-- **Target Module**: `src/modules/finances/Tickets.tsx`
-- **Collection**: `data/tickets/{year}/{month}/{ticketId}`
-- **Cache Strategy**: 2hr TTL, daily aggregation
-- **Purpose**: Track tickets sold by machine with daily/weekly aggregation
+#### **SRS #5: Boletos vendidos** ✅
+- **Status**: Complete Implementation + Advanced Comparison Features
+- **Module**: `src/modules/finances/Tickets.tsx`
+- **Comparison Module**: `src/modules/finances/TicketsComparison.tsx`
+- **Chart Component**: `src/components/sales/TicketsComparisonChart.tsx`
+- **Service**: `src/services/TicketsService.ts` + `src/services/TicketsService.cached.ts`
+- **Hook**: `src/hooks/useCachedTickets.ts`
+- **Route**: `/finances/tickets` + `/finances/tickets/comparison`
+- **Collection**: `data/tickets/{year}/{month}/entries/{ticketId}`
+- **Cache Strategy**: 1-3hr adaptive TTL (current month 1h, historical 3h), weekly aggregation
+- **Purpose**: Track tickets sold by machine with daily/weekly aggregation and comprehensive comparison tools
 
 **Fields**:
 ```typescript
-interface TicketsData {
+interface TicketEntry {
   id?: string
-  week: string            // YYYY-Www format
   date: string            // YYYY-MM-DD
+  week: string            // YYYY-Www format (auto-calculated ISO week)
   machineId: '76' | '79'
   ticketsDay: number      // Tickets sold that day
-  ticketsTotal: number    // Calculated weekly total
+  ticketsTotal: number    // Calculated weekly total for this machine
   operatorId: string
+  notes?: string
   timestamp: Date
   createdAt: Date
+  updatedAt?: Date
 }
 ```
 
-**Features**:
-- Daily ticket tracking
-- Weekly total calculations
-- Machine breakdown analysis
-- Historical ticket trends
-- Export functionality
-- Role-based access (Operador+)
+**Core Features** ✅:
+- ✅ Complete CRUD operations with cross-month date handling
+- ✅ Daily ticket tracking with machine breakdown
+- ✅ Automatic ISO week calculation and weekly totals
+- ✅ Month picker with navigation (current/previous/next)
+- ✅ Summary cards: Total tickets, Machine 76/79 breakdown, Daily average
+- ✅ Weekly summary table (with clarification for month-spanning weeks)
+- ✅ Detailed entries table with inline edit/delete
+- ✅ CSV export functionality
+- ✅ Smart modal date defaulting (uses selected month instead of always today)
+- ✅ Immediate stats refresh after CRUD operations
+- ✅ Dashboard integration with monthly/annual KPI cards
+- ✅ Role-based access (Operador+ can create/read, Supervisor+ can update/delete)
+
+**Comparison Features** ⭐ NEW ✅:
+- ✅ **Four Comparison Modes**:
+  1. **Por Día**: Daily ticket comparison across custom date ranges
+  2. **Por Semana**: Weekly total comparison with ISO week aggregation
+  3. **Por Mes**: Monthly total comparison across multiple months
+  4. **Por Día de la Semana**: Compare same weekday across multiple weeks (e.g., all Mondays)
+  
+- ✅ **Weekday Comparison Mode** - Analyze day-of-week patterns:
+  - Select specific weekday (Lunes through Domingo)
+  - Quick selections: Last 8 weeks, Last 12 weeks
+  - Visual display: "lunes 4 nov", "lunes 11 nov", etc.
+  - Identify consistent patterns by day of week
+
+- ✅ **Interactive Visualizations**:
+  - Line charts for trend analysis
+  - Bar charts for direct comparisons
+  - Chart mode toggle with persistence
+  - Smart axis labels based on data volume
+  - Color-coded machine breakdown
+
+- ✅ **Advanced Filtering**:
+  - Date range selection with validation
+  - Quick date selections (last 7/30 days, this/last month, 3/6 months)
+  - Machine filter (76, 79, or both)
+  - Mode-specific quick selections
+
+- ✅ **Data Management**:
+  - CSV export for all comparison modes
+  - Chart/table visibility toggles
+  - localStorage preference persistence
+  - Real-time data aggregation across months
+
+**UX Enhancements**:
+- Weekly summary clarification: "Totals only include days within selected month" note
+- Table header: "Total Boletos (días en este mes)" for transparency
+- Modal date defaults to selected month's first day (not today)
+- Navigation: "Ver Comparaciones" button from main tickets page
+- Back link from comparison page to main tickets view
+
+**localStorage Persistence**:
+```typescript
+'ticketsComparison_chartMode': 'line' | 'bar'
+'ticketsComparison_showChart': 'true' | 'false'
+'ticketsComparison_showTable': 'true' | 'false'
+```
 
 #### **SRS #6: Promedio por boleto**
 - **Status**: Not Started
@@ -567,9 +626,16 @@ Each SRS contributes specific KPIs to the main dashboard:
 - Day-of-week performance
 - Monthly comparisons
 
+#### **SRS #5 Contributions**
+- Monthly tickets sold total (current month)
+- Annual tickets sold total (year-to-date)
+- Machine breakdown (76/79)
+- Daily average tickets
+- Quick action link to tickets
+- Weekday pattern analysis
+
 #### **Remaining SRS Contributions**
 - #3: Roll change frequency and machine reliability
-- #5: Ticket sales trends and volume
 - #6: Average spending patterns per ticket
 - #7: Prize distribution and scratch lottery analysis
 - #9: Jackpot accumulation and first place trends
@@ -579,18 +645,19 @@ Each SRS contributes specific KPIs to the main dashboard:
 ### **Phase 2: Core Business Functions (Completed ✅)**
 1. ✅ **SRS #2 (Comisiones mensuales)** - Financial tracking implemented
 2. ✅ **SRS #8 (Boletos premiados pagados)** - Prize tracking implemented
-3. **SRS #5 (Boletos vendidos)** - Next: Foundation for SRS #6
+3. ✅ **SRS #5 (Boletos vendidos)** - Complete with advanced comparison features
 
 ### **Phase 3: Advanced Features**
-4. **SRS #6 (Promedio por boleto)** - Depends on SRS #5
+4. **SRS #6 (Promedio por boleto)** - Next: Depends on SRS #5 (now available)
 5. **SRS #7 (Raspados premiados)** - Lottery management
 6. **SRS #9 (Primeros lugares)** - Jackpot management
 7. **SRS #3 (Cambio de rollo)** - Operational necessity
 
 ### **Implementation Dependencies**
-- SRS #6 requires SRS #5 (ticket data for averages)
-- SRS #4 leverages SRS #1 (smart aggregation)
-- Dashboard KPIs depend on multiple SRS for comprehensive metrics
+- ✅ SRS #6 ready to implement (SRS #5 ticket data now available)
+- ✅ SRS #4 leverages SRS #1 (smart aggregation implemented)
+- ✅ Dashboard KPIs enhanced with tickets data (SRS #5)
+- Remaining dependencies clear for Phase 3
 
 ## 📋 Implementation Checklist
 
@@ -626,8 +693,8 @@ For each new SRS implementation:
 
 ---
 
-**SRS Status**: 4 of 9 Complete (44%)  
-**Completed**: SRS #1 (Ventas), #2 (Comisiones), #4 (Comparación), #8 (Premiados)
-**Next Implementation**: SRS #5 (Boletos vendidos)  
-**Reference**: Established patterns for hierarchical data, caching, and permissions  
-**Last Updated**: October 29, 2025
+**SRS Status**: 5 of 9 Complete (56%)  
+**Completed**: SRS #1 (Ventas), #2 (Comisiones), #4 (Comparación), #5 (Boletos), #8 (Premiados)  
+**Next Implementation**: SRS #6 (Promedio por boleto) - Now ready with SRS #5 data available  
+**Reference**: Established patterns for hierarchical data, caching, permissions, and advanced comparisons  
+**Last Updated**: November 2, 2025
