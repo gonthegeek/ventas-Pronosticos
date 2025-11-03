@@ -205,11 +205,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
             {!isCollapsed && (
               <>
                 {item.name}
-                {item.srsId && (
-                  <span className="ml-auto text-xs bg-gray-100 text-gray-500 px-2 py-1 rounded">
-                    SRS #{item.srsId}
-                  </span>
-                )}
               </>
             )}
           </NavLink>
