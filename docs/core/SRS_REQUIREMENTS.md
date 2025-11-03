@@ -1,18 +1,18 @@
 # Casa Pronósticos - System Requirements Specification (SRS)
 
-> **📊 Complete SRS Documentation** - All 9 core functionalities with implementation details
+> **📊 Complete SRS Documentation** - All 10 core functionalities with implementation details
 
 ## 📋 SRS Overview
 
-Casa Pronósticos implements 9 core System Requirements Specifications (SRS) for comprehensive sales and lottery management. Each SRS represents a specific business functionality with defined data structures, user interfaces, and system behaviors.
+Casa Pronósticos implements 10 core System Requirements Specifications (SRS) for comprehensive sales and lottery management. Each SRS represents a specific business functionality with defined data structures, user interfaces, and system behaviors.
 
-**Current Status**: 3 of 9 SRS implemented (33% complete)  
+**Current Status**: 3 of 10 SRS implemented (33% complete)  
 **Architecture**: React + TypeScript + Firebase + Intelligent Cache  
 **Implementation Approach**: Modular, cache-optimized, hierarchical data structure
 
 ## 🎯 SRS Implementation Status
 
-### ✅ **IMPLEMENTED (3 of 9)**
+### ✅ **IMPLEMENTED (3 of 10)**
 
 #### **SRS #1: Ventas por hora** ✅
 - **Status**: Complete Implementation
@@ -140,6 +140,7 @@ interface ComparisonData {
 3. **Peak Hour Analysis**: Compare all Fridays at 20:00 to identify consistent patterns
 4. **Day-of-Week Patterns**: Compare all Mondays, Tuesdays, etc. at specific hours
 5. **Custom Ranges**: Any date range for special events or promotions
+6. **Hourly Cross-Week Analysis**: Compare same hour across all days of the week (e.g., 5 PM on Monday, Tuesday, Wednesday, etc.)
 
 #### **SRS #2: Comisiones mensuales** ✅
 - **Status**: Complete Implementation
@@ -235,6 +236,92 @@ interface PaidPrizeEntry {
 #### **SRS #4: Ventas diarias y semanales** ⭐ ✅
 
 ### 🔄 **PENDING (5 of 9)**
+
+#### **SRS #10: Comparación de ventas por hora cross-semana** 🆕
+- **Status**: Planned Enhancement to SRS #4
+- **Target Module**: Enhancement to `src/modules/sales/SalesComparisonPage.tsx`
+- **Implementation Approach**: New comparison mode in existing comparison component
+- **Data Source**: Calculated from SRS #1 hourly sales data
+- **Cache Strategy**: Leverages existing sales cache + calculation caching (1hr TTL)
+- **Purpose**: Compare sales at the same hour across all days of the week to identify hourly patterns by weekday
+
+**Comparison Mode**:
+```typescript
+// Compare sales at 5 PM (17:00) across all weekdays for a date range
+interface HourlyWeekdayParams {
+  hour: 0-23                    // Hour to compare (e.g., 17 for 5 PM)
+  dayOfWeek: 0-6                // Specific day of week (0=Sun, 1=Mon, etc.)
+  startDate: string             // Start date of range (YYYY-MM-DD)
+  endDate: string               // End date of range (YYYY-MM-DD)
+  includeAllMachines: boolean   // Combine or separate machine data
+}
+
+// Service method with caching
+CachedSalesService.getHourlyWeekdayComparison(
+  hour: 17,                     // 5 PM
+  dayOfWeek: 1,                 // Monday
+  startDate: '2024-10-01',      // Start of date range
+  endDate: '2024-11-01',        // End of date range
+  includeAllMachines: true      // Total for both machines
+)
+
+// Returns array of ComparisonData for each matching weekday+hour occurrence
+// Cache key: `hourly-weekday-${hour}-${dayOfWeek}-${startDate}-${endDate}`
+// TTL: 1 hour (historical data unlikely to change frequently)
+```
+
+**UI Features**:
+- Mode selector: Add "Mismo Día y Hora" tab to existing comparison modes
+- Hour selector: Dropdown for hours 0-23 (with friendly labels like "5 PM", "17:00", etc.)
+- Day of week selector: Dropdown for specific weekday (Lunes, Martes, Miércoles, etc.)
+- Date range selector: 
+  - Start date and end date pickers for custom intervals
+  - Quick selections: "Últimas 4 semanas", "Últimas 8 semanas", "Últimas 12 semanas", "Último mes", "Últimos 3 meses"
+  - Date validation: ensure end date >= start date
+  - Smart filtering: automatically finds all occurrences of selected day+hour within range
+- Machine filter: Toggle for combined view or individual machine breakdown
+- Chart visualization: Line or bar chart showing sales trend for selected day+hour across date range
+- Table view: Detailed breakdown with date, weekday, hour, and sales columns
+- Export: CSV download with hourly weekday data including full date information
+
+**Chart Labels**:
+- X-axis: Dates (abbreviated format for readability, e.g., "4 nov", "11 nov", "18 nov")
+- Y-axis: Sales amount ($)
+- Title: "Ventas [Día] a las [HH]:00 - [startDate] a [endDate]" (e.g., "Ventas Lunes a las 17:00 - 01 oct a 01 nov")
+- Legend: Machine breakdown if separate view enabled
+- Tooltip: Full date, weekday name, hour, and sales amount
+
+**Calculated Fields**:
+```typescript
+interface HourlyWeekdayData {
+  hour: number                  // Selected hour
+  dayOfWeek: number            // 0-6 (0=Sun, 1=Mon, etc.)
+  dayName: string              // "Lunes", "Martes", etc.
+  date: string                 // Specific date (YYYY-MM-DD)
+  displayLabel: string         // User-friendly label (e.g., "lun 4 nov")
+  totalSales: number           // Combined sales for both machines at that hour
+  machine76: number            // Machine 76 sales at that hour
+  machine79: number            // Machine 79 sales at that hour
+  hasSales: boolean            // Whether sales data exists for this hour/day
+}
+```
+
+**Example Use Cases**:
+1. **Monday Evening Trend**: Compare all Mondays at 6 PM over last 8 weeks to identify sales trend
+2. **Friday Peak Analysis**: Compare all Fridays at 8 PM over last 3 months to validate peak hour
+3. **Weekend Opening**: Compare all Saturdays at 10 AM over last 2 months for staffing decisions
+4. **Holiday Impact**: Compare specific day+hour across custom date range including holidays
+5. **Seasonal Patterns**: Compare same day+hour across quarters to identify seasonal trends
+6. **Promotional Effectiveness**: Track Tuesday 5 PM sales before/during/after promotions
+
+**Implementation Notes**:
+- Reuse existing `SalesComparisonChart` component with new data shape
+- Add new quick selections: "Últimas 4 semanas", "Últimas 8 semanas", "Últimas 12 semanas", "Último mes", "Últimos 3 meses"
+- Date range validation: ensure end date >= start date, max range of 6 months for performance
+- Smart data fetching: only query months within the selected date range to minimize Firestore reads
+- Cache results per hour/dayOfWeek/dateRange combination with 1hr TTL
+- Integrate with existing comparison filters and export tools
+- Show occurrence count in UI (e.g., "10 lunes encontrados" - "10 Mondays found")
 
 #### **SRS #3: Cambio de rollo**
 - **Status**: Not Started
@@ -648,12 +735,14 @@ Each SRS contributes specific KPIs to the main dashboard:
 3. ✅ **SRS #5 (Boletos vendidos)** - Complete with advanced comparison features
 
 ### **Phase 3: Advanced Features**
-4. **SRS #6 (Promedio por boleto)** - Next: Depends on SRS #5 (now available)
-5. **SRS #7 (Raspados premiados)** - Lottery management
-6. **SRS #9 (Primeros lugares)** - Jackpot management
-7. **SRS #3 (Cambio de rollo)** - Operational necessity
+4. **SRS #10 (Mismo Día y Hora Comparison)** - Next: Enhancement to SRS #4 for hourly weekday pattern analysis with date ranges
+5. **SRS #6 (Promedio por boleto)** - Depends on SRS #5 (now available)
+6. **SRS #7 (Raspados premiados)** - Lottery management
+7. **SRS #9 (Primeros lugares)** - Jackpot management
+8. **SRS #3 (Cambio de rollo)** - Operational necessity
 
 ### **Implementation Dependencies**
+- ✅ SRS #10 ready to implement (SRS #1 and #4 infrastructure available)
 - ✅ SRS #6 ready to implement (SRS #5 ticket data now available)
 - ✅ SRS #4 leverages SRS #1 (smart aggregation implemented)
 - ✅ Dashboard KPIs enhanced with tickets data (SRS #5)
@@ -693,8 +782,9 @@ For each new SRS implementation:
 
 ---
 
-**SRS Status**: 5 of 9 Complete (56%)  
+**SRS Status**: 5 of 10 Complete (50%) + 1 Enhancement Planned  
 **Completed**: SRS #1 (Ventas), #2 (Comisiones), #4 (Comparación), #5 (Boletos), #8 (Premiados)  
 **Next Implementation**: SRS #6 (Promedio por boleto) - Now ready with SRS #5 data available  
+**New Enhancement**: SRS #10 (Hourly Cross-Week Comparison) - Extension to SRS #4 for hourly weekday pattern analysis  
 **Reference**: Established patterns for hierarchical data, caching, permissions, and advanced comparisons  
 **Last Updated**: November 2, 2025

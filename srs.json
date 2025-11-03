@@ -306,6 +306,54 @@
       "collection_path": "data/firstPlaces/{year}/{month}",
       "cache_strategy": "4hr TTL, event-based",
       "notes": "Registro de primeros lugares, bolsa acumulada y ganadores"
+    },
+    {
+      "id": 10,
+      "name": "Comparación de ventas por hora y día específico (Mismo Día y Hora)",
+      "srs_status": "planned_enhancement",
+      "migration_status": "not_started",
+      "module": "Enhancement to src/modules/sales/SalesComparisonPage.tsx",
+      "implementation_approach": "New comparison mode in existing component",
+      "data_source": "Calculated from existing SRS #1 hourly sales data",
+      "fields": [
+        "hour (0-23, selected hour to compare)",
+        "dayOfWeek (0-6, selected day of week: 0=Sun, 1=Mon, etc.)",
+        "dayName (string, e.g., 'Lunes')",
+        "startDate (YYYY-MM-DD, start of date range)",
+        "endDate (YYYY-MM-DD, end of date range)",
+        "date (YYYY-MM-DD, specific date of occurrence)",
+        "displayLabel (string, e.g., 'lun 4 nov')",
+        "totalSales (number, combined sales at that hour)",
+        "machine76 (number, machine 76 sales)",
+        "machine79 (number, machine 79 sales)",
+        "hasSales (boolean, data availability flag)"
+      ],
+      "granularity": "hora/día de semana/rango de fechas",
+      "collection_path": "NONE - calculated on-demand from data/sales/{year}/{month}/{day}",
+      "cache_strategy": "Leverages existing sales cache + calculation caching (1hr TTL)",
+      "features": [
+        "Compare same day and hour across custom date range",
+        "Hour selector with friendly labels (e.g., '5 PM', '17:00')",
+        "Day of week selector (Lunes, Martes, Miércoles, etc.)",
+        "Date range selector with start and end date pickers",
+        "Quick selections: Last 4/8/12 weeks, Last 1/3 months",
+        "Date validation: end date >= start date, max 6 months range",
+        "Machine filter for combined or individual breakdown",
+        "Line or bar chart visualization showing trend over time",
+        "Table view with full date, weekday, hour, and sales breakdown",
+        "CSV export functionality with complete date information",
+        "Occurrence counter showing how many matches found",
+        "Smart data fetching: only queries months within selected range"
+      ],
+      "use_cases": [
+        "Monday evening trend: All Mondays at 6 PM over last 8 weeks",
+        "Friday peak analysis: All Fridays at 8 PM over last 3 months",
+        "Weekend opening: All Saturdays at 10 AM over last 2 months",
+        "Holiday impact: Specific day+hour across custom range including holidays",
+        "Seasonal patterns: Same day+hour across quarters",
+        "Promotional effectiveness: Track specific day+hour before/during/after promotions"
+      ],
+      "notes": "Extension to SRS #4 for hourly weekday pattern analysis with flexible date range selection. Reuses existing comparison infrastructure. No duplicate data storage required. Provides powerful insights for identifying trends and patterns at specific day+hour combinations."
     }
   ],
   "firebase_schema": {

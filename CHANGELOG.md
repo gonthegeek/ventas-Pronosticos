@@ -9,6 +9,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **SRS #10: Mismo Día y Hora Comparison** (Planned)
+  - New comparison mode for sales comparison: "Mismo Día y Hora" (Same Day and Hour)
+  - Compare sales at specific day+hour combination across custom date ranges
+  - Example: Compare all Mondays at 5 PM over last 8 weeks
+  - Features planned:
+    - Hour selector (0-23) with friendly labels (e.g., "5 PM", "17:00")
+    - Day of week selector (Lunes through Domingo)
+    - Date range selector with start and end date pickers
+    - Quick selections: "Últimas 4/8/12 semanas", "Último 1/3 meses"
+    - Date validation: end date >= start date, max 6 months range
+    - Line or bar chart visualization showing trend over time
+    - Table view with full date breakdown
+    - Machine filter for combined or individual breakdown
+    - Occurrence counter (e.g., "10 lunes encontrados")
+    - Smart data fetching: only queries months within selected range
+  - Use cases: Track Monday evening trends, Friday peak hours, weekend patterns, seasonal analysis, promotional effectiveness
+  - Will leverage existing SRS #1 data with 1hr cache TTL
+  - Documentation: Updated SRS_REQUIREMENTS.md and srs.json
+
 ### Fixed
 - **Browser Console Warnings**
   - Removed `X-Frame-Options` from HTML meta tags (must be set via HTTP headers)
