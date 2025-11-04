@@ -34,6 +34,9 @@ export const PERMISSIONS = {
     // Rollos permissions  
     ROLLOS_CREATE: 'rollos:create',
     ROLLOS_READ: 'rollos:read',
+    ROLLOS_UPDATE: 'rollos:update',
+    ROLLOS_DELETE: 'rollos:delete',
+    ROLLOS_ALL: 'rollos:all',
     
     // Comisiones permissions
     COMISIONES_ALL: 'comisiones:all',
@@ -78,6 +81,8 @@ const operadorPermissions: PermissionName[] = [
 
 const supervisorPermissions: PermissionName[] = [
     ...operadorPermissions,
+    PERMISSIONS.ROLLOS_UPDATE,
+    PERMISSIONS.ROLLOS_DELETE,
     PERMISSIONS.COMISIONES_ALL,
     PERMISSIONS.PREMIADOS_ALL,
     PERMISSIONS.PROMEDIO_BOLETO_ALL,
@@ -312,6 +317,9 @@ export class PermissionUtils {
             [PERMISSIONS.BOLETOS_READ]: 'Ver Boletos',
             [PERMISSIONS.ROLLOS_CREATE]: 'Crear Rollos',
             [PERMISSIONS.ROLLOS_READ]: 'Ver Rollos',
+            [PERMISSIONS.ROLLOS_UPDATE]: 'Editar Rollos',
+            [PERMISSIONS.ROLLOS_DELETE]: 'Eliminar Rollos',
+            [PERMISSIONS.ROLLOS_ALL]: 'Gestión Completa de Rollos',
             [PERMISSIONS.COMISIONES_ALL]: 'Gestión Completa de Comisiones',
             [PERMISSIONS.COMISIONES_READ]: 'Ver Comisiones',
             [PERMISSIONS.COMISIONES_WRITE]: 'Editar Comisiones',

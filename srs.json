@@ -103,21 +103,43 @@
     {
       "id": 3,
       "name": "Cambio de rollo",
-      "srs_status": "pending",
-      "migration_status": "not_started",
-      "module": "src/modules/operations/rollChanges.tsx (to be created)",
+      "srs_status": "implemented",
+      "migration_status": "completed",
+      "module": "src/modules/operations/RollChanges.tsx",
+      "route": "/operations/roll-changes",
+      "services": [
+        "src/services/RollChangesService.ts",
+        "src/services/RollChangesService.cached.ts"
+      ],
+      "hooks": ["src/hooks/useCachedRollChanges.ts"],
+      "dashboard_integration": "Last roll change date per machine (M76/M79) with quick action link",
       "fields": [
         "date (YYYY-MM-DD)",
         "machineId ('76' | '79')",
         "operatorId (string)",
         "notes (string, optional)",
         "timestamp (Date)",
-        "createdAt (Firebase Timestamp)"
+        "createdAt (Firebase Timestamp)",
+        "updatedAt (Firebase Timestamp, optional)"
       ],
       "granularity": "evento",
-      "collection_path": "data/rollChanges/{year}/{month}",
-      "cache_strategy": "2hr TTL, event-based",
-      "notes": "Registra cada cambio de rollo de papel en cada máquina"
+      "collection_path": "data/rollChanges/{year}/{month}/entries",
+      "cache_strategy": "2hr TTL, event-based caching via financesCache, year-range fetching for dashboard",
+      "firestore_rules": "Operador+ can create/read, Supervisor+ can update/delete",
+      "features": [
+        "CRUD operations for roll change events",
+        "Month picker with quick navigation (current/previous/next month)",
+        "Summary cards: total changes, machine breakdown (76/79), separate frequency per machine",
+        "Time between changes calculation per machine",
+        "Machine reliability metrics with independent averages",
+        "Detailed event table with inline edit/delete (no operator column)",
+        "CSV export functionality",
+        "Intelligent caching with 2hr TTL",
+        "Role-based access (Operador+ create/read, Supervisor+ update/delete)",
+        "Dashboard integration with last change date insights (M76 emerald, M79 purple)",
+        "Year-to-date data fetching for accurate last change display"
+      ],
+      "notes": "Completamente implementado con CRUD, análisis de frecuencia independiente por máquina, métricas de confiabilidad, cache inteligente, reglas de Firestore, e integración completa en dashboard. Registra cada cambio de rollo de papel en cada máquina para análisis operacional. Dashboard muestra fecha del último cambio independientemente del mes de registro."
     },
     {
       "id": 4,
@@ -425,9 +447,18 @@
         "status": "implemented"
       },
       "data/rollChanges/{year}/{month}": {
-        "path": "/data/rollChanges/{year}/{month}/{changeId}",
+        "path": "/data/rollChanges/{year}/{month}/entries/{changeId}",
         "description": "Roll change events for SRS #3",
-        "status": "planned"
+        "status": "implemented",
+        "fields": {
+          "date": "string (YYYY-MM-DD)",
+          "machineId": "string ('76' | '79')",
+          "operatorId": "string",
+          "notes": "string (optional)",
+          "timestamp": "Timestamp",
+          "createdAt": "Timestamp",
+          "updatedAt": "Timestamp (optional)"
+        }
       },
       "data/dailyWeeklySales/{year}/{month}": {
         "path": "/data/dailyWeeklySales/{year}/{month}/{saleId}",
@@ -620,6 +651,7 @@
       "Authentication and authorization",
       "SRS #1: Hourly Sales (complete CRUD)",
       "SRS #2: Comisiones mensuales (CRUD + cache)",
+      "SRS #3: Cambio de rollo (CRUD + cache + dashboard integration)",
       "SRS #4: Ventas diarias y semanales (smart aggregation)",
       "SRS #5: Boletos vendidos (CRUD + cache + comparison)",
       "SRS #6: Promedio por boleto (CRUD + cache + calculations)",
@@ -635,7 +667,6 @@
       "Testing and optimization"
     ],
     "pending": [
-      "SRS #3: Cambio de rollo",
       "SRS #7: Raspados premiados",
       "SRS #9: Primeros lugares de sorteos",
       "SRS #10: Mismo Día y Hora Comparison (enhancement to SRS #4)",

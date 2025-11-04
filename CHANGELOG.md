@@ -10,6 +10,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **SRS #3: Cambio de Rollo** (Complete Implementation)
+  - Full CRUD operations for paper roll change tracking by machine
+  - Event-based logging system for roll changes in machines 76 and 79
+  - Monthly statistics with machine breakdown and frequency analysis
+  - Time between changes calculation and average frequency metrics
+  - Comprehensive UI with month picker, summary cards, and table view
+  - CSV export functionality with full event data
+  - Intelligent caching with 2hr TTL for event-based data
+  - Services: `RollChangesService.ts`, `RollChangesService.cached.ts`
+  - Hooks: `useCachedRollChanges.ts` with multiple data-fetching hooks
+  - Module: `src/modules/operations/RollChanges.tsx`
+  - Route: `/operations/roll-changes`
+  - Hierarchical Firestore structure: `data/rollChanges/{year}/{month}/entries/{id}`
+  - Permissions: `ROLLOS_CREATE`, `ROLLOS_READ`, `ROLLOS_UPDATE`, `ROLLOS_DELETE`, `ROLLOS_ALL`
+  - Firestore rules: Operador+ can create/read, Supervisor+ can update/delete
+  - Operador+ can create/read, Supervisor+ can update/delete
+  - Updated sidebar navigation with "Cambios de Rollo" menu item
+  - **Dashboard Integration**:
+    - Added two insight cards showing last roll change dates per machine
+    - "Último Cambio M76" card with emerald color theme displaying last change date
+    - "Último Cambio M79" card with purple color theme displaying last change date
+    - Quick action link to roll changes module with emerald hover effect
+    - Integrated `useCachedMonthlyRollChanges` hook for real-time data
+    - Date formatting in Spanish locale (Mexico City timezone)
+
 - **Ticket Averages Chart Enhancement**
   - Added three separate trend lines in the ticket averages chart:
     - Overall average (blue dashed line) showing combined performance
@@ -19,11 +44,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Increased chart height to 400px for better visibility
   - Color-coded lines match summary card colors for consistency
 
+### Changed
+- **Cache Service Enhancement**
+  - Added `invalidateRollChangesData()` method to CacheManager
+  - Roll changes cache invalidation with year/month specificity
+  - Pattern-based cache invalidation: `rollChanges:.*:${year}-${month}`
+
 ### Fixed
 - **Dashboard Tickets Sold Cards**
   - Removed interactive links from monthly and annual tickets sold insight cards
   - Cards now display as read-only data without navigation functionality
   - Maintains visual styling (cyan/teal colors) for consistency
+
+- **Dashboard Roll Changes Insights**
+  - Fixed insight cards to show last roll change across entire year instead of only current month
+  - Now uses `useCachedRollChangesRange` hook to fetch data from January through current month
+  - Displays most recent roll change date for each machine regardless of when it occurred
+  - Properly handles empty data states with "Sin datos" fallback
 
 ---
 

@@ -76,8 +76,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
     },
     {
       id: 'rollos',
-      name: 'Rollos',
-      path: '/rollos',
+      name: 'Cambios de Rollo',
+      path: '/operations/roll-changes',
       icon: (
         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 

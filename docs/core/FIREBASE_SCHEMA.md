@@ -180,11 +180,11 @@ interface CommissionsData {
 }
 ```
 
-### **🔄 SRS #3: Roll Changes**
-**Collection**: `/data/rollChanges/{year}/{month}/{changeId}`
+### **✅ SRS #3: Roll Changes** (Implemented)
+**Collection**: `/data/rollChanges/{year}/{month}/entries/{changeId}`
 
 ```typescript
-interface RollChangesData {
+interface RollChangeEntry {
   // Business Data
   date: string                       // YYYY-MM-DD
   machineId: '76' | '79'            // Machine identifier
@@ -196,12 +196,17 @@ interface RollChangesData {
   // System Fields
   timestamp: Timestamp              // When roll was changed
   createdAt: Timestamp             // System creation time
-  
-  // Derived Fields
-  yearMonth: string                // "2025-08"
-  dayOfWeek: number               // 0-6 for analysis
+  updatedAt?: Timestamp            // Last update time (optional)
 }
 ```
+
+**Features**:
+- Event-based logging for roll changes
+- Separate frequency calculations per machine (M76, M79)
+- Time between changes analytics
+- Dashboard integration showing last roll change date
+- 2hr TTL caching strategy
+- Role-based access (Operador+ create/read, Supervisor+ update/delete)
 
 ### **✅ SRS #5: Tickets Sold** (Implemented)
 **Collection**: `/data/tickets/{year}/{month}/entries/{entryId}`

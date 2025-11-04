@@ -6,32 +6,34 @@
 
 Casa Pronósticos is a comprehensive sales and lottery management system for analyzing data from lottery machines. The system has been successfully migrated from legacy SPA to modern React architecture with intelligent caching to optimize Firebase usage and stay within free tier limits.
 
-**Current Status**: Phase 2 Complete (60% - 6 of 9 SRS Complete + 1 Enhancement Planned)
+**Current Status**: Phase 2 Complete (70% - 7 of 9 SRS Complete + 1 Enhancement Planned)
 
 ### ✅ **Key Achievements**
 
 - ✅ **Complete React Migration**: Modern React 18 + TypeScript architecture
 - ✅ **Intelligent Cache System**: 85-95% hit rate, 75-90% Firebase reduction
-- ✅ **6 SRS Implemented**: Hourly Sales, Commissions, Sales Comparison, Tickets, Ticket Averages, Paid Prizes
+- ✅ **7 SRS Implemented**: Hourly Sales, Commissions, Roll Changes, Sales Comparison, Tickets, Ticket Averages, Paid Prizes
 - ✅ **Role-Based Security**: Granular permissions (Operador/Supervisor/Admin)
 - ✅ **Admin Panel**: User management, cache monitoring, data migration tools
 - ✅ **Firebase Optimization**: <10,000 reads/day (down from 500-1000/day)
 - ✅ **Firestore Security Rules**: Complete rules for all implemented SRS
-- ✅ **Comprehensive Dashboard**: Real-time KPIs with 11 insight cards and quick actions
+- ✅ **Comprehensive Dashboard**: Real-time KPIs with 13 insight cards and quick actions
 - ✅ **Advanced Comparisons**: 4 comparison modes including weekday pattern analysis
 
 ### 📊 Dashboard Overview
 
 The dashboard (`src/modules/dashboard/Dashboard.tsx`) provides a comprehensive overview with real-time metrics:
 
-**Insight Cards (9 Total)**:
+**Insight Cards (13 Total)**:
 - 💰 **Sales KPIs**: Today's sales, weekly sales, monthly sales
 - 💼 **Commission Tracking**: Monthly commissions, annual commissions (calculated from Tira/paperTotal)
 - 🎁 **Prize Tracking**: Monthly paid prizes, annual paid prizes (year-to-date)
+- 🎫 **Ticket Metrics**: Monthly tickets sold, annual tickets sold (year-to-date)
+- 🔄 **Roll Changes**: Last roll change for Machine 76 (emerald), Last roll change for Machine 79 (purple)
 - ⏰ **Current Hour**: Real-time hour display
 
 **Quick Actions**:
-- Direct links to Hourly Sales, Commissions, and Paid Prizes modules
+- Direct links to Hourly Sales, Commissions, Paid Prizes, Tickets, Ticket Averages, and Roll Changes modules
 - Admin panel access (admin role only)
 
 **Features**:
@@ -58,7 +60,7 @@ The dashboard (`src/modules/dashboard/Dashboard.tsx`) provides a comprehensive o
 
 ## 📊 SRS (System Requirements Specification) - 10 Functionalities (9 Core + 1 Enhancement)
 
-### ✅ **IMPLEMENTED** (6 of 9 Core Complete)
+### ✅ **IMPLEMENTED** (7 of 9 Core Complete)
 
 #### **SRS #1: Ventas por hora** 
 - **Module**: `src/modules/sales/HourlySales.tsx`
@@ -74,6 +76,16 @@ The dashboard (`src/modules/dashboard/Dashboard.tsx`) provides a comprehensive o
 - **Features**: CRUD complete, monthly tracking, system vs paper comparison, year-over-year analysis, CSV export
 - **Fields**: year, month, machineId ('76'|'79'), systemTotal, paperTotal, difference (calculated), notes
 - **Access**: Supervisor and Admin only
+
+#### **SRS #3: Cambio de rollo** 🆕
+- **Module**: `src/modules/operations/RollChanges.tsx`
+- **Route**: `/operations/roll-changes`
+- **Collection**: `data/rollChanges/{year}/{month}/entries/{changeId}`
+- **Features**: CRUD complete, event-based logging, machine-specific frequency analysis, time between changes calculation, dashboard integration, CSV export
+- **Fields**: date, machineId ('76'|'79'), operatorId, notes, timestamp
+- **Dashboard**: Last roll change date per machine with emerald (M76) and purple (M79) themed insight cards
+- **Access**: Operador+ can create/read, Supervisor+ can update/delete
+- **Note**: *Tracks paper roll changes for operational analysis and preventive maintenance*
 
 #### **SRS #4: Ventas diarias y semanales** ⭐ 
 - **Module**: `src/modules/sales/SalesComparisonPage.tsx` + `src/components/sales/SalesComparison.tsx`
@@ -118,9 +130,8 @@ The dashboard (`src/modules/dashboard/Dashboard.tsx`) provides a comprehensive o
 - **UI**: Hour selector, weekday selector, date range picker, line/bar charts, quick selections
 - **Use Cases**: Monday trends, Friday peaks, weekend patterns, seasonal analysis, promotional effectiveness
 
-### 🔄 **PENDING** (3 of 9 Core)
+### 🔄 **PENDING** (2 of 9 Core)
 
-#### **SRS #3: Cambio de rollo** - Paper roll change event logging  
 #### **SRS #7: Raspados premiados** - Scratch lottery prize tracking
 #### **SRS #9: Primeros lugares de sorteos** - First place winner tracking
 

@@ -149,6 +149,14 @@ service cloud.firestore {
       allow write: if isSupervisorOrAdmin();
     }
     
+    // Roll changes data - hierarchical structure: data/rollChanges/{year}/{month}/entries/{id}
+    // SRS #3: Cambio de rollo - Operador+ can create/read, Supervisor+ can update/delete
+    match /data/rollChanges/{document=**} {
+      allow read: if isAuthorizedUser();
+      allow create: if isAuthorizedUser();
+      allow update, delete: if isSupervisorOrAdmin();
+    }
+    
     // Inventory data
     match /inventory/{document=**} {
       allow read: if isAuthorizedUser();

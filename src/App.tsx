@@ -18,6 +18,7 @@ import PaidPrizes from './modules/finances/PaidPrizes'
 import Tickets from './modules/finances/Tickets'
 import TicketsComparison from './modules/finances/TicketsComparison'
 import TicketAverages from './modules/finances/TicketAverages'
+import RollChanges from './modules/operations/RollChanges'
 
 function App() {
   const dispatch = useAppDispatch()
@@ -66,6 +67,7 @@ function App() {
         <Route path="/finances/tickets" element={<Tickets />} />
         <Route path="/finances/tickets/comparison" element={<TicketsComparison />} />
         <Route path="/finances/ticket-averages" element={<TicketAverages />} />
+        <Route path="/operations/roll-changes" element={<RollChanges />} />
         <Route path="/admin" element={<EnhancedAdminPanel />} />
         {/* Additional routes will be added as we migrate more modules */}
       </Routes>

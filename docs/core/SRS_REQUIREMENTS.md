@@ -6,13 +6,13 @@
 
 Casa Pronósticos implements 10 core System Requirements Specifications (SRS) for comprehensive sales and lottery management. Each SRS represents a specific business functionality with defined data structures, user interfaces, and system behaviors.
 
-**Current Status**: 3 of 10 SRS implemented (33% complete)  
+**Current Status**: 7 of 10 SRS implemented (70% complete)  
 **Architecture**: React + TypeScript + Firebase + Intelligent Cache  
 **Implementation Approach**: Modular, cache-optimized, hierarchical data structure
 
 ## 🎯 SRS Implementation Status
 
-### ✅ **IMPLEMENTED (6 of 10)**
+### ✅ **IMPLEMENTED (7 of 10)**
 
 #### **SRS #1: Ventas por hora** ✅
 - **Status**: Complete Implementation
@@ -284,7 +284,69 @@ interface TicketAverageEntry {
 - Calculates: `averagePerTicket = totalSale / ticketsSold` (2 decimal precision)
 - Aggregates weekly and monthly statistics
 
-### 🔄 **PENDING (4 of 10)**
+#### **SRS #3: Cambio de rollo** ✅
+- **Status**: Complete Implementation + Dashboard Integration
+- **Module**: `src/modules/operations/RollChanges.tsx`
+- **Service**: `src/services/RollChangesService.ts` + `src/services/RollChangesService.cached.ts`
+- **Hook**: `src/hooks/useCachedRollChanges.ts`
+- **Route**: `/operations/roll-changes`
+- **Collection**: `data/rollChanges/{year}/{month}/entries/{changeId}`
+- **Cache Strategy**: 2hr TTL, event-based caching, year-range fetching for dashboard
+- **Purpose**: Track paper roll changes for operational analysis and preventive maintenance
+
+**Fields**:
+```typescript
+interface RollChangeEntry {
+  id?: string
+  date: string            // YYYY-MM-DD
+  machineId: '76' | '79'
+  operatorId: string
+  notes?: string          // Optional notes about the change
+  timestamp: Date
+  createdAt: Date
+  updatedAt?: Date
+}
+```
+
+**Core Features** ✅:
+- ✅ Complete CRUD operations for roll change events
+- ✅ Month picker with quick navigation (current/previous/next)
+- ✅ Summary cards: Total changes, Machine 76 count, Machine 79 count
+- ✅ Machine-specific frequency metrics: Separate average frequency for M76 and M79
+- ✅ Time between changes calculation per machine
+- ✅ Detailed event table with inline edit/delete (no operator column)
+- ✅ CSV export functionality with date, machine, and notes
+- ✅ Intelligent caching with 2hr TTL
+- ✅ Role-based access (Operador+ can create/read, Supervisor+ can update/delete)
+- ✅ Firestore security rules fully implemented
+
+**Dashboard Integration** ✅:
+- ✅ Last roll change date for Machine 76 (emerald-themed insight card)
+- ✅ Last roll change date for Machine 79 (purple-themed insight card)
+- ✅ Quick action link to roll changes module
+- ✅ Year-to-date data fetching (January through current month)
+- ✅ Spanish date formatting with Mexico City timezone
+
+**Statistics & Analytics**:
+```typescript
+interface MonthlyStats {
+  totalChanges: number
+  machine76: number              // Count of changes for Machine 76
+  machine79: number              // Count of changes for Machine 79
+  averageFrequency76: number     // Average days between changes (M76)
+  averageFrequency79: number     // Average days between changes (M79)
+  changesByDate: Map<string, number>
+}
+```
+
+**Operational Benefits**:
+- Track roll usage patterns per machine
+- Identify when each machine needs roll changes
+- Plan inventory based on frequency metrics
+- Monitor machine reliability independently
+- Prevent out-of-stock situations
+
+### 🔄 **PENDING (3 of 10)**
 
 #### **SRS #10: Comparación de ventas por hora cross-semana** 🆕
 - **Status**: Planned Enhancement to SRS #4
@@ -372,33 +434,7 @@ interface HourlyWeekdayData {
 - Integrate with existing comparison filters and export tools
 - Show occurrence count in UI (e.g., "10 lunes encontrados" - "10 Mondays found")
 
-#### **SRS #3: Cambio de rollo**
-- **Status**: Not Started
-- **Target Module**: `src/modules/operations/RollChanges.tsx`
-- **Collection**: `data/rollChanges/{year}/{month}/{changeId}`
-- **Cache Strategy**: 2hr TTL, event-based caching
-- **Purpose**: Track paper roll changes for each machine
-
-**Fields**:
-```typescript
-interface RollChangesData {
-  id?: string
-  date: string            // YYYY-MM-DD
-  machineId: '76' | '79'
-  operatorId: string
-  notes?: string          // Optional notes about the change
-  timestamp: Date
-  createdAt: Date
-}
-```
-
-**Features**:
-- Event logging for roll changes
-- Machine tracking and history
-- Time-based analytics
-- Change frequency analysis
-- Operator tracking
-- Role-based access (Operador+)
+#### **SRS #5: Boletos vendidos** ✅
 - **Status**: Complete Implementation + Advanced Comparison Features
 - **Module**: `src/modules/finances/Tickets.tsx`
 - **Comparison Module**: `src/modules/finances/TicketsComparison.tsx`
@@ -800,7 +836,7 @@ For each new SRS implementation:
 
 **SRS Status**: 6 of 10 Complete (60%) + 1 Enhancement Planned  
 **Completed**: SRS #1 (Ventas), #2 (Comisiones), #4 (Comparación), #5 (Boletos), #6 (Promedio), #8 (Premiados)  
-**Next Implementation**: SRS #3 (Cambio de rollo) or SRS #7 (Raspados premiados)  
+**Next Implementation**: SRS #7 (Raspados premiados) or SRS #9 (Primeros lugares)  
 **Planned Enhancement**: SRS #10 (Mismo Día y Hora Comparison) - Extension to SRS #4  
 **Reference**: Established patterns for hierarchical data, caching, permissions, and advanced comparisons  
 **Last Updated**: November 2, 2025

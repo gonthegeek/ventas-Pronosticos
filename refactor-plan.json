@@ -220,12 +220,23 @@
         "cache_strategy": "4hr TTL, monthly aggregation"
       },
       {
-        "name": "data/rollChanges/{year}/{month}",
-        "path": "/data/rollChanges/{year}/{month}/{changeId}",
-        "status": "planned",
+        "name": "data/rollChanges/{year}/{month}/entries",
+        "path": "/data/rollChanges/{year}/{month}/entries/{changeId}",
+        "status": "implemented",
         "description": "SRS #3 - Cambio de rollo",
         "related_srs": "srs_3",
-        "cache_strategy": "2hr TTL, event-based"
+        "cache_strategy": "2hr TTL, event-based, year-range fetching for dashboard",
+        "implementation_date": "2025-11-03",
+        "features": [
+          "Complete CRUD with roll change event logging",
+          "Machine-specific frequency calculations (M76, M79)",
+          "Time between changes analytics per machine",
+          "Dashboard integration (last change dates)",
+          "Month picker with quick navigation",
+          "Summary cards and detailed table",
+          "CSV export functionality",
+          "Role-based access (Operador+ create/read, Supervisor+ update/delete)"
+        ]
       },
       {
         "name": "data/dailyWeeklySales/{year}/{month}",
@@ -1014,10 +1025,30 @@
       {
         "srs_id": 3,
         "name": "Cambio de rollo",
-        "status": "pending",
+        "status": "completed",
         "implementation": "src/modules/operations/RollChanges.tsx",
-        "features": ["Event logging", "Machine tracking", "History view"],
-        "phase": 2
+        "route": "/operations/roll-changes",
+        "services": [
+          "src/services/RollChangesService.ts",
+          "src/services/RollChangesService.cached.ts"
+        ],
+        "hooks": ["src/hooks/useCachedRollChanges.ts"],
+        "features": [
+          "Event-based logging for roll changes ✅",
+          "Machine tracking (76, 79) ✅",
+          "Separate frequency calculations per machine ✅",
+          "Time between changes analytics ✅",
+          "Month picker with quick navigation ✅",
+          "Summary cards with machine breakdown ✅",
+          "Detailed event table (no operator column) ✅",
+          "CSV export ✅",
+          "Dashboard integration (last change dates) ✅",
+          "Year-to-date data fetching ✅",
+          "Intelligent caching (2hr TTL) ✅",
+          "Role-based access (Operador+ create/read, Supervisor+ update/delete) ✅"
+        ],
+        "phase": 2,
+        "completion_date": "2025-11-03"
       },
       {
         "srs_id": 4,
@@ -1134,22 +1165,25 @@
   },
   "tracking": {
     "total_estimated_hours": 195,
-    "completed_hours": 122,
-    "remaining_hours": 73,
-    "progress_percentage": 56,
-    "last_updated": "2025-11-02",
-    "current_phase": "Phase 2 - IN PROGRESS (56% complete)",
-    "next_milestone": "Complete remaining Phase 2 SRS (3-4)",
+    "completed_hours": 134,
+    "remaining_hours": 61,
+    "progress_percentage": 70,
+    "last_updated": "2025-11-03",
+    "current_phase": "Phase 2 - IN PROGRESS (70% complete)",
+    "next_milestone": "Complete remaining Phase 2 SRS (#4) and move to Phase 3",
     "blockers": [],
     "notes": [
       "Phase 1 completed successfully with cache system implementation",
       "SRS #2 (Commissions) completed - 18 actual hours",
+      "SRS #3 (Roll Changes) completed with dashboard integration - 12 actual hours",
       "SRS #5 (Tickets) completed with advanced comparison features - 18 actual hours",
       "SRS #4 smartly implemented via existing sales comparison functionality",
-      "5 of 9 SRS complete (56%): #1, #2, #5, #6, #7, #9",
+      "7 of 9 SRS complete (70%): #1, #2, #3, #4, #5, #6, #8",
+      "2 SRS remaining: #7 (Raspados premiados), #9 (Primeros lugares)",
       "Strong foundation established for rapid development of remaining SRS",
       "Performance optimizations already yielding significant Firebase savings",
-      "Established patterns for comparison modules and weekday analysis"
+      "Established patterns for comparison modules, weekday analysis, and dashboard integration",
+      "Roll changes module demonstrates operational event tracking pattern"
     ]
   },
   "success_metrics": {
@@ -1163,15 +1197,16 @@
     "functional": [
       "✅ SRS #1 fully implemented (Hourly Sales)",
       "✅ SRS #2 fully implemented (Commissions)",
+      "✅ SRS #3 fully implemented (Roll Changes with dashboard integration)",
       "✅ SRS #4 implemented via smart aggregation",
       "✅ SRS #5 fully implemented (Tickets with advanced comparison)",
-      "✅ SRS #6 fully implemented (Commissions)",
-      "✅ SRS #7 fully implemented (Paid Prizes)",
-      "✅ SRS #9 fully implemented (Dashboard)",
+      "✅ SRS #6 fully implemented (Ticket Averages)",
+      "✅ SRS #8 fully implemented (Paid Prizes)",
+      "✅ Dashboard with 13 insight cards and quick actions",
       "✅ Role-based access working",
       "✅ Data migration tools operational",
       "✅ Export/import CSV functional",
-      "🔄 SRS #3, #8 pending implementation"
+      "🔄 SRS #7 (Raspados), #9 (Primeros lugares) pending implementation"
     ],
     "usability": [
       "✅ Registration time: <2 minutes achieved",
@@ -1387,21 +1422,27 @@
     },
     {
       "priority": "high",
-      "action": "Begin Phase 2 - SRS #2 Comisiones mensuales",
-      "description": "Implement monthly commissions module using established component patterns",
-      "estimated_time": "3-4 days",
-      "dependencies": ["Component refactoring completed"],
+      "action": "Begin Phase 3 - SRS #7 Raspados premiados",
+      "description": "Implement scratch lottery prize tracking module using established component patterns",
+      "estimated_time": "2-3 days",
+      "dependencies": ["Phase 2 SRS implementations completed"],
       "details": {
-        "module_path": "src/modules/finances/Commissions.tsx",
+        "module_path": "src/modules/lottery/Scratches.tsx",
         "components_needed": [
-          "CommissionFilters (based on SalesFilters pattern)",
-          "CommissionStats (based on SalesStats pattern)",
-          "CommissionTable (based on SalesTable pattern)", 
-          "CommissionForm (based on SalesForm pattern)"
+          "ScratchesFilters (based on established patterns)",
+          "ScratchesStats (based on established patterns)",
+          "ScratchesTable (based on established patterns)", 
+          "ScratchesForm (based on established patterns)"
         ],
-        "service_layer": "src/services/CommissionsService.ts",
-        "cache_integration": "Extend CacheService for commissions data",
-        "collection_path": "data/commissions/{year}/{month}/{commissionId}"
+        "service_layer": "src/services/ScratchesService.ts",
+        "cache_integration": "Extend CacheService for scratches data (1hr TTL, event-based)",
+        "collection_path": "data/scratches/{year}/{month}/entries/{scratchId}",
+        "features": [
+          "Prize tracking by lottery type",
+          "Winner information management",
+          "Weekly/monthly aggregation",
+          "CSV export functionality"
+        ]
       }
     },
     {

@@ -478,6 +478,14 @@ export class CacheManager {
       financesCache.invalidatePattern('ticketAverages:.*')
     }
   }
+
+  static invalidateRollChangesData(year?: number, month?: number): void {
+    if (year && month) {
+      financesCache.invalidatePattern(`rollChanges:.*:${year}-${String(month).padStart(2, '0')}`)
+    } else {
+      financesCache.invalidatePattern('rollChanges:.*')
+    }
+  }
   
   static invalidateUserData(userId?: string): void {
     if (userId) {

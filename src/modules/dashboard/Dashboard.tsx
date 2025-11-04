@@ -6,6 +6,7 @@ import { useCachedDashboard, useCacheStats, useCachePreloader } from '../../hook
 import { useCachedMonthlyCommissions } from '../../hooks/useCachedCommissions'
 import { useCachedMonthlyTotals } from '../../hooks/useCachedPaidPrizes'
 import { useCachedMonthlyTicketStats } from '../../hooks/useCachedTickets'
+import { useCachedRollChangesRange } from '../../hooks/useCachedRollChanges'
 import { CommissionsService } from '../../services/CommissionsService'
 import { PaidPrizesService } from '../../services/PaidPrizesService'
 import TicketsService from '../../services/TicketsService'
@@ -37,6 +38,31 @@ const Dashboard: React.FC = () => {
   
   // Get current month tickets stats
   const { stats: ticketsStats, loading: ticketsLoading } = useCachedMonthlyTicketStats(currentYearMonth)
+  
+  // Get entire year's roll changes to find the most recent ones
+  const startYearMonth = `${nowMexico.getFullYear()}-01`
+  const endYearMonth = currentYearMonth
+  const { data: rollChangesData, loading: rollChangesLoading } = useCachedRollChangesRange(
+    startYearMonth,
+    endYearMonth
+  )
+  
+  // Calculate last roll change dates for each machine (from entire year's data)
+  const lastRollChange76 = React.useMemo(() => {
+    if (!rollChangesData || rollChangesData.length === 0) return null
+    const machine76Changes = rollChangesData
+      .filter((change) => change.machineId === '76')
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    return machine76Changes[0]?.date || null
+  }, [rollChangesData])
+  
+  const lastRollChange79 = React.useMemo(() => {
+    if (!rollChangesData || rollChangesData.length === 0) return null
+    const machine79Changes = rollChangesData
+      .filter((change) => change.machineId === '79')
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    return machine79Changes[0]?.date || null
+  }, [rollChangesData])
   
   // Calculate monthly commission total from Tira (paperTotal) instead of LN (systemTotal)
   const monthlyCommissionTotal = React.useMemo(() => {
@@ -523,6 +549,77 @@ const Dashboard: React.FC = () => {
             </div>
           </div>
         </div>
+
+        {/* Roll Changes Cards */}
+        <div className="bg-white overflow-hidden shadow rounded-lg">
+          <div className="p-5">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <svg className="h-8 w-8 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+              </div>
+              <div className="ml-5 w-0 flex-1">
+                <dl>
+                  <dt className="text-sm font-medium text-gray-500 truncate">
+                    Último Cambio M76
+                  </dt>
+                  <dd className="text-lg font-medium text-gray-900">
+                    {rollChangesLoading ? (
+                      <span className="text-gray-500">Cargando...</span>
+                    ) : lastRollChange76 ? (
+                      <span className="text-emerald-600">
+                        {new Date(lastRollChange76).toLocaleDateString('es-MX', { 
+                          day: '2-digit', 
+                          month: 'short',
+                          timeZone: 'America/Mexico_City' 
+                        })}
+                      </span>
+                    ) : (
+                      <span className="text-gray-400">Sin datos</span>
+                    )}
+                  </dd>
+                </dl>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white overflow-hidden shadow rounded-lg">
+          <div className="p-5">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <svg className="h-8 w-8 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+              </div>
+              <div className="ml-5 w-0 flex-1">
+                <dl>
+                  <dt className="text-sm font-medium text-gray-500 truncate">
+                    Último Cambio M79
+                  </dt>
+                  <dd className="text-lg font-medium text-gray-900">
+                    {rollChangesLoading ? (
+                      <span className="text-gray-500">Cargando...</span>
+                    ) : lastRollChange79 ? (
+                      <span className="text-purple-600">
+                        {new Date(lastRollChange79).toLocaleDateString('es-MX', { 
+                          day: '2-digit', 
+                          month: 'short',
+                          timeZone: 'America/Mexico_City' 
+                        })}
+                      </span>
+                    ) : (
+                      <span className="text-gray-400">Sin datos</span>
+                    )}
+                  </dd>
+                </dl>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Quick Sales Entry */}
@@ -611,6 +708,22 @@ const Dashboard: React.FC = () => {
                 <div>
                   <div className="font-medium text-gray-900">Promedio por Boleto</div>
                   <div className="text-sm text-gray-500">Ver análisis de promedios</div>
+                </div>
+              </div>
+            </Link>
+
+            <Link 
+              to="/operations/roll-changes" 
+              className="block text-left p-4 rounded-lg border-2 border-dashed border-gray-300 hover:border-emerald-500 hover:bg-emerald-50 transition-colors"
+            >
+              <div className="flex items-center">
+                <svg className="h-6 w-6 text-emerald-600 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                <div>
+                  <div className="font-medium text-gray-900">Cambios de Rollo</div>
+                  <div className="text-sm text-gray-500">Registrar cambios de rollo</div>
                 </div>
               </div>
             </Link>
