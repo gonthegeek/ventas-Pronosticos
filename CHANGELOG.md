@@ -7,6 +7,174 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [Unreleased]
+
+## [2.5.0] - 2026-05-01
+
+### Added
+- **SRS #7 Enhancement: Lottery Games Management System**
+  - Supervisor-managed lottery game configuration system
+  - Replaces free-text lottery input with dropdown selector
+  - CRUD operations for lottery games with drag-and-drop reordering
+  - Active/inactive game status toggle (hide games without deletion)
+  - Intelligent caching with 24hr TTL for game lists
+  - Services: `LotteryGamesService.ts`, `LotteryGamesService.cached.ts`
+  - Hooks: `useCachedLotteryGames.ts` with full CRUD capabilities
+  - Module: `src/modules/lottery/LotteryGamesManager.tsx`
+  - Route: `/lottery/games`
+  - Firestore collection: `lotteryGames` (top-level collection)
+  - Permissions: `LOTTERY_GAMES_READ`, `LOTTERY_GAMES_WRITE`, `LOTTERY_GAMES_ALL`
+  - Firestore rules: All users read, supervisors+ write
+  - Updated sidebar navigation with "Gestión de Juegos" menu item
+  - Scratches module now uses dropdown selector populated from lottery games
+  - Empty state message when no games are configured
+
+- **SRS #7 Enhancement: sorteoNumber Field**
+  - Added `sorteoNumber` field to `ScratchEntry` interface for tracking specific lottery draw numbers
+  - Updated `ScratchesService.ts` to parse sorteoNumber from Firestore
+  - Enhanced Scratches.tsx UI:
+    - Form validation includes sorteoNumber check
+    - Table displays "# Sorteo" column between lottery and ticket columns
+    - Modal form includes "Número de Sorteo" input field with placeholder
+    - CSV export includes sorteoNumber column
+  - Users can now track which specific sorteo/draw a prize came from
+
+- **SRS #7: Raspados Premiados** (Complete Implementation)
+  - Full CRUD operations for scratch lottery prize tracking by lottery type
+  - Event-based prize tracking system for multiple lottery games
+  - Monthly statistics with lottery breakdown, weekly aggregations, and top prizes
+  - Comprehensive UI with month picker, summary cards, and detailed table
+  - Top 5 prizes display with visual ranking
+  - Lottery breakdown table showing prize count, total amount, and average per lottery
+  - CSV export functionality with full prize data
+  - Intelligent caching with adaptive TTL (1hr current, 2hrs historical)
+  - Services: `ScratchesService.ts`, `ScratchesService.cached.ts`
+  - Hooks: `useCachedScratches.ts` with multiple data-fetching hooks
+  - Module: `src/modules/lottery/Scratches.tsx`
+  - Route: `/lottery/scratches`
+  - Hierarchical Firestore structure: `data/scratches/{year}/{month}/entries/{id}`
+  - Permissions: `SORTEOS_CREATE`, `SORTEOS_READ`, `SORTEOS_UPDATE`, `SORTEOS_DELETE`
+  - Firestore rules: Supervisor+ access only (read, write, delete)
+  - Updated sidebar navigation with "Raspados Premiados" menu item (SRS #7)
+  - Form includes lottery type autocomplete with historical lottery names
+  - Summary cards: Total prizes, total amount, average prize
+  - Lottery breakdown: Prize count, amount, and average per lottery type
+  - Weekly breakdown: Prize count and amount per ISO week
+  - Top 5 prizes visualization with ranked display
+
+- **Cache Service Enhancement**
+  - Added `invalidateScratchesData()` method to CacheManager
+  - Added `invalidateLotteryGamesData()` method to CacheManager
+  - Scratches cache invalidation with year/month specificity
+  - Pattern-based cache invalidation: `scratches:.*:${year}-${month}`
+  - Lottery games cache invalidation: `lotteryGames:.*`
+  - Added CACHE_KEYS for scratches data:
+    - `scratchesMonthlyList`: Monthly entries list
+    - `scratchesWeeklyList`: Weekly entries list
+    - `scratchesMonthlyStats`: Monthly statistics
+    - `scratchesLotteryList`: Entries filtered by lottery type
+    - `scratchesLotteryTypes`: Unique lottery types for a month
+  - Added CACHE_KEYS for lottery games:
+    - `lotteryGamesList`: All games (24hr TTL)
+    - `lotteryGamesActive`: Active games only (24hr TTL)
+
+- **Permissions Enhancement**
+  - Added granular permissions for scratches (sorteos):
+    - `SORTEOS_CREATE`: Create new scratch prizes
+    - `SORTEOS_UPDATE`: Update existing scratch prizes
+    - `SORTEOS_DELETE`: Delete scratch prizes
+  - Added granular permissions for lottery games management:
+    - `LOTTERY_GAMES_READ`: View lottery games
+    - `LOTTERY_GAMES_WRITE`: Manage lottery games
+    - `LOTTERY_GAMES_ALL`: Full access (included in supervisor+ role)
+  - Existing permissions:
+    - `SORTEOS_ALL`: Full access to scratches
+    - `SORTEOS_READ`: View scratches
+    - `SORTEOS_WRITE`: Edit scratches
+
+### Changed
+- **Sidebar Navigation**
+  - Updated "Sorteos" menu item to "Raspados Premiados"
+  - Changed path from `/sorteos` to `/lottery/scratches`
+  - Updated SRS ID from 6 to 7 for scratches menu item
+  - Changed icon to ticket icon for better visual representation
+  - Added "Gestión de Juegos" menu item with list icon
+  - Lottery games menu requires supervisor+ access
+
+- **Scratches Module UI**
+  - Replaced free-text lottery input with dropdown selector
+  - Dropdown populated from active lottery games configured by supervisors
+  - Empty state warning when no games are configured
+  - Improved data consistency through controlled game selection
+
+### Technical Details
+- **Lottery Games Services**:
+  - `LotteryGamesService.ts`: Base Firestore service for game management
+    - `list()`: Get all games ordered by displayOrder
+    - `listActive()`: Get only active games for dropdowns
+    - `getById()`: Retrieve single game
+    - `create()`: Create new game with automatic ordering
+    - `update()`: Update game properties (name, isActive, displayOrder)
+    - `remove()`: Delete game (only if not used in scratch entries)
+    - `reorder()`: Batch update displayOrder for all games
+    - `toggleActive()`: Quick active/inactive toggle
+  - `LotteryGamesService.cached.ts`: 24hr TTL cached wrapper
+    - Long TTL appropriate for infrequently-changing data
+    - Automatic cache invalidation on all mutations
+
+- **Lottery Games Hooks**:
+  - `useCachedLotteryGames`: Full CRUD operations for management UI
+    - Returns: games, loading, error, refresh, create, update, remove, reorder, toggleActive
+  - `useCachedActiveLotteryGames`: Active games only for form dropdowns
+    - Returns: games, loading, error, refresh
+
+- **Lottery Games UI** (`LotteryGamesManager.tsx`):
+  - Drag-and-drop reordering with visual feedback
+  - Inline active/inactive toggle buttons
+  - Create/Edit modal with name input and active checkbox
+  - Delete confirmation with warning about historical data
+  - Empty state prompt for first game creation
+  - Visual distinction for inactive games (gray background)
+
+- **Scratches Services**:
+  - `ScratchesService.ts`: Base Firestore service with CRUD operations
+    - `getCollectionPath()`: Returns hierarchical path `data/scratches/{year}/{month}/entries`
+    - `getISOWeek()`: ISO week calculation for Mexico timezone
+    - `parseYearMonth()`: Parse year/month from date string
+    - `list()`: List all entries for a month
+    - `listByWeek()`: Get entries for a specific ISO week
+    - `listByLottery()`: Filter entries by lottery type
+    - `create()`: Create new entry with auto-calculated ISO week
+    - `update()`: Update with cross-month date handling
+    - `remove()`: Delete entry
+    - `getMonthlyStats()`: Comprehensive statistics including lottery/weekly breakdowns and top prizes
+    - `getLotteryTypes()`: Get unique lottery types for autocomplete
+    - `getYearToDateStats()`: Year-to-date statistics
+  - `ScratchesService.cached.ts`: Cached wrapper with 1-2hr TTL
+    - Adaptive TTL: 1hr for current month, 2hrs for historical
+    - Automatic cache invalidation on data changes
+    - Handles Map serialization for localStorage persistence
+
+- **Hooks**:
+  - `useCachedMonthlyScratches`: Fetch monthly entries with CRUD operations
+  - `useCachedWeeklyScratches`: Fetch entries by ISO week
+  - `useCachedMonthlyScratchStats`: Fetch comprehensive monthly statistics
+  - `useCachedScratchesByLottery`: Filter entries by lottery type
+  - `useCachedLotteryTypes`: Get unique lottery types for a month
+  - `useCachedYearToDateScratchStats`: Year-to-date statistics
+
+- **UI Components**:
+  - Month picker with prev/next/current navigation
+  - Summary cards: Total prizes, total amount, average prize (3-col grid)
+  - Lottery breakdown table: Count, amount, average per lottery
+  - Top 5 prizes display: Visual ranking with prize details
+  - Detailed entries table: Date, lottery, ticket number, amount, notes, actions
+  - Create/Edit modal: Date, lottery (with autocomplete), winning ticket, prize amount, notes
+  - CSV export: Full data export with all fields
+  - Inline edit/delete for authorized users (Supervisor+)
+
+---
+
 ## [2.4.0] - 2025-11-03
 
 ### Added

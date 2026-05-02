@@ -53,10 +53,18 @@ export const PERMISSIONS = {
     PROMEDIO_BOLETO_WRITE: 'promedio-boleto:write',
     PROMEDIO_BOLETO_ALL: 'promedio-boleto:all',
     
-    // Sorteos permissions
+    // Sorteos permissions (Scratches/Raspados)
     SORTEOS_ALL: 'sorteos:all',
     SORTEOS_READ: 'sorteos:read',
     SORTEOS_WRITE: 'sorteos:write',
+    SORTEOS_CREATE: 'sorteos:create',
+    SORTEOS_UPDATE: 'sorteos:update',
+    SORTEOS_DELETE: 'sorteos:delete',
+    
+    // Lottery Games Management permissions
+    LOTTERY_GAMES_READ: 'lottery-games:read',
+    LOTTERY_GAMES_WRITE: 'lottery-games:write',
+    LOTTERY_GAMES_ALL: 'lottery-games:all',
     
     // Admin permissions
     ADMIN_ALL: 'admin:all',
@@ -86,7 +94,8 @@ const supervisorPermissions: PermissionName[] = [
     PERMISSIONS.COMISIONES_ALL,
     PERMISSIONS.PREMIADOS_ALL,
     PERMISSIONS.PROMEDIO_BOLETO_ALL,
-    PERMISSIONS.SORTEOS_ALL
+    PERMISSIONS.SORTEOS_ALL,
+    PERMISSIONS.LOTTERY_GAMES_ALL
 ];
 
 const adminPermissions: PermissionName[] = [

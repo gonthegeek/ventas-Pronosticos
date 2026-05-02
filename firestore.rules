@@ -150,11 +150,22 @@ service cloud.firestore {
     }
     
     // Roll changes data - hierarchical structure: data/rollChanges/{year}/{month}/entries/{id}
-    // SRS #3: Cambio de rollo - Operador+ can create/read, Supervisor+ can update/delete
     match /data/rollChanges/{document=**} {
       allow read: if isAuthorizedUser();
       allow create: if isAuthorizedUser();
       allow update, delete: if isSupervisorOrAdmin();
+    }
+    
+    // Scratches data - hierarchical structure: data/scratches/{year}/{month}/entries/{id}
+    match /data/scratches/{document=**} {
+      allow read: if isSupervisorOrAdmin();
+      allow write: if isSupervisorOrAdmin();
+    }
+    
+    // Lottery games data - top-level collection for managing lottery game types
+    match /lotteryGames/{gameId} {
+      allow read: if isAuthorizedUser(); // All authenticated users can read
+      allow write: if isSupervisorOrAdmin(); // Only supervisors and admins can manage
     }
     
     // Inventory data

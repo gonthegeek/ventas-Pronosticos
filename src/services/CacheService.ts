@@ -405,6 +405,17 @@ export const CACHE_KEYS = {
   ticketAveragesMonthlyList: (year: number, month: number) => `ticketAverages:monthly:list:${year}-${String(month).padStart(2, '0')}`,
   ticketAveragesDailyStats: (year: number, month: number) => `ticketAverages:daily:stats:${year}-${String(month).padStart(2, '0')}`,
   ticketAveragesMonthlyStats: (year: number, month: number) => `ticketAverages:monthly:stats:${year}-${String(month).padStart(2, '0')}`,
+
+  // Scratches keys (SRS #7)
+  scratchesMonthlyList: (year: number, month: number) => `scratches:monthly:list:${year}-${String(month).padStart(2, '0')}`,
+  scratchesWeeklyList: (week: string) => `scratches:weekly:list:${week}`,
+  scratchesMonthlyStats: (year: number, month: number) => `scratches:monthly:stats:${year}-${String(month).padStart(2, '0')}`,
+  scratchesLotteryList: (year: number, month: number, lottery: string) => `scratches:lottery:list:${year}-${String(month).padStart(2, '0')}:${lottery}`,
+  scratchesLotteryTypes: (year: number, month: number) => `scratches:lottery:types:${year}-${String(month).padStart(2, '0')}`,
+
+  // Lottery Games keys (SRS #7 Enhancement)
+  lotteryGamesList: () => `lotteryGames:list:all`,
+  lotteryGamesActive: () => `lotteryGames:list:active`,
 }
 
 // Global cache instances
@@ -485,6 +496,18 @@ export class CacheManager {
     } else {
       financesCache.invalidatePattern('rollChanges:.*')
     }
+  }
+
+  static invalidateScratchesData(year?: number, month?: number): void {
+    if (year && month) {
+      financesCache.invalidatePattern(`scratches:.*:${year}-${String(month).padStart(2, '0')}`)
+    } else {
+      financesCache.invalidatePattern('scratches:.*')
+    }
+  }
+
+  static invalidateLotteryGamesData(): void {
+    financesCache.invalidatePattern('lotteryGames:.*')
   }
   
   static invalidateUserData(userId?: string): void {
